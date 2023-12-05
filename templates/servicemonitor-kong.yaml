@@ -1,0 +1,74 @@
+{{- if and (.Values.plugins.prometheus.enabled) (.Values.plugins.prometheus.serviceMonitor.enabled) -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+    release: {{ .Values.plugins.prometheus.serviceMonitor.selector | default "guardians-raccoon" }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels: {{ include "kong.selector" $ | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      path: {{ .Values.plugins.prometheus.path | default "/metrics" }}
+      metricRelabelings:
+      - sourceLabels: [__name__]
+        regex: "kong_eni_(.+)"
+        action: drop
+      {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}
+      scheme: {{ .Values.plugins.prometheus.serviceMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.interval }}
+      interval: {{ .Values.plugins.prometheus.serviceMonitor.interval | quote}}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.plugins.prometheus.serviceMonitor.scrapeTimeout | quote }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      {{- end }}
+    {{- if eq .Values.legacyJumper.enabled true }}
+    - port: legacy-metrics
+      path: '/actuator/prometheus'
+      {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}
+      scheme: {{ .Values.plugins.prometheus.serviceMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.interval }}
+      interval: {{ .Values.plugins.prometheus.serviceMonitor.interval | quote}}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.plugins.prometheus.serviceMonitor.scrapeTimeout | quote }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      {{- end }}
+    {{- end }}
+    - port: jumper-metrics
+      path: '/actuator/prometheus'
+      {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}
+      scheme: {{ .Values.plugins.prometheus.serviceMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.interval }}
+      interval: {{ .Values.plugins.prometheus.serviceMonitor.interval | quote}}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.plugins.prometheus.serviceMonitor.scrapeTimeout | quote }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      {{- end }}  
+  targetLabels:
+  - tardis.telekom.de/cluster
+  - tardis.telekom.de/product
+  - tardis.telekom.de/subproduct
+  - tardis.telekom.de/namespace
+  - tardis.telekom.de/team
+  - tardis.telekom.de/environment
+  - app
+  - type
+  - routeId
+{{- end -}}

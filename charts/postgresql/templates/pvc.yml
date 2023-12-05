@@ -1,0 +1,18 @@
+{{- if eq .Values.global.database.location "local" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "postgresql.pvcName" . }}
+  labels: {{ include "postgresql.labels" $ | nindent 4 }}
+{{- if .Values.persistence }}
+  {{- if .Values.persistence.keepOnDelete }}
+  annotations:
+    "helm.sh/resource-policy": keep
+  {{- end -}}
+{{- end }}
+spec:
+  storageClassName: {{ include "platformSpecificValue" (list $ . ".Values.global.storageClassName") | default .Values.persistence.storageClassName | default "gp2" }}
+  accessModes:
+    - ReadWriteOnce
+  resources: {{ .Values.persistence.resources | toYaml | nindent 4 }}
+{{- end }}

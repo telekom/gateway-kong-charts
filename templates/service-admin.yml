@@ -1,0 +1,20 @@
+{{- if .Values.adminApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-admin
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+spec:
+  selector: {{ include "kong.selector" $ | nindent 4 }}
+  ports:
+{{- if .Values.adminApi.tls.enabled }}
+  - name: admin-ssl
+    port: 8444
+    targetPort: 8444
+{{- else }}
+  - name: admin
+    port: 8001
+    targetPort: 8001
+{{- end }}
+    protocol: TCP
+{{- end -}}

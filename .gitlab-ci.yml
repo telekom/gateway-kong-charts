@@ -1,0 +1,8 @@
+include:
+  - project: 'dhei/teams/io/templates/gitlab-pipelines'
+    file: '/helm/PublishChart.gitlab-ci.yml'
+    ref: develop
+
+.setup_job_basics: &setup_job_basics
+  tags:
+  - otc_run_sysbox_m

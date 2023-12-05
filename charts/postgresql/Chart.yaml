@@ -1,0 +1,14 @@
+apiVersion: v1
+name: postgresql
+version: 1.0.0
+icon: https://www.postgresql.org/media/img/about/press/elephant.png
+appVersion: 12.3.0
+description: PostgreSQL (original) database provided by DHEI
+keywords:
+- db
+- sql
+- postgresql
+- tif
+maintainers:
+- name: Team Hyperion
+  email: DTIT_ENI_Hub_Team_Hyperion@telekom.de

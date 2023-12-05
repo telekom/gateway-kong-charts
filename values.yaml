@@ -1,0 +1,487 @@
+global:
+  metadata:
+    pipeline: {}
+
+  # Available platforms: kubernetes (default), aws, caas. Setting any value with no specific platform values.yaml will result in fallback to kubernetes
+  platform: kubernetes
+  #pathToSecret: "path/to/secret" 
+  #storageClassName: gp2
+  domain: ""
+  #environment: ""
+  #zone: ""
+  labels:
+    # fluentd label
+    tif.telekom.de/group: tif
+  product: "stargate"
+  ingress:
+    #tlsSecret: ""
+    #ingressClassName: ""
+    annotations: {}
+      #external-dns.alpha.kubernetes.io/target: ""
+      #kubernetes.io/ingress.class: ""
+
+  # change the values below to overwrite the repository globally
+  # set "force: true" to perform string replacement in "image: repository/organization/name:tag" too
+  # for example:
+  #image:
+  #   repository: harbor.das-schiff.telekom.de
+  #   organization: tardis
+  #  force: false
+  image:
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-common
+    force: false
+
+  # If imagePullSecrets is not empty, a pull secret will be deployed for each entry otherwise 
+  # no pull secret will be deployed
+  # If you use Sapling for deployment this will be set automatically
+  imagePullSecrets: 
+  #- name: mtr-deveops
+  #  registry: https://mtr.devops.telekom.de
+  #  username: changeme
+  #  password: changeme
+  imagePullPolicy: IfNotPresent
+
+  passwordRules:
+    enabled: false
+    length: 12
+    mustMatch:
+    - '[a-z]'
+    - '[A-Z]'
+    - '[0-9]'
+    - '[^a-zA-Z0-9]'
+
+  database:
+    # Determine if the a database will be deployed togehter with Stargate (local) or is provided (external)
+    location: local
+    #port: 5432
+    database: kong
+    schema: public
+    username: kong
+    password: changeme
+
+  # Set a global collectorUrl for traces.
+  # Can be overwritten by individual settings
+  tracing:
+    collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
+    defaultServiceName: "stargate"
+    sampleRatio: 1
+
+  failOnUnsetValues: true
+
+# You can list files (in /templates) here that should cause a re-deployment of your application
+# when their contents change
+# This makes sense if you change configMaps or secrets and you
+# want your deployment to use the latest configuration
+#
+#templateChangeTriggers:
+#- my-custom-configmap.yaml
+templateChangeTriggers: []
+
+# You can force using a specific image here:
+#image: 
+  #repository: mtr.devops.telekom.de
+  #organization: tardis-internal/io
+  #name: eni-kong
+  #tag: 2.8.3.9
+# Or use the flattened string form:
+#image: mtr.devops.telekom.de/tardis-internal/io/eni-kong:2.8.3.9
+#imagePullPolicy: IfNotPresent
+
+# Determine the migrations behaviour (bootstrap, upgrade, jobs)
+# bootstrap: setting up a new deployments database
+# upgrade: utilizing Kongs upgrade task for e.g. database migrations
+# jobs: migrating from eni-plugins to ENI flavoured original plugins
+# Comment out or set to none if none of the options are needed
+migrations: none
+
+
+# Enable Admin API and whether it is http or https
+# Warning: 
+adminApi:
+  enabled: true
+  gatewayAdminApiKey: changeme
+  htpasswd: admin:changeme
+  tls:
+    enabled: false
+# Activate Admin API ingress and set a dedicated hostname
+# For EE (license) this is default true, for CE (no license) this is default false
+  ingress:
+    enabled: true
+    #hostname: ""
+    # alternative second host name in ingress
+    #altHostname: ""
+    #tlsSecret: ""
+    #ingressClassName: ""
+    annotations: {}
+  #accessLog: /dev/stdout
+  #errorLog: /dev/stderr
+
+# Activate proxy ingress and set a dedicated hostname
+proxy:
+  tls:
+    enabled: false
+  ingress:
+    enabled: true
+    #hostname: ""
+    # alternative second host name in ingress
+    #altHostname: ""
+    #tlsSecret: ""
+    #secondHostname: ""
+    #secondTlsSecret: ""
+    #ingressClassName: ""
+    annotations: {}
+
+  legacyIngress: {}
+  #legacyIngress:
+  #  hostname: ""
+  #  tlsSecret: ""
+
+  #accessLog: /dev/stdout
+  #errorLog: /dev/stderr
+
+#configuration: |
+  #Place your curl commands here to configure via Admin-API on deploy time
+
+# values used by nginx directives
+sslVerify: false
+sslVerifyDepth: '1'
+
+# You can define the truststore for SSL verification by setting your CAs in PEM format here 
+#
+#trustedCaCertificates: |
+#  -----BEGIN CERTIFICATE-----
+#  <CA certificate 01 in PEM format here>
+#  -----END CERTIFICATE-----
+#  -----BEGIN CERTIFICATE-----
+#  <CA certificate 02 in PEM format here>
+#  -----END CERTIFICATE-----
+#  -----BEGIN CERTIFICATE-----
+#  <CA certificate 03 in PEM format here>
+#  -----END CERTIFICATE-----
+
+# You can define the default HTTPS server certificate by specifing the secret with private-key/certificate here
+# Note: additional route-specific server certificates can by configured and assigned to SNIs at runtime. This is only a default certificate
+#defaultTlsSecret: "mysecret"
+
+ssl:
+  protocols: "TLSv1.2 TLSv1.3"
+# Defines the TLS ciphers served by Nginx.
+# Accepted values are modern, intermediate, old, or custom.
+# See https://wiki.mozilla.org/Security/Server_Side_TLS for detailed descriptions of each cipher suite.
+  cipherSuite: "custom"
+
+#Defines a custom list of TLS ciphers to be served by Nginx. This list must conform to the pattern defined by openssl ciphers.
+#This value is ignored if ssl_cipher_suite is not custom.
+  ciphers: "DHE-DSS-AES128-SHA256:DHE-DSS-AES256-SHA256:DHE-DSS-AES128-GCM-SHA256:DHE-DSS-AES256-GCM-SHA384:DHE-RSA-AES128-CCM:DHE-RSA-AES256-CCM:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-CCM:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CHACHA20-POLY1305:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256"
+
+disableUpstreamCache: false
+
+#podSecurityContext: {}
+#containerSecurityContext: {}
+
+#topologyKey: kubernetes.io/hostname
+
+jobs: {}
+  #containerSecurityContext: {}
+
+#memCacheSize: 128m
+#nginxWorkerProcesses: auto
+#nginxHttpLuaSharedDict: prometheus_metrics 15m
+#nginxLargeClientBuffers: 4 8k
+#workerConsistency: eventual
+#workerStateUpdateFrequency: 10
+#dbUpdateFrequency: 10
+#dbUpdatePropagation: 0
+#httpClientBodyBufferSize: 4m
+
+replicas: 1
+
+autoscaling:
+  enabled: false
+  # minReplicas is using replicas as default, if replicas is not set, default is 3 
+  #minReplicas: $replicas
+  #maxReplicas: 10
+  #cpuUtilizationPercentage: 80
+
+strategy: {}
+  #rollingUpdate:
+    #maxUnavailable: 25%
+
+resources:
+  limits:
+    cpu: 2500m
+    memory: 4Gi
+  requests:
+    cpu: 1
+    memory: 2Gi
+
+# log_format select the pre-configured log formats for nginx
+# It can have one of the values: default, json or plain.
+# Details are specified in templates/configmap-nginx-kong-template.yaml and nginx/nginx_kong.lua
+# Formats: debug, default, json
+logFormat: json
+
+livenessProbe: {}
+  #timeoutSeconds: 5
+  #periodSeconds: 10
+  #failureThreshold: 3
+readinessProbe: {}
+  #timeoutSeconds: 1
+  #periodSeconds: 10
+  #successThreshold: 2
+  #failureThreshold: 3
+startupProbe: {}
+  #initialDelaySeconds: 5
+  #timeoutSeconds: 1
+  #periodSeconds: 5
+  #failureThreshold: 40
+
+setupJobs:
+  #backoffLimit: 15
+  #activeDeadlineSeconds: 3600
+  #Resources need to be discussed
+  resources:
+    limits:
+      cpu: 0.5
+      memory: 500Mi
+    requests:
+      cpu: 50m
+      memory: 200Mi
+  #containerSecurityContext: {}
+
+plugins:
+  enabled: []
+
+  acl:
+    pluginId: bc823d55-83b5-4184-b03f-ce63cd3b75c7
+
+  cequence:
+    enabled: false
+    pluginId: f7b4e626-2987-4c04-98f1-cc316e8af9a5
+    #authDomain: auth.telekom.1.cequence.cloud
+    #edgeDomain: edge.telekom.1.cequence.cloud
+    #clientId: "kong-edge-client"
+    #realm: cequence
+    clientSecret: changeme
+      
+  jwtKeycloak:
+    enabled: true
+    pluginId: b864d58b-7183-4889-8b32-0b92d6c4d513
+    allowedIss: 
+      - https://changeme/auth/realms/default
+
+  prometheus:
+    enabled: true 
+    pluginId: 3d232d3c-dc2b-4705-aa8d-4e07c4e0ff4c
+    #port: 9542
+    #path: /metrics
+    #customerFacing: false
+    serviceMonitor:   
+      enabled: true
+      #selector: "guardians-raccoon"
+      #scheme: http
+      #interval: "15s"
+      #scrapeTimeout: "3s"
+      #honorLabels: ""
+    podMonitor:   
+      enabled: false
+      #selector: "guardians-raccoon"
+      #scheme: http
+      #interval: "15s"
+      #scrapeTimeout: "3s"
+      #honorLabels: ""
+
+  requestSizeLimiting:
+    enabled: true
+    pluginId: 1e199eee-f592-4afa-8371-6b61dcbd1904
+    #Size in megabytes
+    #allowedPayloadSize: 4
+
+  requestTransformer:
+    pluginId: e9fb4272-0aff-4208-9efa-6bfec5d9df53
+
+  zipkin:
+    enabled: true
+    pluginId: e8ff1211-816f-4d93-9011-a4b194586073
+    #collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
+    #sampleRatio: 1
+    #environment: null
+    #zone: null
+    #forceSample: true
+    #headerType: "b3"
+    #includeCredential: "true"
+    #defaultServiceName: "stargate"
+    #luaSslTrustedCertificate: |
+    #  -----BEGIN CERTIFICATE-----
+    #  <CA certificate in PEM format here>
+    #  -----END CERTIFICATE-----
+    # Set job retries and maximum runtime (default values preset)
+
+# irixBrokerRoute is a route on spacegate proxing to irix-broker
+irixBrokerRoute:
+  enabled: false
+  name: user-login
+  # optional if not according to the usual host rules
+  #host: integration.spacegate.telekom.de
+  upstream:
+    protocol: http
+    service: irix-broker
+    path: /auth/realms/eni-login
+    port: 80
+    # optional if upstream should be accessed by ingress
+    #host: integration.spacegate.telekom.de
+    # optional if upstream should be accessed as service but in another namespace
+    #namespace: integration
+
+# Jumper is a component needed for Gateway-to-Gateway
+# communication
+jumper:
+  enabled: true
+  #image: 
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-internal/hyperion
+    #name: jumper-sse
+    #tag: 3.6.1
+  # Or use the flattened string form:
+  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper-sse:3.9.0
+  #imagePullPolicy: IfNotPresent
+  issuerUrl: https://localhost:443
+  #tracingUrl: http://guardians-drax-collector.skoll:9411
+  #defaultServiceName: "stargate"
+  stargateUrl: https://stargate-integration.test.dhei.telekom.de
+  publishEventUrl: http://producer.integration:8080/v1/events
+  jvmOpts: "-XX:MaxRAMPercentage=80.0 -XshowSettings:vm"
+  #maxHttpHeaderSize: 16KB
+  #fpaProxyHost
+  #fpaProxyPort
+  #fpaNonProxyHostsRegex
+  livenessProbe: {}
+    #timeoutSeconds: 5
+    #periodSeconds: 10
+    #failureThreshold: 6
+  readinessProbe: {}
+    #timeoutSeconds: 1
+    #periodSeconds: 10
+    #successThreshold: 2
+    #failureThreshold: 3
+  startupProbe: {}
+    #initialDelaySeconds: 15
+    #timeoutSeconds: 1
+    #periodSeconds: 5
+    #failureThreshold: 40
+  #port: 8080
+
+  #containerSecurityContext: {}
+
+  resources:
+    limits:
+      cpu: 5
+      memory: 1500Mi
+    requests:
+      cpu: 2
+      memory: 1Gi
+
+legacyJumper:
+  enabled: false
+  startup:
+    livenessProbe:
+      initialDelay: 25
+    readinessProbe:
+      initialDelay: 25
+  #image: 
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-internal/hyperion
+    #name: jumper
+    #tag: 1.10.6.3
+  # Or use the flattened string form:
+  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper:1.10.6.3
+  #imagePullPolicy: IfNotPresent
+
+  #port: 8082
+
+issuerService:
+  enabled: true
+  #image: 
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-internal/hyperion
+    #name: issuer-service
+    #tag: 1.9.0
+  # Or use the flattened string form:
+  #image: mtr.devops.telekom.de/tardis-internal/hyperion/issuer-service:1.9.0
+  #imagePullPolicy: IfNotPresent
+  certsJson: changeme
+  publicJson: changeme
+  privateJson: changeme
+
+  #containerSecurityContext: {}
+
+  resources:
+    limits:
+      cpu: 150m
+      memory: 500Mi
+    requests:
+      cpu: 50m
+      memory: 200Mi
+
+circuitbreaker:
+  enabled: false
+  #image: 
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-internal/hyperion
+    #name: circuitbreaker
+    #tag: 2.1.0
+  # Or use the flattened string form:
+  #image: mtr.devops.telekom.de/tardis-internal/hyperion/gateway-circuitbreaker:2.1.0
+  imagePullPolicy: IfNotPresent
+  #interval: 60s
+  #count: 4
+
+  #containerSecurityContext: {}
+
+  resources:
+    limits:
+      cpu: 0.5
+      memory: 500Mi
+    requests:
+      cpu: 50m
+      memory: 200Mi
+
+postgresql:
+  #image: 
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-common
+    #name: postgres
+    #tag: 12.3-debian
+  # Or use the flattened string form:
+  #image: mtr.devops.telekom.de/tardis-common/postgres:12.3-debian
+  #imagePullPolicy: IfNotPresent
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 500Mi
+    requests:
+      cpu: 20m
+      memory: 200Mi
+
+externalDatabase: 
+  # Set host if you use an external database or service name is not sufficient
+  #host: 'some-external-postgresql-database.example.com'
+  ssl: false
+  sslVerify: false
+  #luaSslTrustedCertificate: |
+  #  -----BEGIN CERTIFICATE-----
+  #  <CA certificate in PEM format here>
+  #  -----END CERTIFICATE-----
+
+job: {}
+# force specific image for jobs:
+#job:
+  #image: 
+    #repository: mtr.devops.telekom.de
+    #organization: tardis-common
+    #name: tif-base-image
+    #tag: 1.0.0
+  # Or use the flattened string form:
+  #image: mtr.devops.telekom.de/tardis-common/tif-base-image:1.0.0

@@ -1,0 +1,45 @@
+{{- if eq (include "kong.adminApi.ingress.enabled" $) "true" }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-admin
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+{{- include "kong.merged.adminApi.annotations" $ | nindent 2 }}
+spec:
+  rules:
+  - host: {{ include "kong.adminApi.host" . }}
+    http:
+      paths:
+        - path: {{ include "kong.adminApi.ingress.path" . }}
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ .Release.Name }}-proxy
+              port:
+{{- if .Values.proxy.tls.enabled }}
+                name: proxy-ssl
+{{- else }}
+                name: proxy
+{{- end }}
+{{- if not (empty .Values.adminApi.ingress.altHostname) }}
+  - host: {{ .Values.adminApi.ingress.altHostname }}
+    http:
+      paths:
+        - path: {{ include "kong.adminApi.ingress.path" . }}
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ .Release.Name }}-proxy
+              port:
+{{- if .Values.proxy.tls.enabled }}
+                name: proxy-ssl
+{{- else }}
+                name: proxy
+{{- end }}
+{{- end }}
+{{- include "kong.adminApi.ingress.ingressClassName" . | nindent 2 }}
+  tls:
+  - hosts:
+    - {{ include "kong.adminApi.host" . }}
+{{- include "kong.adminApi.ingress.tlsSecret" . | nindent 4 -}}
+{{- end -}}

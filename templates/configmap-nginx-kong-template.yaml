@@ -1,0 +1,22 @@
+{{- $availableProxyFormats := dict "default" "" }}
+{{- $_ := set $availableProxyFormats "json" "log_proxy_json" }}
+{{- $_ := set $availableProxyFormats "debug" "log_proxy_debug_json" }}
+{{- $availableAdminFormats := dict "default" "" }}
+{{- $_ := set $availableAdminFormats "json" "log_admin_json" }}
+{{- $_ := set $availableAdminFormats "debug" "log_admin_debug_json" }}
+
+{{- $logFormat := (.Values.logFormat | toString ) }}
+{{- if hasKey $availableProxyFormats $logFormat }}
+{{- $selectedProxyFormat := (get $availableProxyFormats $logFormat) }}
+{{- $selectedAdminFormat := (get $availableAdminFormats $logFormat) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-nginx-kong-template
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+data:
+  nginx_kong.lua: |
+  {{ .Files.Get "nginx/nginx_kong.lua" | nindent 4 | replace "REPLACE_STARGATE_PROXY_LOG_FORMAT" $selectedProxyFormat | replace "REPLACE_STARGATE_ADMIN_LOG_FORMAT" $selectedAdminFormat }}
+{{- else }}
+{{- fail (printf "logFormat must be one of the following values: %v" (keys $availableProxyFormats | sortAlpha )) }}
+{{- end }}

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+
+SPDX-License-Identifier: CC0-1.0
+-->
+
 **Table of contents**
 
 This document show changes done to the chart.

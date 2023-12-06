@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: CC0-1.0
+
 include:
   - project: 'dhei/teams/io/templates/gitlab-pipelines'
     file: '/helm/PublishChart.gitlab-ci.yml'

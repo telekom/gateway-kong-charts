@@ -1,0 +1,4 @@
+.helmignore
+
+# Match any license file
+*.license

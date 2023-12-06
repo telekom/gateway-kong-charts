@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+global:
+  storageClassName: nfs-storage
+
+podSecurityContext:
+  fsGroup: 999
+  supplementalGroups: [999]    
+
+containerSecurityContext:
+  runAsGroup: 999
+  runAsUser: 999
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  privileged: false
+  capabilities:
+    drop:
+    - ALL

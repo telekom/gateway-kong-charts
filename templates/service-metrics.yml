@@ -1,0 +1,26 @@
+{{- if and (.Values.plugins.prometheus.enabled) (.Values.plugins.prometheus.serviceMonitor.enabled) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-metrics
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+  {{- include "common.status-monitor.labels" $ | nindent 4 }}
+  {{- include "status-monitor.labels" $ | nindent 4 }}
+spec:
+  selector: {{ include "kong.selector" $ | nindent 4 }}
+  ports:
+  - name: metrics
+    port: 9542
+    targetPort: metrics
+    protocol: TCP
+  {{- if eq .Values.legacyJumper.enabled true }}
+  - name: legacy-metrics
+    port: 9543
+    targetPort: legacy-jumper
+    protocol: TCP
+  {{- end }}
+  - name: jumper-metrics
+    port: 9544
+    targetPort: jumper
+    protocol: TCP
+{{- end -}}

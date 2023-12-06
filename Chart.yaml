@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: stargate
+version: 5.4.9
+appVersion: 2.0.0
+description: Kong API gateway provided by DHEI
+dependencies:
+- name: postgresql
+  version: 1.0.0
+maintainers:
+- name: Team Hyperion
+  email: DTIT_ENI_Hub_Team_Hyperion@telekom.de

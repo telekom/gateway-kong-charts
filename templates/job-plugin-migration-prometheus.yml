@@ -1,0 +1,50 @@
+{{- if and (include "kong.isMigrationsJob" $) (.Values.adminApi.enabled) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-plugin-migration-prometheus
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/weight": "-10"
+spec:
+  backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
+  template:
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      containers:
+      - name: prometheus-deletion
+        image: {{ include "job.image" $ }}
+        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jobs.containerSecurityContext") | default "{}" | nindent 10 }}
+        env:
+        - name: X_TARDIS_GATEWAY_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}
+              key: gatewayAdminApiKey
+        command:        
+          - /bin/bash
+          - -c
+          - |-
+            echo "Removing old Kong ENI flavoured Prometheus plugin via DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins"
+
+            ADMIN_API_HTTP_RETURN_CODE=`curl -Is -o /dev/null -w "%{http_code}" -u "admin:$-X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
+            if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then
+                echo "Kong Admin-API unreachable return: $ADMIN_API_HTTP_RETURN_CODE"
+                exit 1
+            fi
+
+            CONFIG_CALL_HTTP_RETURN_CODE=`curl \
+            -o /dev/null \
+            -w "%{http_code}" \
+            -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
+            -X DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.prometheus.pluginId }}`
+
+            if [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "204" ]; then
+              echo "Plugin deletion failed"
+              exit 1
+            fi
+      restartPolicy: OnFailure
+{{- end -}}

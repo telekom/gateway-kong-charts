@@ -1,0 +1,249 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+  {{- include "kong.annotations" $ | nindent 4 }}
+  {{- include "kong.checksums" $ | nindent 4 }}
+  labels: {{ include "kong.labels" $ | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicas | default 1 }}
+{{- end }}
+{{- if .Values.strategy.rollingUpdate }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable | default "25%" }}
+      maxSurge: 25%
+{{- end }}
+  selector: 
+    matchLabels: {{ include "kong.selector" $ | nindent 6 }}
+  template:
+    metadata:
+      annotations: 
+      {{- include "kong.annotations" $ | nindent 8 }}
+      {{- include "kong.checksums" $ | nindent 8 }}
+{{- if eq .Values.plugins.prometheus.enabled true }}
+        prometheus.io/path: '{{ .Values.plugins.prometheus.path | default "/metrics" }}'
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '{{ .Values.plugins.prometheus.port | default 9542 }}'
+{{- end }}
+      labels: 
+        {{- include "kong.labels" $ | nindent 8 }}
+        {{- include "common.status-monitor.labels" $ | nindent 8 }}
+        {{- include "status-monitor.labels" $ | nindent 8 }}
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - {{ .Release.Name }}-kong
+              topologyKey: {{ include "platformSpecificValue" (list $ . ".Values.topologyKey") | default "kubernetes.io/hostname" }}
+      securityContext: {{ include "platformSpecificValue" (list $ . ".Values.podSecurityContext") | default "{}" | nindent 8 }}
+      containers:
+{{- if eq .Values.jumper.enabled true }}
+      - name: jumper
+        image: {{ include "kong.jumper.image" $ }}
+        imagePullPolicy: {{ .Values.jumper.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jumper.containerSecurityContext") | default "{}" | nindent 10 }}
+        resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "65"]
+        ports:
+        - containerPort: {{ .Values.jumper.port | default 8080 }} 
+          name: jumper
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.jumper.volumeMounts" $ | indent 8 }}
+        env:
+        - name: JUMPER_PORT
+          value: {{ .Values.jumper.port | default 8080 | quote }}
+        {{- include "kong.jumper.env" $ | indent 8 }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: jumper
+            scheme: HTTP
+          timeoutSeconds: {{ .Values.jumper.livenessProbe.timeoutSeconds | default 5 }}
+          periodSeconds: {{ .Values.jumper.livenessProbe.periodSeconds | default 10 }}
+          successThreshold: 1
+          failureThreshold: {{ .Values.jumper.livenessProbe.failureThreshold | default 6 }}
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: jumper
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: {{ .Values.jumper.readinessProbe.timeoutSeconds | default 1 }}
+          periodSeconds: {{ .Values.jumper.readinessProbe.periodSeconds | default 10 }}
+          successThreshold: {{ .Values.jumper.readinessProbe.successThreshold | default 1 }}
+          failureThreshold: {{ .Values.jumper.readinessProbe.failureThreshold | default 3 }}
+        startupProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: jumper
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.jumper.startupProbe.initialDelaySeconds | default 15 }}
+          timeoutSeconds: {{ .Values.jumper.startupProbe.timeoutSeconds | default 1 }}
+          periodSeconds: {{ .Values.jumper.startupProbe.periodSeconds | default 5 }}
+          successThreshold: 1
+          failureThreshold: {{ .Values.jumper.startupProbe.failureThreshold | default 40 }}
+{{- end }}
+{{- if eq .Values.legacyJumper.enabled true }}
+      - name: legacy-jumper
+        image: {{ include "kong.legacyJumper.image" $ }}
+        imagePullPolicy: {{ .Values.legacyJumper.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jumper.containerSecurityContext") | default "{}" | nindent 10 }}
+        resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "65"]
+        ports:
+        - containerPort: {{ .Values.legacyJumper.port | default 8082 }} 
+          name: legacy-jumper
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.jumper.volumeMounts" $ | indent 8 }}
+        env:
+        - name: JUMPER_PORT
+          value: {{ .Values.legacyJumper.port | default 8082 | quote }}
+        {{- include "kong.jumper.env" $ | indent 8 }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: legacy-jumper
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.legacyJumper.startup.livenessProbe.initialDelay | default 25 }}
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: legacy-jumper
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.legacyJumper.startup.readinessProbe.initialDelay | default 25 }}
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 6
+{{- end }}
+{{- if eq .Values.issuerService.enabled true }}
+      - name: issuer-service
+        image: {{ include "kong.issuerService.image" $ }}
+        imagePullPolicy: {{ .Values.issuerService.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.issuerService.containerSecurityContext") | default "{}" | nindent 10 }}
+        resources: {{ .Values.issuerService.resources | toYaml | nindent 10 }}
+        ports:
+        - containerPort: {{ .Values.issuerService.port | default 8081 }} 
+          name: issuer-service
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.issuerService.volumeMounts" $ | indent 8 }}
+        env:
+        {{- include "kong.issuerService.env" $ | indent 8 }}
+{{- end }}
+{{- if eq .Values.circuitbreaker.enabled true }}
+      - name: circuitbreaker
+        image: {{ include "kong.circuitbreaker.image" $ }}
+        imagePullPolicy: {{ .Values.circuitbreaker.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.circuitbreaker.containerSecurityContext") | default "{}" | nindent 10 }}
+        resources: {{ .Values.circuitbreaker.resources | toYaml | nindent 10 }}
+        ports:
+        - name: circuitbreaker
+          containerPort: {{ .Values.circuitbreaker.port | default 8084 }} 
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.circuitbreaker.volumeMounts" $ | indent 8 }}
+        env:
+        {{- include "kong.circuitbreaker.env" $ | indent 8 }}
+{{- end }}
+      - name: kong
+        image: {{ include "kong.image" $ }}
+        imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.containerSecurityContext") | default "{}" | nindent 10 }}
+        env:
+        {{- include "kong.nginx.directives" $ | indent 8 }}
+        {{- include "kong.customPlugins.env" $ | indent 8 }}
+        {{- include "kong.env" $ | indent 8 }}
+        command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong start" ]
+        resources: {{ .Values.resources | toYaml | nindent 10 }}
+        ports:
+{{- if .Values.proxy.tls.enabled }}
+        - name: proxy-ssl
+          containerPort: 8443
+          protocol: TCP
+{{- else }}
+        - name: proxy
+          containerPort: 8000
+          protocol: TCP
+{{- end -}}
+{{- if .Values.plugins.prometheus.enabled }}
+        - name: metrics
+          containerPort: {{ .Values.plugins.prometheus.port | default 9542 }}
+          protocol: TCP
+{{- end -}}
+{{- if .Values.adminApi.enabled -}}
+{{- if .Values.adminApi.tls.enabled }}
+        - name: admin-ssl
+          containerPort: 8444
+          protocol: TCP
+{{- else }}
+        - name: admin
+          containerPort: 8001
+          protocol: TCP
+{{- end -}}
+{{- end }}
+        - name: status
+          containerPort: 8100
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: status
+            scheme: HTTP
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 10 }}
+          successThreshold: 1
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold | default 3 }}
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: status
+            scheme: HTTP
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds | default 2 }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 10 }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold | default 1 }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold | default 3 }}
+        startupProbe:
+          httpGet:
+            path: /status
+            port: status
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds | default 5 }}
+          timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds | default 1 }}
+          periodSeconds: {{ .Values.startupProbe.periodSeconds | default 5 }}
+          successThreshold: 1
+          failureThreshold: {{ .Values.startupProbe.failureThreshold | default 40 }}
+        terminationMessagePath: /dev/termination-log
+        volumeMounts:
+        {{- include "kong.volumeMounts" $ | indent 8 }}
+      volumes:
+      {{- include "kong.volumes" $ | indent 6 }}
+      {{- include "kong.jumper.volumes" $ | indent 6 }}
+      {{- include "kong.issuerService.volumes" $ | indent 6 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 80

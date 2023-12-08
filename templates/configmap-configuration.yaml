@@ -149,27 +149,6 @@ data:
       }'
     {{- end -}}
     {{- end -}}
-    {{- if eq .Values.plugins.cequence.enabled true }}
-    echo ""
-    echo $CEQUENCE_CLIENT_SECRET
-    echo "10) Configure cequence-ai-unified plugin"
-    curl --request PUT \
-      --url {{ $apiUrl }}/plugins/{{ .Values.plugins.cequence.pluginId }} \
-      --header 'Content-Type: application/json' \
-      -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
-      --data \
-      '{
-        "enabled": true,
-        "name": "cequence-ai-unified",
-        "config": {
-          "auth_domain": "{{ .Values.plugins.cequence.authDomain | default "auth.telekom.1.cequence.cloud" }}",
-          "edge_domain": "{{ .Values.plugins.cequence.edgeDomain | default "edge.telekom.1.cequence.cloud" }}",
-          "client_id": "{{ .Values.plugins.cequence.clientId | default "kong-edge-client" }}",
-          "realm": "{{ .Values.plugins.cequence.realm | default "cequence" }}",
-          "client_secret": "'"$CEQUENCE_CLIENT_SECRET"'"
-        }
-      }'
-      {{- end -}}
     {{- end -}}
 
 {{- end -}}

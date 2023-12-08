@@ -11,6 +11,9 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]]
+## 5.4.10
+- removed cequence auto configuration from configmap
+
 ## 5.4.9
 - remove jsonWebKey, privateKey, publicKey references
 

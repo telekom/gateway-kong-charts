@@ -10,13 +10,8 @@ include:
     file: "/pipelines/opensource-pipeline.yaml"
     ref: main
     rules:
-      - if: $CI_PROJECT_NAME == "stargate-kong-charts"
+      - if: $IS_OPENSOURCE == "true"
 
 .setup_job_basics: &setup_job_basics
   tags:
   - otc_run_sysbox_m
-
-variables:
-  GITHUB_PROJECT_PATH: "telekom/stargate-kong-charts"
-  GITLAB_PROJECT_PATH: "dhei/teams/io/products/stargate/stargate-chart"
-  GITLAB_SOURCE_BRANCH: main

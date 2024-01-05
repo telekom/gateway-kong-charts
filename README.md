@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
 SPDX-License-Identifier: CC0-1.0    
 -->
 
-# StarGate Helm Chart
+# Gateway Helm Chart
 
 ## Code of Conduct
 
@@ -22,7 +22,7 @@ Each file contains copyright and license information, and license texts can be f
 
 ### Database
 
-StarGate requires a PostgreSQL database that will be preconfigured by StarGate's init container.
+This Gateway requires a PostgreSQL database that will be preconfigured by the Gateway's init container.
 
 ## Configuration
 
@@ -44,7 +44,7 @@ If you want to add routes, services, etc. you can set specific curl command to d
 
 ### External access
 
-StarGate can be accessed via created Ingress/Route. See the Parameters section for details.
+The Gateway can be accessed via created Ingress/Route. See the Parameters section for details.
 By default, URLs will have the format `<Release.Name>[-<Suffix>]-<.Release.Namespace>.<.Values.global.domain>`.
 Setting dedicated hostnames for an ingress will overwrite the created URL. The value set in `hostname` needs to be fully qualified, as `.Values.global.domain` will not be added automatically!
 
@@ -59,7 +59,7 @@ By default, we protect the Admin API via a dedicated service and route together 
 
 ### SSL Verification
 
-If you enable SSL verification StarGate will try to verify all traffic against a bundle of trusted CA certificates which needs to be specified explicitely. 
+If you enable SSL verification the Gateway will try to verify all traffic against a bundle of trusted CA certificates which needs to be specified explicitely. 
 You can enable this by setting sslVerify to true in the ``values.yaml``.  If you do so, you must provide your own truststore by setting the ``trustedCaCertificates`` field with the content of your CA certificates in PEM format otherwise Kong won't start. 
 
 Example *values.yaml*:
@@ -104,7 +104,7 @@ There the chart provides specialised jobs for each of those steps.
 Bootstrapping is required when Kong starts for the first time and needs to setup its database. This task is handled by the job `job-kong-bootstrap.yml`.
 It will be run if "`migrations: bootstrap`" is set in the `values.yaml`. This can be uncommented if no further execution is wished, but this is also prohibited by keeping the job itself.
 Running the job again will do no harm in any way, as the executed bootstrap recognises the database as already initialised.
-If you deploy a new instance of StarGate, make sure migrations is set to `bootstrap`.
+If you deploy a new instance of this Gateway, make sure migrations is set to `bootstrap`.
 
 ### Upgrade
 
@@ -175,7 +175,7 @@ You can create the htpasswd for admin user with Apache htpasswd tool.
 
 ## Advanced Features
 
-During the operation of Stargate we discovered some issues that need some more advanced Kong or Kubernetes settings.
+During the operation of the Gateway we discovered some issues that need some more advanced Kong or Kubernetes settings.
 The following paragraph explains which helm-chart settings are responsible, how to use them and what effects they have.
 
 ### Autoscaling
@@ -185,7 +185,7 @@ In some environments, especially in AWS "prod", we use the autoscaler to update 
 The autoscaling ia documented [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
 (Since chart version `5.4.0` we use kubernetes API `autoscaling/v2`)
  
-Following helm-chart variables controls the autoscaler properties for Stargate:
+Following helm-chart variables controls the autoscaler properties for the Gateway:
 
 | Helm-Chart variable                    | Kubernetes property (HorizontalPodAutoscaler)     | default value | documentation link |
 |----------------------------------------|---------------------------------------------------|---------------|--------------------|
@@ -223,8 +223,8 @@ The same approach can be used to extend the helm-chart for other platforms.
 
 ### readinessProbe & livenessProbe
 
-Stargate is fully operational only when both components Kong and Jumper are operational. This is especially important when deploying as "Rolling Update" in customer environments.
-For this reason, each container deployed in stargate pod has its own settings for `readinessProbe`, `livenessProbe` and configurable initial delays.
+This Gateway is fully operational only when both components Kong and Jumper are operational. This is especially important when deploying as "Rolling Update" in customer environments.
+For this reason, each container deployed in a stargate pod has its own settings for `readinessProbe`, `livenessProbe` and configurable initial delays.
 
 The Probe-URLs are configured as follows:
 - `http://localhost:8100/status` as readiness probe for Kong
@@ -252,7 +252,7 @@ The details for readiness and liveness probes cen be tuned by following values:
 
 ### Latency in Kong (chart 5.2.2)
 
-With the default setting, Kong has the following problem: while Rover is doing larger updates via the Admin-API (keyword "Reconciller"),unacceptable latencies arise in Stargate runtime.
+With the default setting, Kong has the following problem: while Rover is doing larger updates via the Admin-API (keyword "Reconciller"),unacceptable latencies arise in the Gateway runtime.
 
 The problem is similar to the following already reported but still open [issue #7543](https://github.com/Kong/kong/issues/7543) in Github 
 
@@ -343,7 +343,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | `jwtKeycloak.enabled`                               | Activate or deactivate the jwt-keycloak plugin                                                                                            | `true`                                |
 | `jwtKeycloak.setupJob`                              | Set required values for the provieded configuration. Can be ignored for costum config                                                     |                                       |
 | `jwtKeycloak.setupJob.pluginId`                     | If you want to alter the already configured plugin, set the pluginId                                                                      | `24f1d5a5-4d31-4abc-b539-bed6d3cd7f0a`|
-| `jwtKeycloak.setupJob.allowedIss`                   | Set the Iris URL you want StarGate to use for Admin API athentication                                                                     | `https://changeme/auth/realms/default`|
+| `jwtKeycloak.setupJob.allowedIss`                   | Set the Iris URL you want the Gateway to use for Admin API athentication                                                                     | `https://changeme/auth/realms/default`|
 | `jumper`                                            | Configure the Jumper (by Hyperion)                                                                                                        | `1.5.5`                               |
 | `issuerService`                                     | Confgiure the Issuer-Service (by Hyperion)                                                                                                | `1.0.0`                               |
 | `postgresql.image`                                  | Specifiy the PostgreSQL image                                                                                                             | `postgres-12.3-debian`                |
@@ -353,7 +353,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | `externalDatabase.ssl`                              | Use ssl for connection                                                                                                                    | `false`                               |
 | `externalDatabase.sslVerify`                        | Use the provided certificate                                                                                                              | `false`                               |
 | `externalDatabase.luaSslTrustedCertificate`         | Provide certificate                                                                                                                       | `nil`                                 |
-| `replicas`                                          | Set the number of Stargate replicas                                                                                                       | `1`                                   |
+| `replicas`                                          | Set the number of Gateway replicas                                                                                                       | `1`                                   |
 | `autoscaling.enabled`                               | Enables Pod Autoscaling with Target CPU usage                                                                                             | `false`                               |
 | `autoscaling.minReplicas`                           | Minimum number of replicas if autoscaling is enabled                                                                                      | `$replicas`                           |
 | `autoscaling.maxReplicas`                           | Maximum number of replicas if autoscaling is enabled                                                                                      | `10`                                  |
@@ -362,7 +362,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 
 ## Troubleshooting
 
-If StarGate deployment fails to come up, please have a look at the logs of the container.
+If the Gateway deployment fails to come up, please have a look at the logs of the container.
 
 **Log message:**
 ```

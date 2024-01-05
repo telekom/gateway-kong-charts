@@ -6,5 +6,5 @@ SPDX-License-Identifier: CC0-1.0
 
 .helmignore
 
-# Match any license file
+# Matches any license file
 *.license

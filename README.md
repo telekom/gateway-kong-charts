@@ -36,7 +36,7 @@ To add a new platform specific values.yaml, add the required values as platforNa
 
 ### Database
 
-No detailed configuration is necessary. PostgreSQL will be deployed together with StarGate. You should change the default passwords!
+No detailed configuration is necessary. PostgreSQL will be deployed together with the Gateway. You should change the default passwords!
 
 ### Routes, Services, etc. via job
 
@@ -224,7 +224,7 @@ The same approach can be used to extend the helm-chart for other platforms.
 ### readinessProbe & livenessProbe
 
 This Gateway is fully operational only when both components Kong and Jumper are operational. This is especially important when deploying as "Rolling Update" in customer environments.
-For this reason, each container deployed in a stargate pod has its own settings for `readinessProbe`, `livenessProbe` and configurable initial delays.
+For this reason, each container deployed in a gateway pod has its own settings for `readinessProbe`, `livenessProbe` and configurable initial delays.
 
 The Probe-URLs are configured as follows:
 - `http://localhost:8100/status` as readiness probe for Kong
@@ -312,14 +312,14 @@ This is a short overlook about important parameters in the `values.yaml`.
 | `proxy.ingress.annotations`                         | Merges specific into global ingress annotations                                                                                           | `ssl-passthrough`                     |
 | `proxy.access_log`                                  | Set the log target for access log                                                                                                         | `/dev/stdout`                         |
 | `proxy.ingress.annotations`                         | Set the log target for error log                                                                                                          | `/dev/stderr`                         |
-| `configuration`                                     | Set a script to run after deployment for configuration of StarGate                                                                        | `default admin-api conf`              |
+| `configuration`                                     | Set a script to run after deployment for configuration of the Gateway                                                                        | `default admin-api conf`              |
 | `templateChangeTriggers`                            | List of (template) yaml files fo which a checksum annotation will be created                                                              | `[]`                                  |
-| `sslVerify`                                         | Controls whether to check forward proxy traffic against CA certificates                                                                   | `false`                               |
+| `sslVerify`                                         | Controls whether to check forward proxy traffic against CA certificates                                                                   | `true`                               |
 | `sslVerifyDepth`                                    | SSL Verification depth                                                                                                                    | `1`                                   |
 | `setupJobs.backoffLimit`                            | How often should be retried to run the job successfully                                                                                   | `20`                                  |
 | `setupJobs.activeDeadlineSeconds`                   | How long should be retried to run the job successfully                                                                                    | `300`                                 |
 | `zipkin.enabled`                                    | Enable tracing via ENI-Zipkin-Plugin                                                                                                      | `false`                               |
-| `zipkin.collectorUrl`                               | URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory                                                                    | `http://guardians-drax-collector.skoll:9411/api/v2/spans`|
+| `zipkin.collectorUrl`                               | URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory                                                                    | `https://collector-zipkin-http-drax-guardians.live.dhei.telekom.de:443/api/v2/spans`|
 | `zipkin.sampleRatio`                                | How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests.                | `1`                                   |
 | `zipkin.includeCredential`                          | Should the credential of the currently authenticated consumer be included in metadata sent to the Zipkin server?                          | `true`                                |
 | `zipkin.defaultServiceName`                         | Name of the service shown in e.g. Jaeger                                                                                                  | `stargate`                            |

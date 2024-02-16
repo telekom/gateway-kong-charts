@@ -11,6 +11,9 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]]
+## 5.4.11
+- ip-restriction support
+
 ## 5.4.10
 - removed cequence auto configuration from configmap
 

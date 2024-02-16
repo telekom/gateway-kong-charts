@@ -507,6 +507,14 @@ false
   value: 'false'
 - name: KONG_NGINX_HTTP_CLIENT_BODY_BUFFER_SIZE
   value: '{{ .Values.httpClientBodyBufferSize | default "4m" }}'
+{{- if .Values.trustedIps }}
+- name: KONG_TRUSTED_IPS
+  value: '{{ .Values.trustedIps }}'
+- name: KONG_REAL_IP_HEADER
+  value: '{{ .Values.realIpHeader | default "x-original-forwarded-for" }}'
+- name: KONG_REAL_IP_RECURSIVE
+  value: '{{ .Values.realIpRecursive | default "OFF" }}'
+{{- end }}
 {{- template "kong.env.prefix" . }}
 - name: KONG_DATABASE
   value: postgres

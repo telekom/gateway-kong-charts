@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-request-rate-limiting-setup
+  name: {{ .Release.Name }}-request-size-limiting-setup
   labels: {{ include "kong.labels" $ | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
@@ -17,6 +17,7 @@ spec:
       containers:
       - name: request-size-limiting-setup
         image: {{ include "job.image" $ }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jobs.containerSecurityContext") | default "{}" | nindent 10 }}
         env:
         - name: X_TARDIS_GATEWAY_ADMIN
@@ -28,7 +29,7 @@ spec:
           - /bin/bash
           - -c
           - |- 
-            echo "Enabling Kong request-rate-limiting plugin via PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins"
+            echo "Enabling Kong request-size-limiting plugin via PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins"
 
             ADMIN_API_HTTP_RETURN_CODE=`curl -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
             if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then

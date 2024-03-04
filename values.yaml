@@ -351,14 +351,14 @@ jumper:
     #name: jumper-sse
     #tag: 3.6.1
   # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper-sse:3.9.0
+  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper-sse:3.10.0
   #imagePullPolicy: IfNotPresent
   issuerUrl: https://localhost:443
   #tracingUrl: http://guardians-drax-collector.skoll:9411
   #defaultServiceName: "stargate"
   stargateUrl: https://stargate-integration.test.dhei.telekom.de
   publishEventUrl: http://producer.integration:8080/v1/events
-  jvmOpts: "-XX:MaxRAMPercentage=80.0 -XshowSettings:vm"
+  jvmOpts: "-XX:MaxRAMPercentage=75.0 -XshowSettings:vm"
   #maxHttpHeaderSize: 16KB
   #fpaProxyHost
   #fpaProxyPort
@@ -421,11 +421,26 @@ issuerService:
   publicJson: changeme
   privateJson: changeme
 
+  livenessProbe: {}
+    #timeoutSeconds: 5
+    #periodSeconds: 10
+  #failureThreshold: 6
+  readinessProbe: {}
+    #timeoutSeconds: 1
+    #periodSeconds: 10
+    #successThreshold: 2
+  #failureThreshold: 3
+  startupProbe: {}
+    #initialDelaySeconds: 10
+    #timeoutSeconds: 1
+    #periodSeconds: 5
+  #failureThreshold: 40
+
   #containerSecurityContext: {}
 
   resources:
     limits:
-      cpu: 150m
+      cpu: 500m
       memory: 500Mi
     requests:
       cpu: 50m

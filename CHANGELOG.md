@@ -11,6 +11,12 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]]
+## 5.4.12
+- jumper 3.10.0
+- issuer-service 1.11.1
+- added probes for issuer-service
+- increase default cpu limit for issuer-service
+
 ## 5.4.11
 - ip-restriction support
 

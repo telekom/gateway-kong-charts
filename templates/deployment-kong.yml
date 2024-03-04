@@ -154,6 +154,35 @@ spec:
           {{- include "kong.issuerService.volumeMounts" $ | indent 8 }}
         env:
         {{- include "kong.issuerService.env" $ | indent 8 }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: issuer-service
+            scheme: HTTP
+          timeoutSeconds: {{ .Values.issuerService.livenessProbe.timeoutSeconds | default 5 }}
+          periodSeconds: {{ .Values.issuerService.livenessProbe.periodSeconds | default 10 }}
+          successThreshold: 1
+          failureThreshold: {{ .Values.issuerService.livenessProbe.failureThreshold | default 6 }}
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: issuer-service
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: {{ .Values.issuerService.readinessProbe.timeoutSeconds | default 1 }}
+          periodSeconds: {{ .Values.issuerService.readinessProbe.periodSeconds | default 10 }}
+          successThreshold: {{ .Values.issuerService.readinessProbe.successThreshold | default 1 }}
+          failureThreshold: {{ .Values.issuerService.readinessProbe.failureThreshold | default 3 }}
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: issuer-service
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.issuerService.startupProbe.initialDelaySeconds | default 10 }}
+          timeoutSeconds: {{ .Values.issuerService.startupProbe.timeoutSeconds | default 1 }}
+          periodSeconds: {{ .Values.issuerService.startupProbe.periodSeconds | default 5 }}
+          successThreshold: 1
+          failureThreshold: {{ .Values.issuerService.startupProbe.failureThreshold | default 40 }}
 {{- end }}
 {{- if eq .Values.circuitbreaker.enabled true }}
       - name: circuitbreaker

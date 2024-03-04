@@ -62,7 +62,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.jumper.image" -}}
 {{- $imageName := "jumper-sse" -}}
-{{- $imageTag := "3.9.0" -}}
+{{- $imageTag := "3.10.0" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/hyperion" -}}
 {{- if .Values.jumper.image -}}
@@ -110,7 +110,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.issuerService.image" -}}
 {{- $imageName := "issuer-service" -}}
-{{- $imageTag := "1.10.0" -}}
+{{- $imageTag := "1.11.1" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/hyperion" -}}
 {{- if .Values.issuerService.image -}}

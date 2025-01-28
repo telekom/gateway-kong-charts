@@ -37,16 +37,27 @@ spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       affinity:
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: app.kubernetes.io/instance
-                  operator: In
-                  values:
+{{- if and (eq .Values.global.podAntiAffinity.required true) (ne .Values.global.platform "caas") }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
                   - {{ .Release.Name }}-kong
-              topologyKey: {{ include "platformSpecificValue" (list $ . ".Values.topologyKey") | default "kubernetes.io/hostname" }}
+            topologyKey: kubernetes.io/hostname
+{{- else }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/instance
+                      operator: In
+                      values:
+                        - {{ .Release.Name }}-kong
+                topologyKey: {{ include "platformSpecificValue" (list $ . ".Values.topologyKey") | default "kubernetes.io/hostname" }}
+{{- end }}
       securityContext: {{ include "platformSpecificValue" (list $ . ".Values.podSecurityContext") | default "{}" | nindent 8 }}
       containers:
 {{- if eq .Values.jumper.enabled true }}
@@ -58,9 +69,9 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command: ["sleep", "65"]
+              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
         ports:
-        - containerPort: {{ .Values.jumper.port | default 8080 }} 
+        - containerPort: {{ .Values.jumper.port | default 8080 }}
           name: jumper
           protocol: TCP
         volumeMounts:
@@ -95,9 +106,9 @@ spec:
             scheme: HTTP
           initialDelaySeconds: {{ .Values.jumper.startupProbe.initialDelaySeconds | default 15 }}
           timeoutSeconds: {{ .Values.jumper.startupProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.jumper.startupProbe.periodSeconds | default 5 }}
+          periodSeconds: {{ .Values.jumper.startupProbe.periodSeconds | default 1 }}
           successThreshold: 1
-          failureThreshold: {{ .Values.jumper.startupProbe.failureThreshold | default 40 }}
+          failureThreshold: {{ .Values.jumper.startupProbe.failureThreshold | default 285 }}
 {{- end }}
 {{- if eq .Values.legacyJumper.enabled true }}
       - name: legacy-jumper
@@ -108,7 +119,7 @@ spec:
         lifecycle:
           preStop:
             exec:
-              command: ["sleep", "65"]
+              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
         ports:
         - containerPort: {{ .Values.legacyJumper.port | default 8082 }} 
           name: legacy-jumper
@@ -146,6 +157,10 @@ spec:
         imagePullPolicy: {{ .Values.issuerService.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ include "platformSpecificValue" (list $ . ".Values.issuerService.containerSecurityContext") | default "{}" | nindent 10 }}
         resources: {{ .Values.issuerService.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
         ports:
         - containerPort: {{ .Values.issuerService.port | default 8081 }} 
           name: issuer-service
@@ -178,11 +193,11 @@ spec:
             path: /actuator/health
             port: issuer-service
             scheme: HTTP
-          initialDelaySeconds: {{ .Values.issuerService.startupProbe.initialDelaySeconds | default 10 }}
+          initialDelaySeconds: {{ .Values.issuerService.startupProbe.initialDelaySeconds | default 15 }}
           timeoutSeconds: {{ .Values.issuerService.startupProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.issuerService.startupProbe.periodSeconds | default 5 }}
+          periodSeconds: {{ .Values.issuerService.startupProbe.periodSeconds | default 1 }}
           successThreshold: 1
-          failureThreshold: {{ .Values.issuerService.startupProbe.failureThreshold | default 40 }}
+          failureThreshold: {{ .Values.issuerService.startupProbe.failureThreshold | default 285 }}
 {{- end }}
 {{- if eq .Values.circuitbreaker.enabled true }}
       - name: circuitbreaker
@@ -209,6 +224,10 @@ spec:
         {{- include "kong.env" $ | indent 8 }}
         command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong start" ]
         resources: {{ .Values.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep {{ .Values.global.preStopSleepBase }}; kong quit --timeout 60"]
         ports:
 {{- if .Values.proxy.tls.enabled }}
         - name: proxy-ssl
@@ -244,9 +263,9 @@ spec:
             port: status
             scheme: HTTP
           timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
-          periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 10 }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 20 }}
           successThreshold: 1
-          failureThreshold: {{ .Values.livenessProbe.failureThreshold | default 3 }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold | default 4 }}
         readinessProbe:
           httpGet:
             path: /status
@@ -263,9 +282,9 @@ spec:
             scheme: HTTP
           initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds | default 5 }}
           timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.startupProbe.periodSeconds | default 5 }}
+          periodSeconds: {{ .Values.startupProbe.periodSeconds | default 1 }}
           successThreshold: 1
-          failureThreshold: {{ .Values.startupProbe.failureThreshold | default 40 }}
+          failureThreshold: {{ .Values.startupProbe.failureThreshold | default 295 }}
         terminationMessagePath: /dev/termination-log
         volumeMounts:
         {{- include "kong.volumeMounts" $ | indent 8 }}
@@ -275,4 +294,4 @@ spec:
       {{- include "kong.issuerService.volumes" $ | indent 6 }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      terminationGracePeriodSeconds: 80
+      terminationGracePeriodSeconds: {{ add .Values.global.preStopSleepBase 60 }}

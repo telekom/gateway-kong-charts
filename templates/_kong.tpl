@@ -4,7 +4,7 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 app.kubernetes.io/name: kong
 {{ include "kong.selector" . }}
 app.kubernetes.io/component: api-gateway
-app.kubernetes.io/part-of: tif-runtime
+app.kubernetes.io/part-of: tardis-runtime
 {{ .Values.global.labels | toYaml }}
 {{- end -}}
 
@@ -14,7 +14,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.image" -}}
 {{- $imageName := "eni-kong" -}}
-{{- $imageTag := "2.8.3.10" -}}
+{{- $imageTag := "2.8.3.12" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/io" -}}
 {{- if .Values.image -}}
@@ -62,7 +62,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.jumper.image" -}}
 {{- $imageName := "jumper-sse" -}}
-{{- $imageTag := "3.10.0" -}}
+{{- $imageTag := "3.18.0" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/hyperion" -}}
 {{- if .Values.jumper.image -}}
@@ -479,7 +479,7 @@ false
 - name: KONG_PG_SCHEMA
   value: '{{ .Values.global.database.schema }}'
 {{- if eq .Values.global.database.location "external" }}
-{{- if .Values.externalDatabase.ssl }}
+{{- if ne .Values.externalDatabase.ssl false }}
 - name: KONG_PG_SSL
   value: 'on'
 {{- if .Values.externalDatabase.sslVerify }}
@@ -538,7 +538,7 @@ false
 - name: KONG_PROXY_ERROR_LOG
   value: {{ .Values.proxy.errorLog | default "/dev/stderr" | quote }}
 {{- if eq .Values.global.database.location "external" }}
-{{- if .Values.externalDatabase.ssl }}
+{{- if ne .Values.externalDatabase.ssl false }}
 - name: KONG_PG_SSL
   value: 'on'
 {{- if .Values.externalDatabase.sslVerify }}
@@ -604,10 +604,39 @@ false
 {{- define "kong.jumper.env" }}
 - name: JUMPER_ISSUER_URL
   value: {{ .Values.jumper.issuerUrl }}
+- name: JUMPER_ZONE_NAME
+  value: {{ .Values.global.zone }}
 - name: TRACING_URL
   value: {{ include "kong.jumper.collectorUrl" . }}
 - name: STARGATE_URL
   value: {{ .Values.jumper.stargateUrl }}
+{{- if .Values.jumper.zoneHealth.enabled }}
+- name: ZONE_HEALTH_DATABASE_CONNECTTIMEOUT
+  value: {{ .Values.jumper.zoneHealth.databaseConnectionTimeout | quote }}
+- name: ZONE_HEALTH_DATABASE_TIMEOUT
+  value: {{ .Values.jumper.zoneHealth.databaseTimeout | quote }}
+- name: ZONE_HEALTH_DATABASE_HOST
+  value: {{ .Values.jumper.zoneHealth.databaseHost }}
+- name: ZONE_HEALTH_DATABASE_PORT
+  value: {{ .Values.jumper.zoneHealth.databasePort | quote }}
+- name: ZONE_HEALTH_DATABASE_INDEX
+  value: {{ .Values.jumper.zoneHealth.databaseIndex | quote }}
+{{- if and .Values.jumper.zoneHealth.databaseSecretName .Values.jumper.zoneHealth.databaseSecretKey }}
+- name: ZONE_HEALTH_DATABASE_PASSWORD
+  valueFrom:
+   secretKeyRef:
+    name: {{ .Values.jumper.zoneHealth.databaseSecretName }}
+    key: {{ .Values.jumper.zoneHealth.databaseSecretKey }}
+{{- end}}
+- name: ZONE_HEALTH_KEY_CHANNEL
+  value: {{ .Values.jumper.zoneHealth.keyChannel }}
+- name: ZONE_HEALTH_REQUEST_RATE
+  value: {{ .Values.jumper.zoneHealth.requestRate | quote }}
+- name: ZONE_HEALTH_DEFAULT
+  value: {{ .Values.jumper.zoneHealth.defaultHealth | quote }}
+- name: ZONE_HEALTH_ENABLED
+  value: {{ .Values.jumper.zoneHealth.enabled | quote }}
+{{- end}}
 - name: JVM_OPTS
   value: {{ .Values.jumper.jvmOpts }}
 - name: PUBLISH_EVENT_URL
@@ -641,7 +670,7 @@ false
 {{ $enabledPlugins = printf "%s,%s" $enabledPlugins "cequence-ai-unified" }}
 {{- end }}
 - name: KONG_PLUGINS
-  value: bundled,jwt-keycloak{{ $enabledPlugins }}
+  value: bundled,jwt-keycloak,rate-limiting-merged{{ $enabledPlugins }}
 - name: KONG_LUA_PACKAGE_PATH
   value: "/opt/?.lua;;"
 {{- end -}}

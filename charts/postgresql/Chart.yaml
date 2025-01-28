@@ -12,7 +12,7 @@ keywords:
 - db
 - sql
 - postgresql
-- tif
+- tardis
 maintainers:
 - name: Team Hyperion
   email: DTIT_ENI_Hub_Team_Hyperion@telekom.de

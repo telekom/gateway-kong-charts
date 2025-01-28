@@ -68,6 +68,7 @@ spec:
   - tardis.telekom.de/namespace
   - tardis.telekom.de/team
   - tardis.telekom.de/environment
+  - tardis.telekom.de/zone
   - app
   - type
   - routeId

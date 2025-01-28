@@ -4,7 +4,7 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 app.kubernetes.io/name: postgresql
 {{ include "postgresql.selector" . }}
 app.kubernetes.io/component: database
-app.kubernetes.io/part-of: tif-runtime
+app.kubernetes.io/part-of: tardis-runtime
 {{ .Values.global.labels | toYaml }}
 {{- end -}}
 

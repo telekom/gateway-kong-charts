@@ -7,7 +7,7 @@ metadata:
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
-    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-weight": "-1"
 spec:
   backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}

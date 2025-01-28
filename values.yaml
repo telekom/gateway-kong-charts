@@ -12,10 +12,10 @@ global:
   #storageClassName: gp2
   domain: ""
   #environment: ""
-  #zone: ""
+  zone: "zoneName"
   labels:
     # fluentd label
-    tif.telekom.de/group: tif
+    tardis.telekom.de/group: tardis
   product: "stargate"
   ingress:
     #tlsSecret: ""
@@ -71,7 +71,12 @@ global:
     defaultServiceName: "stargate"
     sampleRatio: 1
 
+  podAntiAffinity:
+    required: false
+
   failOnUnsetValues: true
+
+  preStopSleepBase: 30
 
 # You can list files (in /templates) here that should cause a re-deployment of your application
 # when their contents change
@@ -351,7 +356,7 @@ jumper:
     #name: jumper-sse
     #tag: 3.6.1
   # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper-sse:3.10.0
+  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper-sse:3.x.0
   #imagePullPolicy: IfNotPresent
   issuerUrl: https://localhost:443
   #tracingUrl: http://guardians-drax-collector.skoll:9411
@@ -380,6 +385,19 @@ jumper:
   #port: 8080
 
   #containerSecurityContext: {}
+  zoneHealth:
+    defaultHealth: true
+    databaseHost: localhost
+    databaseConnectionTimeout: 500
+    databaseTimeout: 500
+    databasePort: 6379
+    databaseIndex: 2
+    keyChannel: stargate-zone-status
+    requestRate: 10000
+    databaseSecretName: redis
+    databaseSecretKey: redis-password
+    enabled: false
+
 
   resources:
     limits:
@@ -490,7 +508,7 @@ postgresql:
 externalDatabase: 
   # Set host if you use an external database or service name is not sufficient
   #host: 'some-external-postgresql-database.example.com'
-  ssl: false
+  ssl: true
   sslVerify: false
   #luaSslTrustedCertificate: |
   #  -----BEGIN CERTIFICATE-----

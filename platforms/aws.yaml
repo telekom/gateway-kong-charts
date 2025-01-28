@@ -3,3 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 topologyKey: kubernetes.io/hostname
+
+global:
+  ingress:
+    ingressClassName: triton-ingress

@@ -10,7 +10,60 @@ This document show changes done to the chart.
 Please also seek advice from the README regarding updates.
 
 
-[[_TOC_]]
+[[_TOC_]
+## 5.5.1
+- Change from Ingress Class Annotation to ingressClassName field (aws only)
+
+## 5.5.0
+- Increased RequestSizeLimit to 10MB
+
+## 5.4.21
+- jumper 3.18.0
+  - header removal feature
+  - filter query params list 
+
+## 5.4.20
+- jumper 3.17.0
+  - external idp 
+- kong 2.8.3.12
+  - rate-limiting-merged plugin 
+
+## 5.4.19
+- jumper 3.16.0
+  - loadbalancing support
+  - pass spectre info as event headers
+- kong 2.8.3.11
+  - rfc 6750 support within jwt-keycloak + acl plugins
+
+## 5.4.18
+- jumper 3.15.2
+- improved responses from external IDPs in jumper in case of errors
+- added logic to handle default-key in jc-oauth-config
+
+## 5.4.17
+- kong liveness probe to 1min
+- configurable pre stop sleep with default 30s
+- adjust jumper to 3.14.4
+
+## 5.4.16
+- pg ssl enabled by default for external
+- jumper 3.14.3
+
+## 5.4.15
+- jumper 3.13.0
+- add envs for redis configuration for fail over feature
+
+## 5.4.14
+- jumper 3.12.0
+- pod antiAffinity preferred by default, optionally required
+- labels update + added zone
+- startup probe interval 1s
+
+## 5.4.13
+- jumper 3.11.0
+- graceful shutdown with smaller timeouts for kong, jumper. issuer-service
+- pod antiAffinity to required
+
 ## 5.4.12
 - jumper 3.10.0
 - issuer-service 1.11.1

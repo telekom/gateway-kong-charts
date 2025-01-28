@@ -84,3 +84,7 @@ postgresql:
     capabilities:
       drop:
       - ALL
+
+global:
+  ingress:
+    ingressClassName: nginx

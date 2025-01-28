@@ -48,7 +48,7 @@ spec:
               "name": "request-size-limiting",
               "tags" : ["tardis","request-size-limiting"],
               "config" : {
-                "allowed_payload_size": {{ .Values.plugins.requestSizeLimiting.allowedPayloadSize | default 4 }},
+                "allowed_payload_size": {{ .Values.plugins.requestSizeLimiting.allowedPayloadSize | default 10 }},
                 "size_unit": "megabytes",
                 "require_content_length": false
               }

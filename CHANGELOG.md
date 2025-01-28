@@ -11,6 +11,10 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]
+## 5.5.2
+- jumper 3.19.0
+  - adjust config to hide sig param in sleuth tracing
+
 ## 5.5.1
 - Change from Ingress Class Annotation to ingressClassName field (aws only)
 

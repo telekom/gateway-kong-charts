@@ -11,6 +11,10 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]
+## 5.5.3
+- jumper 3.19.1
+  - en/decoding for tracing as well as splitting query params manually
+  
 ## 5.5.2
 - jumper 3.19.0
   - adjust config to hide sig param in sleuth tracing

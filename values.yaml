@@ -263,7 +263,8 @@ setupJobs:
   #containerSecurityContext: {}
 
 plugins:
-  enabled: []
+  enabled:
+    - rate-limiting-merged
 
   acl:
     pluginId: bc823d55-83b5-4184-b03f-ce63cd3b75c7

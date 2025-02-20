@@ -670,7 +670,7 @@ false
 {{ $enabledPlugins = printf "%s,%s" $enabledPlugins "cequence-ai-unified" }}
 {{- end }}
 - name: KONG_PLUGINS
-  value: bundled,jwt-keycloak,rate-limiting-merged{{ $enabledPlugins }}
+  value: bundled,jwt-keycloak{{ $enabledPlugins }}
 - name: KONG_LUA_PACKAGE_PATH
   value: "/opt/?.lua;;"
 {{- end -}}

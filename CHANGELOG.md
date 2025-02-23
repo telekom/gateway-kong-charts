@@ -11,6 +11,10 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]
+## 5.5.4
+- Plugin configuration for rate-limiting-merged is no longer hardcoded
+
+
 ## 5.5.3
 - jumper 3.19.1
   - en/decoding for tracing as well as splitting query params manually

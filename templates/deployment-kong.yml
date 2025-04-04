@@ -79,6 +79,9 @@ spec:
         env:
         - name: JUMPER_PORT
           value: {{ .Values.jumper.port | default 8080 | quote }}
+          {{- with .Values.jumper.environment }}
+          {{- . | toYaml | nindent 8 }}
+          {{- end }}
         {{- include "kong.jumper.env" $ | indent 8 }}
         livenessProbe:
           httpGet:

@@ -10,7 +10,6 @@ global:
   platform: kubernetes
   #pathToSecret: "path/to/secret" 
   #storageClassName: gp2
-  domain: ""
   #environment: ""
   zone: "zoneName"
   labels:
@@ -18,7 +17,6 @@ global:
     tardis.telekom.de/group: tardis
   product: "stargate"
   ingress:
-    #tlsSecret: ""
     #ingressClassName: ""
     annotations: {}
       #external-dns.alpha.kubernetes.io/target: ""
@@ -117,12 +115,19 @@ adminApi:
 # For EE (license) this is default true, for CE (no license) this is default false
   ingress:
     enabled: true
-    #hostname: ""
-    # alternative second host name in ingress
-    #altHostname: ""
-    #tlsSecret: ""
-    #ingressClassName: ""
+    # ingressClassName: ""
     annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+      # secretName is optional as for example in aws for a loadbalancer ingress this is not needed
+      #- secretName: secretName
+      #  hosts:
+      #    - hostNameMatchingCertInSecret
+
   #accessLog: /dev/stdout
   #errorLog: /dev/stderr
 
@@ -132,19 +137,19 @@ proxy:
     enabled: false
   ingress:
     enabled: true
-    #hostname: ""
-    # alternative second host name in ingress
-    #altHostname: ""
-    #tlsSecret: ""
-    #secondHostname: ""
-    #secondTlsSecret: ""
-    #ingressClassName: ""
+    # ingressClassName: ""
     annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+      # secretName is optional as for example in aws for a loadbalancer ingress this is not needed
+      #- secretName: secretName
+      #  hosts:
+      #    - hostNameMatchingCertInSecret
 
-  legacyIngress: {}
-  #legacyIngress:
-  #  hostname: ""
-  #  tlsSecret: ""
 
   #accessLog: /dev/stdout
   #errorLog: /dev/stderr
@@ -384,6 +389,10 @@ jumper:
     #periodSeconds: 5
     #failureThreshold: 40
   #port: 8080
+
+  environment: []
+    #- name: foo
+    #  value: bar
 
   #containerSecurityContext: {}
   zoneHealth:

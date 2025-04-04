@@ -564,7 +564,9 @@ false
   value: '0.0.0.0:8443 ssl http2'
 {{- else }}
   value: '0.0.0.0:8000'
-{{- end -}}
+{{- end }}
+- name: KONG_STATUS_LISTEN
+  value: '0.0.0.0:8100'
 {{- if .Values.adminApi.enabled }}
 - name: KONG_ADMIN_LISTEN
 {{- if .Values.adminApi.tls.enabled }}
@@ -572,8 +574,6 @@ false
 {{- else }}
   value: '0.0.0.0:8001'
 {{- end }}
-- name: KONG_STATUS_LISTEN
-  value: '0.0.0.0:8100'
 - name: KONG_ADMIN_ACCESS_LOG
   value: {{ .Values.adminApi.accessLog | default "/dev/stdout" | quote }}
 - name: KONG_ADMIN_ERROR_LOG
@@ -687,28 +687,12 @@ false
 {{- print (trimPrefix "," $allowedIss) }}
 {{- end -}}
 
-{{- define "kong.adminApi.host" -}}
-{{- if not (empty .Values.adminApi.ingress.hostname) }}
-{{- .Values.adminApi.ingress.hostname -}}
-{{- else }}
-{{- printf "%s-admin-%s.%s" .Release.Name .Release.Namespace .Values.global.domain }}
-{{- end -}}
-{{- end -}}
-
 {{- define "kong.adminApi.serviceHost" -}}
 {{- printf "%s-admin.%s" .Release.Name .Release.Namespace }}
 {{- end -}}
 
 {{- define "kong.adminApi.name" -}}
 admin-api
-{{- end -}}
-
-{{- define "kong.adminApi.ingress.path" -}}
-{{- if (hasKey .Values "configuration") -}}
-/
-{{- else -}}
-/{{ include "kong.adminApi.name" . }}
-{{- end -}}
 {{- end -}}
 
 {{- define "kong.adminApi.serviceUrl" -}}
@@ -729,30 +713,6 @@ admin-api
 {{- end -}}
 {{- end -}}
 
-{{- define "kong.proxy.host" -}}
-{{- if not (empty .Values.proxy.ingress.hostname) }}
-{{- .Values.proxy.ingress.hostname -}}
-{{- else }}
-{{- printf "%s-%s.%s" .Release.Name .Release.Namespace .Values.global.domain }}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.adminApi.ingress.enabled" -}}
-{{- if and .Values.adminApi.enabled (eq (include "kong.adminApi.ingressDefault" $) "true") }}
-{{- printf "true" -}}
-{{- else -}}
-{{- printf "false" -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.adminApi.ingressDefault" -}}
-{{- if hasKey .Values.adminApi.ingress "enabled" }}
-{{- printf "%s" (toString .Values.adminApi.ingress.enabled) -}}
-{{- else -}}
-{{- printf "true" -}}
-{{- end -}}
-{{- end -}}
-
 {{- define "kong.merged.adminApi.annotations" }}
 {{- $globalAnnotations := dict "annotations" .Values.global.ingress.annotations | deepCopy -}}
 {{- $localAnnotations := dict "annotations" .Values.adminApi.ingress.annotations -}}
@@ -767,35 +727,11 @@ admin-api
 {{- $mergedAnnotations | toYaml -}}
 {{ end -}}
 
-{{- define "kong.adminApi.ingress.tlsSecret" -}}
-{{- if not (and (empty .Values.adminApi.ingress.tlsSecret) (empty .Values.global.ingress.tlsSecret)) -}}
-secretName: {{ .Values.adminApi.ingress.tlsSecret | default .Values.global.ingress.tlsSecret -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.proxy.ingress.tlsSecret" -}}
-{{- if not (and (empty .Values.proxy.ingress.tlsSecret) (empty .Values.global.ingress.tlsSecret)) -}}
-secretName: {{ .Values.proxy.ingress.tlsSecret | default .Values.global.ingress.tlsSecret -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.adminApi.ingress.ingressClassName" -}}
-{{- if or (include "platformSpecificValue" (list $ . ".Values.adminApi.ingress.ingressClassName")) (include "platformSpecificValue" (list $ . ".Values.global.ingress.ingressClassName")) -}}
-ingressClassName: {{ include "platformSpecificValue" (list $ . ".Values.adminApi.ingress.ingressClassName") | default (include "platformSpecificValue" (list $ . ".Values.global.ingress.ingressClassName")) }}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.proxy.ingress.ingressClassName" -}}
-{{- if or (include "platformSpecificValue" (list $ . ".Values.proxy.ingress.ingressClassName")) (include "platformSpecificValue" (list $ . ".Values.global.ingress.ingressClassName")) -}}
-ingressClassName: {{ include "platformSpecificValue" (list $ . ".Values.proxy.ingress.ingressClassName") | default (include "platformSpecificValue" (list $ . ".Values.global.ingress.ingressClassName")) }}
-{{- end -}}
-{{- end -}}
-
 {{- define "kong.irixBrokerRoute.spacegateHost" -}}
 {{- if .Values.irixBrokerRoute.host -}}
 {{ .Values.irixBrokerRoute.host -}}
 {{- else -}}
-{{- include "kong.proxy.host" . -}}
+{{- (first .Values.proxy.ingress.hosts).host -}}
 {{- end -}}
 {{- end -}}
 

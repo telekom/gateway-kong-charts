@@ -11,9 +11,11 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]
+## 6.0.0
+- !breaking: refactor ingress definitions and align to defaults / best practices (needs reconfiguring ingress values in existing deployments)
+
 ## 5.5.4
 - Plugin configuration for rate-limiting-merged is no longer hardcoded
-
 
 ## 5.5.3
 - jumper 3.19.1

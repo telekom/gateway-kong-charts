@@ -1,89 +1,41 @@
 {{- if .Values.proxy.ingress.enabled }}
+{{- $svcPort := .Values.proxy.tls.enabled | ternary "proxy-ssl" "proxy" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}-proxy
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels:
+    {{- include "kong.labels" $ | nindent 4 }}
 {{- include "kong.merged.proxy.annotations" $ | nindent 2 }}
 spec:
-  rules:
-  - host: {{ include "kong.proxy.host" . }}
-    http:
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Release.Name }}-proxy
-              port:
-{{- if .Values.proxy.tls.enabled }}
-                name: proxy-ssl
-{{- else }}
-                name: proxy
-{{- end }}
-{{- if not (empty .Values.proxy.ingress.altHostname) }}
-  - host: {{ .Values.proxy.ingress.altHostname }}
-    http:
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Release.Name }}-proxy
-              port:
-{{- if .Values.proxy.tls.enabled }}
-                name: proxy-ssl
-{{- else }}
-                name: proxy
-{{- end }}
-{{- end }}
-{{- if not (empty .Values.proxy.ingress.secondHostname) }}
-  - host: {{ .Values.proxy.ingress.secondHostname }}
-    http:
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Release.Name }}-proxy
-              port:
-{{- if .Values.proxy.tls.enabled }}
-                name: proxy-ssl
-{{- else }}
-                name: proxy
-{{- end }}
-{{- end }}
-{{- if and .Values.proxy.legacyIngress .Values.proxy.legacyIngress.hostname }}
-# An alternate ingress used eg for transition time during zone renaming
-# All settings except hostname and tlsSecret are the same as for proxy-ingress
-  - host: {{ .Values.proxy.legacyIngress.hostname }}
-    http:
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Release.Name }}-proxy
-              port:
-{{- if .Values.proxy.tls.enabled }}
-                name: proxy-ssl
-{{- else }}
-                name: proxy
-{{- end }}
-{{- end }}
-{{- include "kong.proxy.ingress.ingressClassName" . | nindent 2 }}
+  {{- if .Values.proxy.ingress.className }}
+  ingressClassName: {{ .Values.proxy.ingress.className }}
+  {{- end }}
+  {{- if .Values.proxy.ingress.tls }}
   tls:
-  - hosts:
-    - {{ include "kong.proxy.host" . }}
-{{- include "kong.proxy.ingress.tlsSecret" . | nindent 4 -}}
-{{- if and .Values.proxy.ingress.secondHostname .Values.proxy.ingress.secondTlsSecret }}
-  - hosts:
-    - {{ .Values.proxy.ingress.secondHostname }}
-    secretName: {{ .Values.proxy.ingress.secondTlsSecret }}
-{{- end -}}
-{{- if and .Values.proxy.legacyIngress .Values.proxy.legacyIngress.hostname .Values.proxy.legacyIngress.tlsSecret }}
-  - hosts:
-    - {{ .Values.proxy.legacyIngress.hostname }}
-    secretName: {{ .Values.proxy.legacyIngress.tlsSecret }}
-{{- end -}}
-{{- end -}}
+    {{- range .Values.proxy.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- if .secretName }}
+      secretName: {{ .secretName }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.proxy.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $.Release.Name }}-proxy
+                port:
+                  name: {{ $svcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}

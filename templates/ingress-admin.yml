@@ -1,45 +1,39 @@
-{{- if eq (include "kong.adminApi.ingress.enabled" $) "true" }}
+{{- if and .Values.adminApi.enabled .Values.adminApi.ingress.enabled }}
+{{- $svcPort := .Values.adminApi.tls.enabled | ternary "proxy-ssl" "proxy" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}-admin
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels:
+    {{- include "kong.labels" $ | nindent 4 }}
 {{- include "kong.merged.adminApi.annotations" $ | nindent 2 }}
 spec:
-  rules:
-  - host: {{ include "kong.adminApi.host" . }}
-    http:
-      paths:
-        - path: {{ include "kong.adminApi.ingress.path" . }}
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Release.Name }}-proxy
-              port:
-{{- if .Values.proxy.tls.enabled }}
-                name: proxy-ssl
-{{- else }}
-                name: proxy
-{{- end }}
-{{- if not (empty .Values.adminApi.ingress.altHostname) }}
-  - host: {{ .Values.adminApi.ingress.altHostname }}
-    http:
-      paths:
-        - path: {{ include "kong.adminApi.ingress.path" . }}
-          pathType: Prefix
-          backend:
-            service:
-              name: {{ .Release.Name }}-proxy
-              port:
-{{- if .Values.proxy.tls.enabled }}
-                name: proxy-ssl
-{{- else }}
-                name: proxy
-{{- end }}
-{{- end }}
-{{- include "kong.adminApi.ingress.ingressClassName" . | nindent 2 }}
+  {{- if .Values.adminApi.ingress.className }}
+  ingressClassName: {{ .Values.adminApi.ingress.className }}
+  {{- end }}
+  {{- if .Values.adminApi.ingress.tls }}
   tls:
-  - hosts:
-    - {{ include "kong.adminApi.host" . }}
-{{- include "kong.adminApi.ingress.tlsSecret" . | nindent 4 -}}
-{{- end -}}
+    {{- range .Values.adminApi.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.adminApi.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ $.Release.Name }}-proxy
+                port:
+                  name: {{ $svcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}

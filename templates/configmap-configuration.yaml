@@ -50,11 +50,15 @@ data:
         "name": "{{ include "kong.adminApi.name" . }}",
         "protocols": ["http","https"],
         "hosts": [
-          "{{- if or (hasKey .Values "configuration") (eq .Values.adminApi.ingress.enabled false) }}
-          {{- include "kong.proxy.host" . }}"
+          {{- if or (hasKey .Values "configuration") (eq .Values.adminApi.ingress.enabled false) }}
+          {{- range $index, $element := .Values.proxy.ingress.hosts }}
+          {{ $element.host | quote }}{{- if ne $index (sub (len $.Values.proxy.ingress.hosts) 1) }},{{- end }}
+          {{- end -}}
           {{- else }}
-          {{- include "kong.adminApi.host" . }}
-          {{- end }}"
+          {{- range $index, $element := .Values.adminApi.ingress.hosts }}
+          {{ $element.host | quote }}{{- if ne $index (sub (len $.Values.adminApi.ingress.hosts) 1) }},{{- end }}
+          {{- end -}}
+          {{- end }}
         ],
         "paths": [
           "/{{ include "kong.adminApi.name" . }}"
@@ -141,7 +145,13 @@ data:
         "protocols": ["http","https"],
         "methods": ["GET","POST"],
         "hosts": [
-          "{{ include "kong.irixBrokerRoute.spacegateHost" . }}"
+          {{- if .Values.irixBrokerRoute.host -}}
+          {{ .Values.irixBrokerRoute.host | quote }}
+          {{- else -}}
+          {{- range $index, $element := .Values.proxy.ingress.hosts }}
+          {{ $element.host | quote }}{{- if ne $index (sub (len $.Values.proxy.ingress.hosts) 1) }},{{- end }}
+          {{- end -}}
+          {{- end }}
         ],
         "paths": [
           "/{{ .Values.irixBrokerRoute.name }}"

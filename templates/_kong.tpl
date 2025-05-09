@@ -62,7 +62,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.jumper.image" -}}
 {{- $imageName := "jumper-sse" -}}
-{{- $imageTag := "3.19.1" -}}
+{{- $imageTag := "4.0.0" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/hyperion" -}}
 {{- if .Values.jumper.image -}}
@@ -110,9 +110,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.issuerService.image" -}}
 {{- $imageName := "issuer-service" -}}
-{{- $imageTag := "1.11.1" -}}
+{{- $imageTag := "2.0.1" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/hyperion" -}}
+{{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.issuerService.image -}}
   {{- if not (kindIs "string" .Values.issuerService.image) -}}
     {{ $imageRepository = .Values.issuerService.image.repository | default $imageRepository -}}
@@ -157,8 +157,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{- end -}}
 
 {{- define "kong.issuerService.env" }}
-- name: JUMPER_ISSUER_URL
-  value: {{ .Values.jumper.issuerUrl }}
+- name: CERT_MOUNT_PATH
+  value: /data/keys
 {{- end -}}
 
 {{- define "kong.circuitbreaker.env" }}
@@ -348,12 +348,20 @@ false
 {{- define "kong.jumper.volumes" }}
 - name: kong-jumper-tmp
   emptyDir: {}
-- name: jumper-keys
+- name: jumper-keys-rotated
   secret:
-    secretName: {{ .Release.Name }}-issuer-service
+    {{- if .Values.keyRotation.enabled }}
+    secretName: {{ .Release.Name }}-tls-rotated
+    {{- else if .Values.jumper.existingJwkSecretName }}
+    secretName: {{ .Values.jumper.existingJwkSecretName }}
+    {{- else }}
+    {{- fail (printf "keyRotation.enabled is false but no jumper.existingJwkSecretName is set") }}
+    {{- end }}
     items:
-      - key: privateJson
-        path: private.json
+      - key: tls.kid
+        path: tls.kid
+      - key: tls.key
+        path: tls.key
     defaultMode: 420
     optional: true
 {{- end -}}
@@ -361,22 +369,36 @@ false
 {{- define "kong.jumper.volumeMounts" }}
 - name: kong-jumper-tmp
   mountPath: /tmp
-- name: jumper-keys
-  mountPath: /usr/share/keypair
+- name: jumper-keys-rotated
+  mountPath: /keypair
   readOnly: true
 {{- end -}}
 
 {{- define "kong.issuerService.volumes" }}
 - name: kong-issuer-tmp
   emptyDir: {}
-- name: issuer-keys
+- name: issuer-keys-rotated
   secret:
-    secretName: {{ .Release.Name }}-issuer-service
+    {{- if .Values.keyRotation.enabled }}
+    secretName: {{ .Release.Name }}-tls-rotated
+    {{- else if .Values.issuerService.existingJwkSecretName }}
+    secretName: {{ .Values.issuerService.existingJwkSecretName }}
+    {{- else }}
+    {{- fail (printf "keyRotation.enabled is false but no issuerService.existingJwkSecretName is set") }}
+    {{- end }}
     items:
-      - key: publicJson
-        path: public.json
-      - key: certsJson
-        path: certs.json
+      - key: next-tls.kid
+        path: next-tls.kid
+      - key: tls.kid
+        path: tls.kid
+      - key: prev-tls.kid
+        path: prev-tls.kid
+      - key: next-tls.crt
+        path: next-tls.crt
+      - key: tls.crt
+        path: tls.crt
+      - key: prev-tls.crt
+        path: prev-tls.crt
     defaultMode: 420
     optional: true
 {{- end -}}
@@ -384,8 +406,8 @@ false
 {{- define "kong.issuerService.volumeMounts" }}
 - name: kong-issuer-tmp
   mountPath: /tmp
-- name: issuer-keys
-  mountPath: /usr/share/keypair
+- name: issuer-keys-rotated
+  mountPath: /data/keys
   readOnly: true
 {{- end -}}
 
@@ -534,9 +556,9 @@ false
 - name: KONG_PG_SCHEMA
   value: '{{ .Values.global.database.schema }}'
 - name: KONG_PROXY_ACCESS_LOG
-  value: {{ .Values.proxy.accessLog | default "/dev/stdout" | quote }}
+  value: {{ .Values.proxy.accessLog | quote }}
 - name: KONG_PROXY_ERROR_LOG
-  value: {{ .Values.proxy.errorLog | default "/dev/stderr" | quote }}
+  value: {{ .Values.proxy.errorLog | quote }}
 {{- if eq .Values.global.database.location "external" }}
 {{- if ne .Values.externalDatabase.ssl false }}
 - name: KONG_PG_SSL
@@ -575,9 +597,9 @@ false
   value: '0.0.0.0:8001'
 {{- end }}
 - name: KONG_ADMIN_ACCESS_LOG
-  value: {{ .Values.adminApi.accessLog | default "/dev/stdout" | quote }}
+  value: {{ .Values.adminApi.accessLog | quote }}
 - name: KONG_ADMIN_ERROR_LOG
-  value: {{ .Values.adminApi.errorLog | default "/dev/stderr" | quote }}
+  value: {{ .Values.adminApi.errorLog | quote }}
 {{- end }}
 {{- include "kong.kongLuaSslTrustedCertificatePath" . -}}
 {{- end }}

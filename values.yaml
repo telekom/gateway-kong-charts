@@ -6,18 +6,22 @@ global:
   metadata:
     pipeline: {}
 
-  # Available platforms: kubernetes (default), aws, caas. Setting any value with no specific platform values.yaml will result in fallback to kubernetes
+  # -- Available platforms: kubernetes (default), aws, caas. Setting any value with no specific platform values.yaml will result in fallback to kubernetes
   platform: kubernetes
   #pathToSecret: "path/to/secret" 
+
+  # -- Overwrites the setting determined by the platform
   #storageClassName: gp2
   #environment: ""
   zone: "zoneName"
+  # -- Define global labels
   labels:
     # fluentd label
     tardis.telekom.de/group: tardis
   product: "stargate"
   ingress:
     #ingressClassName: ""
+    # -- Set annotations for all ingress, can be extended by ingress specific ones
     annotations: {}
       #external-dns.alpha.kubernetes.io/target: ""
       #kubernetes.io/ingress.class: ""
@@ -30,18 +34,20 @@ global:
   #   organization: tardis-common
   #   force: false
   image:
+    # -- Set default repository for all images
     #repository: mtr.devops.telekom.de
+    # -- Set default organisation for all images
     #organization: tardis-common
+    # -- Replace repository/organisation also if image is set as custom  "image:" value
     force: false
 
   # If imagePullSecrets is not empty, a pull secret will be deployed for each entry otherwise 
   # no pull secret will be deployed
   # If you use Sapling for deployment this will be set automatically
+  # -- array of pull secret names to use for image pulling
   imagePullSecrets: 
-  #- name: mtr-deveops
-  #  registry: https://mtr.devops.telekom.de
-  #  username: changeme
-  #  password: changeme
+
+  # -- global default for imagePullPolicy
   imagePullPolicy: IfNotPresent
 
   passwordRules:
@@ -54,24 +60,34 @@ global:
     - '[^a-zA-Z0-9]'
 
   database:
-    # Determine if the a database will be deployed togehter with Stargate (local) or is provided (external)
+    # -- Determine if the a database will be deployed togehter with Stargate (local) or is provided (external)
     location: local
+    # -- Port of the database
     #port: 5432
+    # -- Name of the database
     database: kong
+    # -- Name of the schema
     schema: public
+    # -- Username for accessing the database
     username: kong
+    # -- The users password
     password: changeme
 
   # Set a global collectorUrl for traces.
   # Can be overwritten by individual settings
   tracing:
+    # -- URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory
     collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
+    # -- Name of the service shown in e.g. Jaeger
     defaultServiceName: "stargate"
+    # -- How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests.
     sampleRatio: 1
 
   podAntiAffinity:
+    # -- configure pod anti affinity to be requiredDuringSchedulingIgnoredDuringExecution or preferredDuringSchedulingIgnoredDuringExecution
     required: false
 
+  # -- 
   failOnUnsetValues: true
 
   preStopSleepBase: 30
@@ -83,6 +99,7 @@ global:
 #
 #templateChangeTriggers:
 #- my-custom-configmap.yaml
+# -- List of (template) yaml files fo which a checksum annotation will be created
 templateChangeTriggers: []
 
 # You can force using a specific image here:
@@ -100,23 +117,34 @@ templateChangeTriggers: []
 # upgrade: utilizing Kongs upgrade task for e.g. database migrations
 # jobs: migrating from eni-plugins to ENI flavoured original plugins
 # Comment out or set to none if none of the options are needed
+# -- Determine the migrations behaviour for a new instance or upgrade
 migrations: none
 
 
 # Enable Admin API and whether it is http or https
 # Warning: 
 adminApi:
+  # -- Create service for accessing Kong Admin API
   enabled: true
   gatewayAdminApiKey: changeme
   htpasswd: admin:changeme
   tls:
+    # -- Access Admin API via https instead of http  
     enabled: false
+  # -- Set the log target for access log
+  access_log: /dev/stdout
+  # -- Set the log target for error log
+  error_log: /dev/stderr
 # Activate Admin API ingress and set a dedicated hostname
 # For EE (license) this is default true, for CE (no license) this is default false
   ingress:
+    # -- Create ingress for Admin API. Default depends on Edition (CE: false, EE: true)
     enabled: true
-    # ingressClassName: ""
+    # -- Set ingress className for the Admin API ingress
+    # className: ""
+    # -- Merges specific into global ingress annotations
     annotations: {}
+    # -- Set usual ingress array of hosts
     hosts:
       - host: chart-example.local
         paths:
@@ -135,9 +163,16 @@ adminApi:
 proxy:
   tls:
     enabled: false
+  # -- Set the log target for access log
+  access_log: /dev/stdout
+  # -- Set the log target for error log
+  error_log: /dev/stderr
   ingress:
+    # -- Create ingress for proxy
     enabled: true
-    # ingressClassName: ""
+    # -- Set ingressClassName for the proxy ingress
+    # className: ""
+    # -- Merges specific into global ingress annotations
     annotations: {}
     hosts:
       - host: chart-example.local
@@ -150,19 +185,19 @@ proxy:
       #  hosts:
       #    - hostNameMatchingCertInSecret
 
-
-  #accessLog: /dev/stdout
-  #errorLog: /dev/stderr
-
+# -- Set a script to run after deployment for configuration of the Gateway
 #configuration: |
   #Place your curl commands here to configure via Admin-API on deploy time
 
 # values used by nginx directives
+# -- Controls whether to check forward proxy traffic against CA certificates
 sslVerify: false
+# -- SSL Verification depth
 sslVerifyDepth: '1'
 
 # You can define the truststore for SSL verification by setting your CAs in PEM format here 
 #
+# -- CA certificates in PEM format (string)
 #trustedCaCertificates: |
 #  -----BEGIN CERTIFICATE-----
 #  <CA certificate 01 in PEM format here>
@@ -176,6 +211,7 @@ sslVerifyDepth: '1'
 
 # You can define the default HTTPS server certificate by specifing the secret with private-key/certificate here
 # Note: additional route-specific server certificates can by configured and assigned to SNIs at runtime. This is only a default certificate
+# -- Name of the secret containing the default server certificates
 #defaultTlsSecret: "mysecret"
 
 ssl:
@@ -239,25 +275,40 @@ resources:
 # Formats: debug, default, json
 logFormat: json
 
-livenessProbe: {}
-  #timeoutSeconds: 5
-  #periodSeconds: 10
-  #failureThreshold: 3
-readinessProbe: {}
-  #timeoutSeconds: 1
-  #periodSeconds: 10
-  #successThreshold: 2
-  #failureThreshold: 3
-startupProbe: {}
-  #initialDelaySeconds: 5
-  #timeoutSeconds: 1
-  #periodSeconds: 5
-  #failureThreshold: 40
+# -- kong livenessProbe configuration
+livenessProbe:
+  httpGet:
+    path: /status
+    port: status
+    scheme: HTTP
+  timeoutSeconds: 5
+  periodSeconds: 20
+  failureThreshold: 4
+# -- kong readinessProbe configuration
+readinessProbe:
+  httpGet:
+    path: /status
+    port: status
+    scheme: HTTP
+  timeoutSeconds: 2
+# -- kong startupProbe configuration
+startupProbe:
+  httpGet:
+    path: /status
+    port: status
+    scheme: HTTP
+  initialDelaySeconds: 5
+  timeoutSeconds: 1
+  periodSeconds: 1
+  failureThreshold: 295
 
 setupJobs:
+  # -- How often should be retried to run the job successfully
   #backoffLimit: 15
+  # -- How long should be retried to run the job successfully
   #activeDeadlineSeconds: 3600
   #Resources need to be discussed
+  # -- resource defaults configured for the setupJobs
   resources:
     limits:
       cpu: 0.5
@@ -268,14 +319,18 @@ setupJobs:
   #containerSecurityContext: {}
 
 plugins:
+  # -- additional enabled plugins for kong besides `bundled,jwt-keycloak`
   enabled:
     - rate-limiting-merged
 
   acl:
+    # -- pluginId for configuration in kong
     pluginId: bc823d55-83b5-4184-b03f-ce63cd3b75c7
 
   cequence:
+    # -- Activate or deactivate the cequence plugin
     enabled: false
+    # -- pluginId for configuration in kong
     pluginId: f7b4e626-2987-4c04-98f1-cc316e8af9a5
     #authDomain: auth.telekom.1.cequence.cloud
     #edgeDomain: edge.telekom.1.cequence.cloud
@@ -284,52 +339,78 @@ plugins:
     clientSecret: changeme
       
   jwtKeycloak:
+    # -- Activate or deactivate the jwt-keycloak plugin
     enabled: true
+    # -- pluginId for configuration in kong
     pluginId: b864d58b-7183-4889-8b32-0b92d6c4d513
+    # -- Set the Iris URL you want the Gateway to use for Admin API athentication
     allowedIss: 
       - https://changeme/auth/realms/default
 
   prometheus:
-    enabled: true 
+    # -- Controls whether to annotate pods with prometheus scraping information or not
+    enabled: true
+    # -- pluginId for configuration in kong
     pluginId: 3d232d3c-dc2b-4705-aa8d-4e07c4e0ff4c
-    #port: 9542
-    #path: /metrics
-    #customerFacing: false
-    serviceMonitor:   
+    # -- Sets the port at which metrics can be accessed
+    port: 9542
+    # -- Sets the endpoint at which at which metrics can be accessed
+    path: /metrics
+    serviceMonitor:
+      # -- Enables a servicemonitor which can be used by the prometheus operator to collect metrics
       enabled: true
-      #selector: "guardians-raccoon"
+      # -- default selector label (only label)
+      selector: "guardians-raccoon"
+      # -- HTTP scheme to use for scraping
       #scheme: http
+      # -- Interval at which metrics should be scraped
       #interval: "15s"
+      # -- Timeout after which the scrape of prometheus is ended
       #scrapeTimeout: "3s"
-      #honorLabels: ""
-    podMonitor:   
+      # -- HonorLabels chooses the metric’s labels on collisions with target labels
+      # honorLabels: true
+    podMonitor:
+      # -- Enables a podmonitor which can be used by the prometheus operator to collect metrics
       enabled: false
       #selector: "guardians-raccoon"
-      #scheme: http
+      # -- HTTP scheme to use for scraping
+      # scheme: http
+      # -- Interval at which metrics should be scraped
       #interval: "15s"
+      # -- Timeout after which the scrape of prometheus is ended
       #scrapeTimeout: "3s"
-      #honorLabels: ""
+      # -- HonorLabels chooses the metric’s labels on collisions with target labels
+      #honorLabels: true
 
   requestSizeLimiting:
     enabled: true
+    # -- pluginId for configuration in kong
     pluginId: 1e199eee-f592-4afa-8371-6b61dcbd1904
     #Size in megabytes
     #allowedPayloadSize: 4
 
   requestTransformer:
+    # -- pluginId for configuration in kong
     pluginId: e9fb4272-0aff-4208-9efa-6bfec5d9df53
 
   zipkin:
+    # -- Enable tracing via ENI-Zipkin-Plugin
     enabled: true
+    # -- pluginId for configuration in kong
     pluginId: e8ff1211-816f-4d93-9011-a4b194586073
+    # -- URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory (defaults to global.tracing.collectorUrl)
     #collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
+    # -- How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests.
     #sampleRatio: 1
     #environment: null
     #zone: null
     #forceSample: true
     #headerType: "b3"
+    # -- Should the credential of the currently authenticated consumer be included in metadata sent to the Zipkin server?
     #includeCredential: "true"
+    # -- Name of the service shown in e.g. Jaeger
     #defaultServiceName: "stargate"
+    # -- CA certificate for the Zipkin-Collector-URL
     #luaSslTrustedCertificate: |
     #  -----BEGIN CERTIFICATE-----
     #  <CA certificate in PEM format here>
@@ -355,6 +436,7 @@ irixBrokerRoute:
 # Jumper is a component needed for Gateway-to-Gateway
 # communication
 jumper:
+  # -- enable deployment of jumper conatiner inside gateway pod
   enabled: true
   #image: 
     #repository: mtr.devops.telekom.de
@@ -374,21 +456,34 @@ jumper:
   #fpaProxyHost
   #fpaProxyPort
   #fpaNonProxyHostsRegex
-  livenessProbe: {}
-    #timeoutSeconds: 5
-    #periodSeconds: 10
-    #failureThreshold: 6
-  readinessProbe: {}
-    #timeoutSeconds: 1
-    #periodSeconds: 10
-    #successThreshold: 2
-    #failureThreshold: 3
-  startupProbe: {}
-    #initialDelaySeconds: 15
-    #timeoutSeconds: 1
-    #periodSeconds: 5
-    #failureThreshold: 40
-  #port: 8080
+  # -- jumper livenessProbe configuration
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: jumper
+      scheme: HTTP
+    timeoutSeconds: 5
+    failureThreshold: 6
+  # -- jumper readinessProbe configuration
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: jumper
+      scheme: HTTP
+    initialDelaySeconds: 5
+  # -- jumper startupProbe configuration
+  startupProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: jumper
+      scheme: HTTP
+    initialDelaySeconds: 15
+    periodSeconds: 1
+    failureThreshold: 285
+
+  # -- generic injection possibility for additional environment variables
+  #- {name: foo, value: bar}
+  environment: []
 
   environment: []
     #- name: foo
@@ -408,7 +503,12 @@ jumper:
     databaseSecretKey: redis-password
     enabled: false
 
+  # When providing an existing secret, it has to compatible with a gateway-rotator managed one
+  # Format is specified here https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process
+  # -- configure manually externally managed secret for oauth access token issueing (as alternative for keyRotation.enabled=true) 
+  existingJwkSecretName:
 
+  # -- jumper container default resource configuration
   resources:
     limits:
       cpu: 5
@@ -417,6 +517,7 @@ jumper:
       cpu: 2
       memory: 1Gi
 
+# @ignored
 legacyJumper:
   enabled: false
   startup:
@@ -436,6 +537,7 @@ legacyJumper:
   #port: 8082
 
 issuerService:
+  # -- enable deployment of issuer-service container inside gateway pod
   enabled: true
   #image: 
     #repository: mtr.devops.telekom.de
@@ -445,27 +547,42 @@ issuerService:
   # Or use the flattened string form:
   #image: mtr.devops.telekom.de/tardis-internal/hyperion/issuer-service:1.9.0
   #imagePullPolicy: IfNotPresent
-  certsJson: changeme
-  publicJson: changeme
-  privateJson: changeme
 
-  livenessProbe: {}
-    #timeoutSeconds: 5
-    #periodSeconds: 10
-  #failureThreshold: 6
-  readinessProbe: {}
-    #timeoutSeconds: 1
-    #periodSeconds: 10
-    #successThreshold: 2
-  #failureThreshold: 3
-  startupProbe: {}
-    #initialDelaySeconds: 10
-    #timeoutSeconds: 1
-    #periodSeconds: 5
-  #failureThreshold: 40
+  # When providing an existing secret, it has to compatible with a gateway-rotator managed one
+  # Format is specified here https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process
+  # -- configure manually externally managed secret for oauth (as alternative for keyRotation.enabled=true) 
+  existingJwkSecretName:
+
+  # -- issuerService livenessProbe configuration
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: issuer-service
+      scheme: HTTP
+    timeoutSeconds: 5
+    failureThreshold: 6
+  # -- issuerService readinessProbe configuration
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: issuer-service
+      scheme: HTTP
+  # -- issuerService startupProbe configuration
+  startupProbe:
+    httpGet:
+      path: /health
+      port: issuer-service
+      scheme: HTTP
+    periodSeconds: 1
+    failureThreshold: 60
 
   #containerSecurityContext: {}
 
+  # -- generic injection possibility for additional environment variables
+  #- {name: foo, value: bar}
+  environment: []
+
+  # -- issuerService container default resource configuration
   resources:
     limits:
       cpu: 500m
@@ -475,6 +592,7 @@ issuerService:
       memory: 200Mi
 
 circuitbreaker:
+  # -- enable deployment of circuitbreaker component
   enabled: false
   #image: 
     #repository: mtr.devops.telekom.de
@@ -483,12 +601,16 @@ circuitbreaker:
     #tag: 2.1.0
   # Or use the flattened string form:
   #image: mtr.devops.telekom.de/tardis-internal/hyperion/gateway-circuitbreaker:2.1.0
+
+  # -- default value for imagePullPolicy
   imagePullPolicy: IfNotPresent
+
   #interval: 60s
   #count: 4
 
   #containerSecurityContext: {}
 
+  # -- circuitbreaker container default resource configuration
   resources:
     limits:
       cpu: 0.5
@@ -507,6 +629,7 @@ postgresql:
   #image: mtr.devops.telekom.de/tardis-common/postgres:12.3-debian
   #imagePullPolicy: IfNotPresent
 
+  # -- postgresql container default resource configuration
   resources:
     limits:
       cpu: 100m
@@ -535,3 +658,18 @@ job: {}
     #tag: 1.0.0
   # Or use the flattened string form:
   #image: mtr.devops.telekom.de/tardis-common/tif-base-image:1.0.0
+
+# enabling keyRotration requires a working cert-manager as well as the gateway-rotator
+# alternatively use jumper.existingJwkSecretName and issuerService.existingJwkSecretName to provide compatible secret
+keyRotation:
+  # -- enable automatic cert / key rotation for access token issueing based on cert-manager and gateway-rotator
+  enabled: false
+  # -- provide alternative configuration for cert-managers Certificate resource
+  additionalSpecValues: {}
+    #privateKey:
+    #  rotationPolicy: Never
+    #duration: 2160h
+    #renewBefore: 360h
+    #commonName: stargate.telekom.de
+    #dnsNames:
+    #  - stargate.telekom.de

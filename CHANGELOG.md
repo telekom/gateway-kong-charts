@@ -11,8 +11,13 @@ Please also seek advice from the README regarding updates.
 
 
 [[_TOC_]
+## 7.0.0
+- :warning: !breaking: Switched to new secret format to enable graceful cert/key rotation for oauth mechanisms
+  - jumper 4.0.0 needed
+  - new issuer-service-go 2.0.1 as default (see https://github.com/telekom/gateway-issuer-service-go) with corresponding changed defaults
+
 ## 6.0.0
-- !breaking: refactor ingress definitions and align to defaults / best practices (needs reconfiguring ingress values in existing deployments)
+- :warning: !breaking: refactor ingress definitions and align to defaults / best practices (needs reconfiguring ingress values in existing deployments)
 
 ## 5.5.4
 - Plugin configuration for rate-limiting-merged is no longer hardcoded

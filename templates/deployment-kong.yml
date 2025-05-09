@@ -1,3 +1,6 @@
+{{- if and (not .Values.keyRotation.enabled) (or (not .Values.jumper.existingJwkSecretName) (not .Values.issuerService.existingJwkSecretName)) }}
+{{- fail (printf "Cannot deploy stargate due to missing jwk secret. Use keyRotation.enabled or jumper.existingJwkSecretName with issuerService.existingJwkSecretName to provide jwk secrets") }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,9 +28,9 @@ spec:
       {{- include "kong.annotations" $ | nindent 8 }}
       {{- include "kong.checksums" $ | nindent 8 }}
 {{- if eq .Values.plugins.prometheus.enabled true }}
-        prometheus.io/path: '{{ .Values.plugins.prometheus.path | default "/metrics" }}'
+        prometheus.io/path: '{{ .Values.plugins.prometheus.path }}'
         prometheus.io/scrape: 'true'
-        prometheus.io/port: '{{ .Values.plugins.prometheus.port | default 9542 }}'
+        prometheus.io/port: '{{ .Values.plugins.prometheus.port }}'
 {{- end }}
       labels: 
         {{- include "kong.labels" $ | nindent 8 }}
@@ -79,39 +82,23 @@ spec:
         env:
         - name: JUMPER_PORT
           value: {{ .Values.jumper.port | default 8080 | quote }}
-          {{- with .Values.jumper.environment }}
-          {{- . | toYaml | nindent 8 }}
-          {{- end }}
+        {{- with .Values.jumper.environment }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
         {{- include "kong.jumper.env" $ | indent 8 }}
+
+        {{- with .Values.jumper.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /actuator/health/liveness
-            port: jumper
-            scheme: HTTP
-          timeoutSeconds: {{ .Values.jumper.livenessProbe.timeoutSeconds | default 5 }}
-          periodSeconds: {{ .Values.jumper.livenessProbe.periodSeconds | default 10 }}
-          successThreshold: 1
-          failureThreshold: {{ .Values.jumper.livenessProbe.failureThreshold | default 6 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.jumper.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /actuator/health/readiness
-            port: jumper
-            scheme: HTTP
-          initialDelaySeconds: 5
-          timeoutSeconds: {{ .Values.jumper.readinessProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.jumper.readinessProbe.periodSeconds | default 10 }}
-          successThreshold: {{ .Values.jumper.readinessProbe.successThreshold | default 1 }}
-          failureThreshold: {{ .Values.jumper.readinessProbe.failureThreshold | default 3 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.jumper.startupProbe }}
         startupProbe:
-          httpGet:
-            path: /actuator/health/readiness
-            port: jumper
-            scheme: HTTP
-          initialDelaySeconds: {{ .Values.jumper.startupProbe.initialDelaySeconds | default 15 }}
-          timeoutSeconds: {{ .Values.jumper.startupProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.jumper.startupProbe.periodSeconds | default 1 }}
-          successThreshold: 1
-          failureThreshold: {{ .Values.jumper.startupProbe.failureThreshold | default 285 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
 {{- end }}
 {{- if eq .Values.legacyJumper.enabled true }}
       - name: legacy-jumper
@@ -172,35 +159,21 @@ spec:
           {{- include "kong.issuerService.volumeMounts" $ | indent 8 }}
         env:
         {{- include "kong.issuerService.env" $ | indent 8 }}
+        {{- with .Values.issuerService.environment }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
+        {{- with .Values.issuerService.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: issuer-service
-            scheme: HTTP
-          timeoutSeconds: {{ .Values.issuerService.livenessProbe.timeoutSeconds | default 5 }}
-          periodSeconds: {{ .Values.issuerService.livenessProbe.periodSeconds | default 10 }}
-          successThreshold: 1
-          failureThreshold: {{ .Values.issuerService.livenessProbe.failureThreshold | default 6 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.issuerService.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: issuer-service
-            scheme: HTTP
-          initialDelaySeconds: 5
-          timeoutSeconds: {{ .Values.issuerService.readinessProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.issuerService.readinessProbe.periodSeconds | default 10 }}
-          successThreshold: {{ .Values.issuerService.readinessProbe.successThreshold | default 1 }}
-          failureThreshold: {{ .Values.issuerService.readinessProbe.failureThreshold | default 3 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.issuerService.startupProbe }}
         startupProbe:
-          httpGet:
-            path: /actuator/health
-            port: issuer-service
-            scheme: HTTP
-          initialDelaySeconds: {{ .Values.issuerService.startupProbe.initialDelaySeconds | default 15 }}
-          timeoutSeconds: {{ .Values.issuerService.startupProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.issuerService.startupProbe.periodSeconds | default 1 }}
-          successThreshold: 1
-          failureThreshold: {{ .Values.issuerService.startupProbe.failureThreshold | default 285 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
 {{- end }}
 {{- if eq .Values.circuitbreaker.enabled true }}
       - name: circuitbreaker
@@ -260,34 +233,18 @@ spec:
         - name: status
           containerPort: 8100
           protocol: TCP
+        {{- with .Values.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /status
-            port: status
-            scheme: HTTP
-          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds | default 5 }}
-          periodSeconds: {{ .Values.livenessProbe.periodSeconds | default 20 }}
-          successThreshold: 1
-          failureThreshold: {{ .Values.livenessProbe.failureThreshold | default 4 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /status
-            port: status
-            scheme: HTTP
-          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds | default 2 }}
-          periodSeconds: {{ .Values.readinessProbe.periodSeconds | default 10 }}
-          successThreshold: {{ .Values.readinessProbe.successThreshold | default 1 }}
-          failureThreshold: {{ .Values.readinessProbe.failureThreshold | default 3 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.startupProbe }}
         startupProbe:
-          httpGet:
-            path: /status
-            port: status
-            scheme: HTTP
-          initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds | default 5 }}
-          timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds | default 1 }}
-          periodSeconds: {{ .Values.startupProbe.periodSeconds | default 1 }}
-          successThreshold: 1
-          failureThreshold: {{ .Values.startupProbe.failureThreshold | default 295 }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
         terminationMessagePath: /dev/termination-log
         volumeMounts:
         {{- include "kong.volumeMounts" $ | indent 8 }}

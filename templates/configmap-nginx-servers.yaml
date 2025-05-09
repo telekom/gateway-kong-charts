@@ -9,10 +9,10 @@ data:
       # Kong Prometheus Exporter
       server {
           server_name kong_prometheus_exporter;
-          listen 0.0.0.0:{{ .Values.plugins.prometheus.port | default 9542 }};
+          listen 0.0.0.0:{{ .Values.plugins.prometheus.port }};
           access_log off;
 
-          location {{ .Values.plugins.prometheus.path | default "/metrics" }} {
+          location {{ .Values.plugins.prometheus.path }} {
               default_type text/plain;
               content_by_lua_block {
                   local prometheus = require "kong.plugins.prometheus.exporter"

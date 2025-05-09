@@ -4,7 +4,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ .Release.Name }}
   labels: {{ include "kong.labels" $ | nindent 4 }}
-    release: {{ .Values.plugins.prometheus.serviceMonitor.selector | default "guardians-raccoon" }}
+    release: {{ .Values.plugins.prometheus.serviceMonitor.selector }}
   namespace: {{ .Release.Namespace }}
 spec:
   selector:

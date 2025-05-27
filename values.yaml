@@ -485,10 +485,6 @@ jumper:
   #- {name: foo, value: bar}
   environment: []
 
-  environment: []
-    #- name: foo
-    #  value: bar
-
   #containerSecurityContext: {}
   zoneHealth:
     defaultHealth: true

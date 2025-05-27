@@ -363,7 +363,6 @@ false
       - key: tls.key
         path: tls.key
     defaultMode: 420
-    optional: true
 {{- end -}}
 
 {{- define "kong.jumper.volumeMounts" }}
@@ -400,7 +399,6 @@ false
       - key: prev-tls.crt
         path: prev-tls.crt
     defaultMode: 420
-    optional: true
 {{- end -}}
 
 {{- define "kong.issuerService.volumeMounts" }}

@@ -132,9 +132,9 @@ adminApi:
     # -- Access Admin API via https instead of http  
     enabled: false
   # -- Set the log target for access log
-  access_log: /dev/stdout
+  accessLog: /dev/stdout
   # -- Set the log target for error log
-  error_log: /dev/stderr
+  errorLog: /dev/stderr
 # Activate Admin API ingress and set a dedicated hostname
 # For EE (license) this is default true, for CE (no license) this is default false
   ingress:
@@ -156,17 +156,15 @@ adminApi:
       #  hosts:
       #    - hostNameMatchingCertInSecret
 
-  #accessLog: /dev/stdout
-  #errorLog: /dev/stderr
 
 # Activate proxy ingress and set a dedicated hostname
 proxy:
   tls:
     enabled: false
   # -- Set the log target for access log
-  access_log: /dev/stdout
+  accessLog: /dev/stdout
   # -- Set the log target for error log
-  error_log: /dev/stderr
+  errorLog: /dev/stderr
   ingress:
     # -- Create ingress for proxy
     enabled: true

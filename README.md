@@ -388,9 +388,9 @@ This is a short overlook about important parameters in the `values.yaml`.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| adminApi.access_log | string | `"/dev/stdout"` | Set the log target for access log |
+| adminApi.accessLog | string | `"/dev/stdout"` | Set the log target for access log |
 | adminApi.enabled | bool | `true` | Create service for accessing Kong Admin API |
-| adminApi.error_log | string | `"/dev/stderr"` | Set the log target for error log |
+| adminApi.errorLog | string | `"/dev/stderr"` | Set the log target for error log |
 | adminApi.gatewayAdminApiKey | string | `"changeme"` |  |
 | adminApi.htpasswd | string | `"admin:changeme"` |  |
 | adminApi.ingress.annotations | object | `{}` | Merges specific into global ingress annotations |
@@ -494,8 +494,8 @@ This is a short overlook about important parameters in the `values.yaml`.
 | plugins.zipkin.enabled | bool | `true` | Enable tracing via ENI-Zipkin-Plugin |
 | plugins.zipkin.pluginId | string | `"e8ff1211-816f-4d93-9011-a4b194586073"` | pluginId for configuration in kong |
 | postgresql.resources | object | `{"limits":{"cpu":"100m","memory":"500Mi"},"requests":{"cpu":"20m","memory":"200Mi"}}` | postgresql container default resource configuration |
-| proxy.access_log | string | `"/dev/stdout"` | Set the log target for access log |
-| proxy.error_log | string | `"/dev/stderr"` | Set the log target for error log |
+| proxy.accessLog | string | `"/dev/stdout"` | Set the log target for access log |
+| proxy.errorLog | string | `"/dev/stderr"` | Set the log target for error log |
 | proxy.ingress.annotations | object | `{}` | Merges specific into global ingress annotations |
 | proxy.ingress.enabled | bool | `true` | Create ingress for proxy |
 | proxy.ingress.hosts[0].host | string | `"chart-example.local"` |  |

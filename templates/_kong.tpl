@@ -62,7 +62,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.jumper.image" -}}
 {{- $imageName := "jumper-sse" -}}
-{{- $imageTag := "4.0.0" -}}
+{{- $imageTag := "4.1.0" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/hyperion" -}}
 {{- if .Values.jumper.image -}}
@@ -657,6 +657,10 @@ false
 - name: ZONE_HEALTH_ENABLED
   value: {{ .Values.jumper.zoneHealth.enabled | quote }}
 {{- end}}
+{{- if not (empty .Values.jumper.internetFacingZones) }}
+- name: JUMPER_INTERNET_FACING_ZONES
+  value: {{ .Values.jumper.internetFacingZones | join "," | quote }}
+{{- end }}
 - name: JVM_OPTS
   value: {{ .Values.jumper.jvmOpts }}
 - name: PUBLISH_EVENT_URL

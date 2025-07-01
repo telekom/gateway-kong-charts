@@ -497,6 +497,12 @@ jumper:
     databaseSecretKey: redis-password
     enabled: false
 
+  # This is the list of zones that are considered internet facing within the whole existing ecosystem.
+  # e.g. [space, canis, aries]
+  # An empty list means that the default internet facing zones as part of the Jumper application config will be used.
+  # -- list of zones that are considered internet facing
+  internetFacingZones: []
+
   # When providing an existing secret, it has to compatible with a gateway-rotator managed one
   # Format is specified here https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process
   # -- configure manually externally managed secret for oauth access token issueing (as alternative for keyRotation.enabled=true) 

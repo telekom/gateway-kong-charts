@@ -449,6 +449,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | jumper.enabled | bool | `true` | enable deployment of jumper conatiner inside gateway pod |
 | jumper.environment | list | `[]` | generic injection possibility for additional environment variables - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | configure manually externally managed secret for oauth access token issueing (as alternative for keyRotation.enabled=true)  |
+| jumper.internetFacingZones | list | `[]` | list of zones that are considered internet facing |
 | jumper.issuerUrl | string | `"https://localhost:443"` |  |
 | jumper.jvmOpts | string | `"-XX:MaxRAMPercentage=75.0 -XshowSettings:vm"` |  |
 | jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/actuator/health/liveness","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | jumper livenessProbe configuration |

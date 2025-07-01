@@ -12,6 +12,13 @@ Please also seek advice from the README regarding updates.
 
 [[_TOC_]
 
+## 7.1.0
+- feat: added configurable internet facing zone names for jumper
+- jumper 4.1.0 needed
+
+## 7.0.2
+- fix: value names for logging in kong
+
 ## 7.0.1
 - make jwt issuer secrets mandatory for deployment volumes
 

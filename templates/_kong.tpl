@@ -84,33 +84,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{- end -}}
 {{- end -}}
 
-{{- define "kong.legacyJumper.image" -}}
-{{- $imageName := "jumper" -}}
-{{- $imageTag := "1.10.6.3" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/hyperion" -}}
-{{- if .Values.legacyJumper.image -}}
-  {{- if not (kindIs "string" .Values.legacyJumper.image) -}}
-    {{ $imageRepository = .Values.legacyJumper.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.legacyJumper.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.legacyJumper.image.name | default $imageName -}}
-    {{ $imageTag = .Values.legacyJumper.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.legacyJumper.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-    {{- end -}}
-    {{- .Values.legacyJumper.image -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
-{{- end -}}
-
 {{- define "kong.issuerService.image" -}}
 {{- $imageName := "issuer-service" -}}
-{{- $imageTag := "2.0.1" -}}
+{{- $imageTag := "2.1.1" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.issuerService.image -}}
@@ -607,9 +583,6 @@ false
 {{- if or .Values.plugins.zipkin.luaSslTrustedCertificate (and .Values.externalDatabase.ssl .Values.externalDatabase.sslVerify) }}
 {{ $path = printf "%s,%s" $path "/opt/kong/tls/lua-ssl-trusted-certificates.pem" }}
 {{- end }}
-{{- if eq .Values.plugins.cequence.enabled true }}
-{{ $path = printf "%s,%s" $path "system" }}
-{{- end }}
 {{- if not (empty $path) -}}
 - name: KONG_LUA_SSL_TRUSTED_CERTIFICATE
   value: {{ $path | trimAll "," | quote }}
@@ -689,9 +662,6 @@ false
 {{ $enabledPlugins := "" }}
 {{- range .Values.plugins.enabled -}}
 {{ $enabledPlugins = printf "%s,%s" $enabledPlugins .  }}
-{{- end }}
-{{- if eq .Values.plugins.cequence.enabled true }}
-{{ $enabledPlugins = printf "%s,%s" $enabledPlugins "cequence-ai-unified" }}
 {{- end }}
 - name: KONG_PLUGINS
   value: bundled,jwt-keycloak{{ $enabledPlugins }}

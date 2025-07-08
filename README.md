@@ -314,9 +314,9 @@ The Probe-URLs are configured as follows:
 - `http://localhost:8100/status` as readiness probe for Kong
 - `http://localhost:8100/status` as liveness probe for Kong
 - `http://localhost:8100/status` as startup probe for Kong
-- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper", "legacyJumper")
-- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper", "legacyJumper")
-- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper", "legacyJumper")
+- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
+- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
+- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
 - `http://localhost:8081/health` as readiness probe for each Issuer-service container
 - `http://localhost:8081/health` as liveness probe for each Issuer-service container
 - `http://localhost:8081/health` as startup probe for each Issuer-service container
@@ -475,9 +475,6 @@ This is a short overlook about important parameters in the `values.yaml`.
 | logFormat | string | `"json"` |  |
 | migrations | string | `"none"` | Determine the migrations behaviour for a new instance or upgrade |
 | plugins.acl.pluginId | string | `"bc823d55-83b5-4184-b03f-ce63cd3b75c7"` | pluginId for configuration in kong |
-| plugins.cequence.clientSecret | string | `"changeme"` |  |
-| plugins.cequence.enabled | bool | `false` | Activate or deactivate the cequence plugin |
-| plugins.cequence.pluginId | string | `"f7b4e626-2987-4c04-98f1-cc316e8af9a5"` | pluginId for configuration in kong |
 | plugins.enabled | list | `["rate-limiting-merged"]` | additional enabled plugins for kong besides `bundled,jwt-keycloak` |
 | plugins.jwtKeycloak.allowedIss | list | `["https://changeme/auth/realms/default"]` | Set the Iris URL you want the Gateway to use for Admin API athentication |
 | plugins.jwtKeycloak.enabled | bool | `true` | Activate or deactivate the jwt-keycloak plugin |

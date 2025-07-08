@@ -100,47 +100,6 @@ spec:
           {{- toYaml . | nindent 12 }}
         {{- end }}
 {{- end }}
-{{- if eq .Values.legacyJumper.enabled true }}
-      - name: legacy-jumper
-        image: {{ include "kong.legacyJumper.image" $ }}
-        imagePullPolicy: {{ .Values.legacyJumper.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jumper.containerSecurityContext") | default "{}" | nindent 10 }}
-        resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
-        lifecycle:
-          preStop:
-            exec:
-              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
-        ports:
-        - containerPort: {{ .Values.legacyJumper.port | default 8082 }} 
-          name: legacy-jumper
-          protocol: TCP
-        volumeMounts:
-          {{- include "kong.jumper.volumeMounts" $ | indent 8 }}
-        env:
-        - name: JUMPER_PORT
-          value: {{ .Values.legacyJumper.port | default 8082 | quote }}
-        {{- include "kong.jumper.env" $ | indent 8 }}
-        livenessProbe:
-          httpGet:
-            path: /actuator/health/liveness
-            port: legacy-jumper
-            scheme: HTTP
-          initialDelaySeconds: {{ .Values.legacyJumper.startup.livenessProbe.initialDelay | default 25 }}
-          timeoutSeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          failureThreshold: 6
-        readinessProbe:
-          httpGet:
-            path: /actuator/health/readiness
-            port: legacy-jumper
-            scheme: HTTP
-          initialDelaySeconds: {{ .Values.legacyJumper.startup.readinessProbe.initialDelay | default 25 }}
-          timeoutSeconds: 5
-          periodSeconds: 10
-          successThreshold: 1
-          failureThreshold: 6
-{{- end }}
 {{- if eq .Values.issuerService.enabled true }}
       - name: issuer-service
         image: {{ include "kong.issuerService.image" $ }}

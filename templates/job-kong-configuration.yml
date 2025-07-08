@@ -28,13 +28,6 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}
               key: gatewayAdminApiKey
-{{- if eq .Values.plugins.cequence.enabled true }}
-        - name: CEQUENCE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}
-              key: cequenceClientSecret
-{{- end }}
         volumeMounts:
           {{- include "kong.configuration.volumeMounts" $ | indent 8 }}
       restartPolicy: OnFailure

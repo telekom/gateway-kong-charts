@@ -324,17 +324,6 @@ plugins:
   acl:
     # -- pluginId for configuration in kong
     pluginId: bc823d55-83b5-4184-b03f-ce63cd3b75c7
-
-  cequence:
-    # -- Activate or deactivate the cequence plugin
-    enabled: false
-    # -- pluginId for configuration in kong
-    pluginId: f7b4e626-2987-4c04-98f1-cc316e8af9a5
-    #authDomain: auth.telekom.1.cequence.cloud
-    #edgeDomain: edge.telekom.1.cequence.cloud
-    #clientId: "kong-edge-client"
-    #realm: cequence
-    clientSecret: changeme
       
   jwtKeycloak:
     # -- Activate or deactivate the jwt-keycloak plugin
@@ -516,25 +505,6 @@ jumper:
     requests:
       cpu: 2
       memory: 1Gi
-
-# @ignored
-legacyJumper:
-  enabled: false
-  startup:
-    livenessProbe:
-      initialDelay: 25
-    readinessProbe:
-      initialDelay: 25
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: jumper
-    #tag: 1.10.6.3
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/jumper:1.10.6.3
-  #imagePullPolicy: IfNotPresent
-
-  #port: 8082
 
 issuerService:
   # -- enable deployment of issuer-service container inside gateway pod

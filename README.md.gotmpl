@@ -316,9 +316,9 @@ The Probe-URLs are configured as follows:
 - `http://localhost:8100/status` as readiness probe for Kong
 - `http://localhost:8100/status` as liveness probe for Kong
 - `http://localhost:8100/status` as startup probe for Kong
-- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper", "legacyJumper")
-- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper", "legacyJumper")
-- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper", "legacyJumper")
+- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
+- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
+- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
 - `http://localhost:8081/health` as readiness probe for each Issuer-service container
 - `http://localhost:8081/health` as liveness probe for each Issuer-service container
 - `http://localhost:8081/health` as startup probe for each Issuer-service container

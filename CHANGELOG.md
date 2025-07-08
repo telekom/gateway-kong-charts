@@ -12,6 +12,11 @@ Please also seek advice from the README regarding updates.
 
 [[_TOC_]
 
+## 7.2.0
+- feat: remove unused cequence plugin functionality
+- feat: remove deprecated legacy-jumper
+- feat: update issuer-service to 2.1.1
+
 ## 7.1.0
 - feat: added configurable internet facing zone names for jumper
 - jumper 4.1.0 needed

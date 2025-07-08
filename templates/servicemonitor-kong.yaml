@@ -31,22 +31,6 @@ spec:
       {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
       honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
       {{- end }}
-    {{- if eq .Values.legacyJumper.enabled true }}
-    - port: legacy-metrics
-      path: '/actuator/prometheus'
-      {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}
-      scheme: {{ .Values.plugins.prometheus.serviceMonitor.scheme }}
-      {{- end }}
-      {{- if .Values.plugins.prometheus.serviceMonitor.interval }}
-      interval: {{ .Values.plugins.prometheus.serviceMonitor.interval | quote}}
-      {{- end }}
-      {{- if .Values.plugins.prometheus.serviceMonitor.scrapeTimeout }}
-      scrapeTimeout: {{ .Values.plugins.prometheus.serviceMonitor.scrapeTimeout | quote }}
-      {{- end }}
-      {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
-      honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
-      {{- end }}
-    {{- end }}
     - port: jumper-metrics
       path: '/actuator/prometheus'
       {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}

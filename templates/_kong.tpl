@@ -13,10 +13,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{- end -}}
 
 {{- define "kong.image" -}}
-{{- $imageName := "eni-kong" -}}
-{{- $imageTag := "2.8.3.12" -}}
+{{- $imageName := "kong" -}}
+{{- $imageTag := "1.0.1" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/io" -}}
+{{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.image -}}
   {{- if not (kindIs "string" .Values.image) -}}
     {{ $imageRepository = .Values.image.repository | default $imageRepository -}}

@@ -105,11 +105,11 @@ templateChangeTriggers: []
 # You can force using a specific image here:
 #image: 
   #repository: mtr.devops.telekom.de
-  #organization: tardis-internal/io
-  #name: eni-kong
-  #tag: 2.8.3.9
+  #organization: tardis-internal/gateway
+  #name: kong
+  #tag: 1.0.1
 # Or use the flattened string form:
-#image: mtr.devops.telekom.de/tardis-internal/io/eni-kong:2.8.3.9
+#image: mtr.devops.telekom.de/tardis-internal/gateway/kong:1.0.1
 #imagePullPolicy: IfNotPresent
 
 # Determine the migrations behaviour (bootstrap, upgrade, jobs)

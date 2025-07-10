@@ -12,6 +12,9 @@ Please also seek advice from the README regarding updates.
 
 [[_TOC_]
 
+## 7.2.1
+- fix: switch to open source [gateway-kong-image](https://github.com/telekom/gateway-kong-image) based on Kong 2.8.3
+
 ## 7.2.0
 - feat: remove unused cequence plugin functionality
 - feat: remove deprecated legacy-jumper

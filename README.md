@@ -474,6 +474,9 @@ This is a short overlook about important parameters in the `values.yaml`.
 | livenessProbe | object | `{"failureThreshold":4,"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"periodSeconds":20,"timeoutSeconds":5}` | kong livenessProbe configuration |
 | logFormat | string | `"json"` |  |
 | migrations | string | `"none"` | Determine the migrations behaviour for a new instance or upgrade |
+| pdb.create | bool | `false` | enable pod discruption budget creation |
+| pdb.maxUnavailable | string | `nil` | maxUnavailable pods in number or percent (defaults to 1 if unset and minAvailable also unset) |
+| pdb.minAvailable | string | `nil` | minAvailable pods in number or percent |
 | plugins.acl.pluginId | string | `"bc823d55-83b5-4184-b03f-ce63cd3b75c7"` | pluginId for configuration in kong |
 | plugins.enabled | list | `["rate-limiting-merged"]` | additional enabled plugins for kong besides `bundled,jwt-keycloak` |
 | plugins.jwtKeycloak.allowedIss | list | `["https://changeme/auth/realms/default"]` | Set the Iris URL you want the Gateway to use for Admin API athentication |

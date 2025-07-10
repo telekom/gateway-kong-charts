@@ -643,3 +643,11 @@ keyRotation:
     #commonName: stargate.telekom.de
     #dnsNames:
     #  - stargate.telekom.de
+
+pdb:
+  # -- enable pod discruption budget creation
+  create: false
+  # -- minAvailable pods in number or percent
+  minAvailable:
+  # --  maxUnavailable pods in number or percent (defaults to 1 if unset and minAvailable also unset)
+  maxUnavailable:

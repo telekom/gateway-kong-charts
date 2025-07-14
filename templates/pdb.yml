@@ -10,5 +10,7 @@ spec:
   {{- else }}
   maxUnavailable: {{ .Values.pdb.maxUnavailable | default 1 }}
   {{- end }}
-  selector: {{ include "kong.selector" $ | nindent 4 }}
+  selector: 
+    matchLabels:
+      {{- include "kong.selector" $ | nindent 6 }}
 {{- end }}

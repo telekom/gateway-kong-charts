@@ -12,23 +12,11 @@ Please also seek advice from the README regarding updates.
 
 [[_TOC_]]
 
+## 7.3.1
+- fix: correct pdb label selector
+
 ## 7.3.0
 - feat: add PDB for kong
-
-## 7.2.1
-- fix: switch to open source [gateway-kong-image](https://github.com/telekom/gateway-kong-image) based on Kong 2.8.3
-
-## 7.2.0
-- feat: remove unused cequence plugin functionality
-- feat: remove deprecated legacy-jumper
-- feat: update issuer-service to 2.1.1
-
-## 7.1.0
-- feat: added configurable internet facing zone names for jumper
-- jumper 4.1.0 needed
-
-## 7.0.2
-- fix: value names for logging in kong
 
 ## 7.2.1
 - fix: switch to open source [gateway-kong-image](https://github.com/telekom/gateway-kong-image) based on Kong 2.8.3

@@ -4,8 +4,8 @@
 
 apiVersion: v2
 name: stargate
-version: 7.3.1
-appVersion: 2.0.0
+version: 8.0.0
+appVersion: 3.0.0
 description: Kong API gateway provided by DHEI
 dependencies:
 - name: postgresql

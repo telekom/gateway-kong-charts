@@ -15,7 +15,7 @@ By participating in this project, you agree to abide by its [Code of Conduct](./
 ## Licensing
 
 This project follows the [REUSE standard for software licensing](https://reuse.software/).
-Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit https://reuse.software/.
+Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit <https://reuse.software/>.
 
 ## Requirements
 
@@ -33,7 +33,7 @@ To add a new platform specific values.yaml, add the required values as platforNa
 
 **Note:** Setting platform specific values for the sub-chart by the platform specific platformName.yaml of your main-chart will not work, as the sub-chart platforms have precedence.
 
-### Database
+### Database Configuration
 
 No detailed configuration is necessary. PostgreSQL will be deployed together with the Gateway. You should change the default passwords!
 
@@ -50,7 +50,7 @@ The Gateway can be accessed via created Ingress/Route. See the Parameters sectio
 ### Community Edition
 
 Be aware that exposing the Admin-API for Community Edition can be dangerous, as the API is not protected by any RBAC. Thus it can be accessed by anyone having access to the API url. \
-Therefore the Admin-API-Ingress is disabled. For Mor details see [External access](#External-access).
+Therefore the Admin-API-Ingress is disabled. For Mor details see [External access](#external-access).
 
 By default, we protect the Admin API via a dedicated service and route together with the jwt-keycloak. You need to add the used issuer.
 
@@ -60,6 +60,7 @@ If you enable SSL verification the Gateway will try to verify all traffic agains
 You can enable this by setting sslVerify to true in the ``values.yaml``.  If you do so, you must provide your own truststore by setting the ``trustedCaCertificates`` field with the content of your CA certificates in PEM format otherwise Kong won't start.
 
 Example *values.yaml*:
+
 ```yaml
 trustedCaCertificates: |
   -----BEGIN CERTIFICATE-----
@@ -72,6 +73,7 @@ trustedCaCertificates: |
   <CA certificate 03 in PEM format here>
   -----END CERTIFICATE-----
 ```
+
 Of course Helm let's you reference multiple values files when installing a deployment so you could also outsource ``trustedCaCertificates`` wo its own values file, for example ``my-trustes-ca-certificates.yaml``.
 
 ### Supported TLS versions
@@ -80,24 +82,28 @@ Only TLS versions TLSv1.2 and TLSv.1.3 are allowed. TLSv1.1 is NOT supported.
 
 ### Server Certificate
 
-If "https" is used but no SNI is configured, the API gateway provides a default server certificate issued for "https://localhost". You can replace the default certificate by a custom server-certificate by specyfing the secret name in the variable ``defaultTlsSecret``.
+If "https" is used but no SNI is configured, the API gateway provides a default server certificate issued for "<https://localhost>". You can replace the default certificate by a custom server-certificate by specyfing the secret name in the variable ``defaultTlsSecret``.
 
 Example *values.yaml*:
+
 ```yaml
 defaultTlsSecret: my-https-secret
 ```
 
 Here are some examples how to create a corresponding secret from PEM files. For more details s. Kubernetes documentation.
-```
+
+```bash
 kubectl create secret tls my-https-secret --key=key.pem --cert=cert.pem
 oc create secret generic my-https-secret-2 --from-file=tls.key=key.pem  --from-file=tls.crt=cert.pem
 ```
 
 ## Bootstrap and Upgrade
+
 Setup and some upgrades require specific migration steps to be run before and after changing the Kong version via a newer image or starting it for the first time.
 There the chart provides specialised jobs for each of those steps.
 
 ### Bootstrap
+
 Bootstrapping is required when Kong starts for the first time and needs to setup its database. This task is handled by the job `job-kong-bootstrap.yml`.
 It will be run if "`migrations: bootstrap`" is set in the `values.yaml`. This can be uncommented if no further execution is wished, but this is also prohibited by keeping the job itself.
 Running the job again will do no harm in any way, as the executed bootstrap recognises the database as already initialised.
@@ -106,50 +112,62 @@ If you deploy a new instance of this Gateway, make sure migrations is set to `bo
 ### Upgrade
 
 Upgrading to a newer version may require running migration steps (e.g. database changes). To run those jobs set "`migrations: upgrade`" in the `values.yaml`.
-As a result `job-kong-pre-upgrade-migrations.yml` will run and `job-kong-post-upgrade-migrations.yml` will be run after successfull deployments to complete the upgrade.
+As a result `job-kong-migrations-up.yml` will run.
 
 **Warning:** Uncomment "`migrations: upgrade`" if you deploy again after a successfull deployment or set it to "`migrations: bootstrap`". Otherwise migrations will be executed again.
 
-**Note:** Those jobs are only ment to be used for upgrading.
+**Note:** Those jobs are only meant to be used for upgrading.
 
 ## Upgrade Advice
+
 The following section contains special advice for dedicated updates and maybe necessary steps to be taken if updating from a certain version to another.
 Although updates in minor versions, whilst keeping the same major verison, do not contain breaking changes, implications may occour.
 
 ### To 1.24.0 and up
+
 This version introduces Kong 2.8.1 and requires migrations to be run.\
-It also requires to adapt to the changed ```securityContext``` settings of the ```plugins``` in the ````values.yaml```. 
+It also requires to adapt to the changed ```securityContext``` settings of the ```plugins``` in the ````values.yaml```.
 
 ### To 1.23.0 and up
+
 Version 1.23.0 introduces a new issuer service version. If in use, this requires to set values for the new secret ```secret-issuer-service.yml```. \
 Replace ```jsonWebKey: changeme``` and  ```publicKey: changeme```.
 
 ### From 1.5.x and lower to 1.6.x
+
 With introduction of Kong CE, a dedicated Admin-API handling has been introduced to proted the Admin-API. This required changes to the ingress of the Admin-API.
 Those changes are only reflected in the ```ingress-admin.yml``` and not in the ```route-admin.yml```. Using Kong CE will work, but deploying
 the Admin-API-Route will provide unsecured access to the Admin-API.
 
 ### From 1.7.x and lower to 1.8.x and up
+
 The bundled Zipkin-plugin has been replaced by the ENI-Zipkin pluging. Behaviour and configuration differ slightly to the used one.
 To avoid complications, we strongly recommend removing the existing Zipkin-Plugin before upgrading. This can be done via a DELETE call on the Admin-API (Token required).
 
 Lookup all plugins and find the Zipkin-Plugin-ID:
+
+```bash
+curl -X GET https://admin-api-url.me/plugins
 ```
-via GET on https://admin-api-url.me/plugins
-```
+
 Deleting the existing plugin:
-```
-via DELETE on https://admin-api-url.me/plugins/<zipkinPluginId>
+
+```bash
+curl -X DELETE https://admin-api-url.me/plugins/<zipkinPluginId>
 ```
 
 ### From 2.x.x and lower to 3.x.x
+
+```bash
 We changed the integration of the ENI-plugins. Therefore names of the plugins changed and and eni-prefixed plugins have been removed from the image. Therefore the configuration of Kong itself, precisely the database, needs to be updated.
 You can do this by activating the jobs migration. This will delete the "old" ENI-plugins to allow the configuration of the new ones.
 
-```
+```yaml
 migrations: jobs
 ```
+
 ### From 2.x.x and lower to 4.x.x
+
 The migration from 2.x.x to 4.x.x is not possible. Please upgrade first from 2.x.x to 3.x.x as described above and afterwards without any migrations configuration from 3.x.x to 4.x.x
 
 ### From 4.x.x to Version 5.x.x
@@ -266,7 +284,7 @@ The following paragraph explains which helm-chart settings are responsible, how 
 
 In some environments, especially in AWS "prod", we use the autoscaler to update workload ressources.
 
-The autoscaling ia documented [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+The autoscaling ia documented [in the HPA section](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
 (Since chart version `5.4.0` we use kubernetes API `autoscaling/v2`)
 
 Following helm-chart variables controls the autoscaler properties for the Gateway:
@@ -311,6 +329,7 @@ This Gateway is fully operational only when all components Kong, Jumper and Issu
 For this reason, each container deployed in a gateway pod has its own settings for `readinessProbe`, `livenessProbe` and `startupProbe` as well as configurable values for all health probes options.
 
 The Probe-URLs are configured as follows:
+
 - `http://localhost:8100/status` as readiness probe for Kong
 - `http://localhost:8100/status` as liveness probe for Kong
 - `http://localhost:8100/status` as startup probe for Kong
@@ -523,13 +542,15 @@ This is a short overlook about important parameters in the `values.yaml`.
 If the Gateway deployment fails to come up, please have a look at the logs of the container.
 
 **Log message:**
-```
+
+```text
 Error: /usr/local/share/lua/5.1/opt/kong/cmd/start.lua:37: nginx configuration is invalid (exit code 1):
 nginx: [emerg] SSL_CTX_load_verify_locations("/usr/local/opt/kong/tif/trusted-ca-certificates.pem") failed (SSL: error:0B084088:x509 certificate routines:X509_load_cert_crl_file:no certificate or crl found)
 nginx: configuration file /opt/kong/nginx.conf test failed
 ```
-**Solution:** 
-This error happens if ``sslVerify`` is set to true but no valid certificates could be found. 
+
+**Solution:**
+This error happens if ``sslVerify`` is set to true but no valid certificates could be found.
 Please make sue that ``trustedCaCertificates`` is set probably or set sslVerify to false if you don't wish to use ssl verification.
 
 ## Compatibility

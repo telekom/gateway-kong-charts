@@ -1,0 +1,36 @@
+# Copyright 2025 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Ensure up-to-date docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  check-readme-changes:
+    name: Ensure README is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm Docs
+        run: |
+          HELM_DOCS_VERSION="1.11.0"
+          wget -q https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz -O - | tar -xzf - helm-docs
+          chmod +x ./helm-docs
+          sudo mv ./helm-docs /usr/local/bin/helm-docs
+
+      - name: Generate README with Helm Docs
+        run: helm-docs
+
+      - name: Ensure README is up-to-date
+        run: |
+          if ! git diff --exit-code README.md; then
+            printf "\n\nERROR | README.md is not up to date with Helm values. Please run 'helm-docs' locally and commit the changes.\n"
+            exit 1
+          fi

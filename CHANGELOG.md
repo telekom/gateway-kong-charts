@@ -1,16 +1,6 @@
-<!--
-SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+# Changelog
 
-SPDX-License-Identifier: CC0-1.0
--->
-
-**Table of contents**
-
-This document show changes done to the chart.
-Please also seek advice from the README regarding updates.
-
-
-[[_TOC_]]
+Please refer to the README for additional upgrade instructions.
 
 ## 7.3.1
 - fix: correct pdb label selector

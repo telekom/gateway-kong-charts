@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+//
+// SPDX-License-Identifier: Apache-2.0
+
 module.exports = {
   branches: ['main'],
   tagFormat: '${version}',
@@ -7,7 +11,8 @@ module.exports = {
     [
       '@semantic-release/changelog',
       {
-        changelogFile: 'CHANGELOG.md'
+        changelogFile: 'CHANGELOG.md',
+        changelogTitle: '# Changelog\n\nPlease refer to the README for additional upgrade instructions.\n',
       }
     ],
     [

@@ -2,6 +2,14 @@
 
 Please refer to the README for additional upgrade instructions.
 
+
+## [7.3.2](https://github.com/telekom/gateway-kong-charts/compare/7.3.1...7.3.2) (2025-08-06)
+
+
+### Bug Fixes
+
+* update default jumper image to 4.1.2 built on github ([ac8cae6](https://github.com/telekom/gateway-kong-charts/commit/ac8cae6442f1fe55276d2b50d343438063052610))
+
 ## 7.3.1
 - fix: correct pdb label selector
 
@@ -525,4 +533,3 @@ Please refer to the README for additional upgrade instructions.
 - DHEI-1136: Added option to enable and configure Zipkin-Plugin
 - DHEI-967: Added option to configure mTLS Proxy to present a server cert
 - DHEI-1135: Added option to enable a metrics service that can be found scraped by Prometheus
-

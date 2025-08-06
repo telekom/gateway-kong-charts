@@ -61,10 +61,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{- end -}}
 
 {{- define "kong.jumper.image" -}}
-{{- $imageName := "jumper-sse" -}}
-{{- $imageTag := "4.1.0" -}}
+{{- $imageName := "jumper" -}}
+{{- $imageTag := "4.1.2" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/hyperion" -}}
+{{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.jumper.image -}}
   {{- if not (kindIs "string" .Values.jumper.image) -}}
     {{ $imageRepository = .Values.jumper.image.repository | default $imageRepository -}}

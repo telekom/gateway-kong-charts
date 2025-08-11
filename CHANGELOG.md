@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+# [7.4.0](https://github.com/telekom/gateway-kong-charts/compare/7.3.2...7.4.0) (2025-08-11)
+
+
+### Features
+
+* update issuer service to v2.2.0 making ISSUER_URL environment variable obsolete ([d9dfded](https://github.com/telekom/gateway-kong-charts/commit/d9dfded8b1d65cc2f642d3b35134d1034eb61be4))
+
 ## [7.3.2](https://github.com/telekom/gateway-kong-charts/compare/7.3.1...7.3.2) (2025-08-06)
 
 

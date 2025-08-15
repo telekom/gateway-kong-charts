@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [7.4.1](https://github.com/telekom/gateway-kong-charts/compare/7.4.0...7.4.1) (2025-08-15)
+
+
+### Bug Fixes
+
+* update issuer image v2.2.0 -> v2.2.1 ([cc0284b](https://github.com/telekom/gateway-kong-charts/commit/cc0284bca1d8adf841f67c23ef0a8fc88d9f402f))
+
 # [7.4.0](https://github.com/telekom/gateway-kong-charts/compare/7.3.2...7.4.0) (2025-08-11)
 
 

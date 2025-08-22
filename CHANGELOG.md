@@ -8,7 +8,7 @@ Please refer to the README for additional upgrade instructions.
 
 ### Bug Fixes
 
-* trigger release ([c9fdc1b](https://github.com/telekom/gateway-kong-charts/commit/c9fdc1b9a42479e668ff66bf55fc088b8be0e062))
+* update jumper to 4.1.3 (switch to google distroless image) ([418955d](https://github.com/telekom/gateway-kong-charts/commit/418955d2cecbdbd5e0fe3bede7ac472c7166c93e))
 
 ## [7.4.1](https://github.com/telekom/gateway-kong-charts/compare/7.4.0...7.4.1) (2025-08-15)
 

@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [7.4.3](https://github.com/telekom/gateway-kong-charts/compare/7.4.2...7.4.3) (2025-08-22)
+
+
+### Bug Fixes
+
+* update jumper to 4.1.4 (switch to nonroot image) ([0e2901d](https://github.com/telekom/gateway-kong-charts/commit/0e2901d465df8a10759a528dd9952634550d92ce))
+
 ## [7.4.2](https://github.com/telekom/gateway-kong-charts/compare/7.4.1...7.4.2) (2025-08-22)
 
 

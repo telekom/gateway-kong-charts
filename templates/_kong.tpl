@@ -62,7 +62,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.jumper.image" -}}
 {{- $imageName := "jumper" -}}
-{{- $imageTag := "4.1.2" -}}
+{{- $imageTag := "4.1.3" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.jumper.image -}}

@@ -223,6 +223,7 @@ server {
 
     access_by_lua_block {
         Kong.access()
+        ngx.var.gateway_consumer = kong.ctx.shared.gateway_consumer or ''
     }
 
     header_filter_by_lua_block {

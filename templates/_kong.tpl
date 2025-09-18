@@ -275,9 +275,6 @@ false
   emptyDir: {}
 - name: kong-tmp
   emptyDir: {}
-- name: nginx-kong-template
-  configMap:
-    name: {{ .Release.Name }}-nginx-kong-template
 - name: htpasswd
   secret:
     secretName: {{ .Release.Name }}
@@ -303,9 +300,6 @@ false
   mountPath: /kong
 - name: kong-tmp
   mountPath: /tmp
-- name: nginx-kong-template
-  mountPath: /usr/local/share/lua/5.1/kong/templates/nginx_kong.lua
-  subPath: nginx_kong.lua
 - name: htpasswd
   mountPath: /opt/kong/.htpasswd
   subPath: .htpasswd

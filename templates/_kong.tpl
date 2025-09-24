@@ -14,7 +14,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.image" -}}
 {{- $imageName := "kong" -}}
-{{- $imageTag := "1.0.1" -}}
+{{- $imageTag := "migration-kong-3.9.1" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.image -}}
@@ -275,9 +275,6 @@ false
   emptyDir: {}
 - name: kong-tmp
   emptyDir: {}
-- name: nginx-kong-template
-  configMap:
-    name: {{ .Release.Name }}-nginx-kong-template
 - name: htpasswd
   secret:
     secretName: {{ .Release.Name }}
@@ -303,9 +300,6 @@ false
   mountPath: /kong
 - name: kong-tmp
   mountPath: /tmp
-- name: nginx-kong-template
-  mountPath: /usr/local/share/lua/5.1/kong/templates/nginx_kong.lua
-  subPath: nginx_kong.lua
 - name: htpasswd
   mountPath: /opt/kong/.htpasswd
   subPath: .htpasswd
@@ -634,7 +628,7 @@ false
 - name: JUMPER_INTERNET_FACING_ZONES
   value: {{ .Values.jumper.internetFacingZones | join "," | quote }}
 {{- end }}
-- name: JVM_OPTS
+- name: JAVA_TOOL_OPTIONS
   value: {{ .Values.jumper.jvmOpts }}
 - name: PUBLISH_EVENT_URL
   value: {{ .Values.jumper.publishEventUrl }}

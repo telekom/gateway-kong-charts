@@ -628,7 +628,7 @@ false
 - name: JUMPER_INTERNET_FACING_ZONES
   value: {{ .Values.jumper.internetFacingZones | join "," | quote }}
 {{- end }}
-- name: JVM_OPTS
+- name: JAVA_TOOL_OPTIONS
   value: {{ .Values.jumper.jvmOpts }}
 - name: PUBLISH_EVENT_URL
   value: {{ .Values.jumper.publishEventUrl }}

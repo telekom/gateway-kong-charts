@@ -437,7 +437,7 @@ jumper:
   #defaultServiceName: "stargate"
   stargateUrl: https://stargate-integration.test.dhei.telekom.de
   publishEventUrl: http://producer.integration:8080/v1/events
-  jvmOpts: "-XX:MaxRAMPercentage=75.0 -XshowSettings:vm"
+  jvmOpts: "-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"
   #maxHttpHeaderSize: 16KB
   #fpaProxyHost
   #fpaProxyPort

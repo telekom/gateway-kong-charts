@@ -269,7 +269,6 @@ resources:
 
 # log_format select the pre-configured log formats for nginx
 # It can have one of the values: default, json or plain.
-# Details are specified in templates/configmap-nginx-kong-template.yaml and nginx/nginx_kong.lua
 # Formats: debug, default, json
 logFormat: json
 
@@ -438,7 +437,7 @@ jumper:
   #defaultServiceName: "stargate"
   stargateUrl: https://stargate-integration.test.dhei.telekom.de
   publishEventUrl: http://producer.integration:8080/v1/events
-  jvmOpts: "-XX:MaxRAMPercentage=75.0 -XshowSettings:vm"
+  jvmOpts: "-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"
   #maxHttpHeaderSize: 16KB
   #fpaProxyHost
   #fpaProxyPort

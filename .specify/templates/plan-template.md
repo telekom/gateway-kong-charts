@@ -31,7 +31,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with `.specify/memory/constitution.md` principles:
+
+- [ ] **Values-First Configuration**: All new configuration exposed in `values.yaml` with defaults and documentation
+- [ ] **Template Simplicity**: Templates are readable, use named templates for complex logic, single responsibility per file
+- [ ] **Backward Compatibility**: Changes follow semver, breaking changes documented with migration path
+- [ ] **Platform Portability**: No platform-specific assumptions in core templates, extensions use `platforms/*.yaml`
+- [ ] **Progressive Disclosure**: Advanced features disabled by default, required values validated with helpful errors
+- [ ] **Observability**: Health probes configured, structured logging enabled, resource limits set
+- [ ] **Security by Default**: Secure defaults, secrets properly managed, least-privilege security contexts
+- [ ] **Helm Best Practices**: Standard labels, `_helpers.tpl` usage, validation with `required` function
+- [ ] **Testing**: Changes validated with `helm lint`, `helm template`, and test deployment
+- [ ] **Documentation**: README, values comments, and CHANGELOG updated in same PR
 
 ## Project Structure
 

@@ -282,6 +282,8 @@ The following paragraph explains which helm-chart settings are responsible, how 
 
 ### Autoscaling
 
+#### Standard HPA (Horizontal Pod Autoscaler)
+
 In some environments, especially in AWS "prod", we use the autoscaler to update workload ressources.
 
 The autoscaling ia documented [in the HPA section](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
@@ -297,6 +299,150 @@ Following helm-chart variables controls the autoscaler properties for the Gatewa
 | `autoscaling.cpuUtilizationPercentage` | `spec.metrics.resource.target.averageUtilization` | 80            | [k8s_hpe_spec]     |
 
 [k8s_hpe_spec]: https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/horizontal-pod-autoscaler-v2/#HorizontalPodAutoscalerSpec
+
+#### KEDA-Based Autoscaling (Advanced)
+
+**Available since chart version `8.1.0`**
+
+[KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh/) provides advanced autoscaling capabilities beyond standard HPA, including:
+- **Multiple metric sources**: CPU, memory, custom metrics from Victoria Metrics, and time-based schedules
+- **Anti-flapping protection**: Sophisticated cooldown periods and stabilization windows
+- **Custom metrics**: Scale based on request rate, error rate, or any Prometheus/Victoria Metrics query
+- **Schedule-based scaling**: Pre-scale for known traffic patterns (business hours, weekends, etc.)
+
+**Prerequisites:**
+- KEDA must be installed in the cluster: `helm install keda kedacore/keda --namespace keda --create-namespace`
+- Kubernetes metrics server must be running (for CPU/memory scaling)
+- Victoria Metrics must be accessible (for custom metric scaling)
+- ClusterTriggerAuthentication resource must exist (for Victoria Metrics auth)
+
+**Important:** `kedaAutoscaling` and `autoscaling` (HPA) are mutually exclusive. Enable only one at a time.
+
+**Minimal Configuration Example** (CPU + Memory only):
+
+```yaml
+kedaAutoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  
+  triggers:
+    cpu:
+      enabled: true
+      threshold: 70  # Scale up when CPU > 70%
+    
+    memory:
+      enabled: true
+      threshold: 85  # Scale up when memory > 85%
+    
+    prometheus:
+      enabled: false
+    
+    cron:
+      enabled: false
+```
+
+**Full Configuration Example** (All triggers):
+
+```yaml
+kedaAutoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 20
+  pollingInterval: 30      # Check metrics every 30 seconds
+  cooldownPeriod: 300      # Wait 5 minutes before scaling down
+  
+  fallback:
+    enabled: true
+    replicas: 3            # Fallback replica count if metrics unavailable
+  
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300  # 5 minute stabilization
+          policies:
+          - type: Percent
+            value: 10      # Max 10% reduction per period
+            periodSeconds: 60
+        scaleUp:
+          stabilizationWindowSeconds: 0    # Immediate scale-up
+          policies:
+          - type: Percent
+            value: 100     # Max 100% increase per period
+            periodSeconds: 60
+          - type: Pods
+            value: 4       # Or max 4 pods per period
+            periodSeconds: 60
+          selectPolicy: Max
+  
+  triggers:
+    # CPU-based scaling
+    cpu:
+      enabled: true
+      threshold: 70
+    
+    # Memory-based scaling
+    memory:
+      enabled: true
+      threshold: 85
+    
+    # Victoria Metrics custom metric scaling
+    prometheus:
+      enabled: true
+      serverAddress: "http://vmauth-raccoon.monitoring.svc.cluster.local:8427"
+      metricName: "kong_request_rate"
+      query: 'sum(rate(kong_http_requests_total{tardis_telekom_de_zone="{{ .Values.global.zone }}"}[1m]))'
+      threshold: "100"     # Scale up when > 100 req/s total
+      authModes: "basic"
+      authentication:
+        clusterTriggerAuthenticationName: "eni-keda-vmselect-creds"
+    
+    # Schedule-based scaling
+    cron:
+      enabled: true
+      timezone: "Europe/Berlin"  # Automatically handles CET/CEST
+      schedules:
+      - name: "business-hours"
+        start: "0 8 * * 1-5"     # 8 AM Mon-Fri
+        end: "0 18 * * 1-5"      # 6 PM Mon-Fri
+        desiredReplicas: 5
+      - name: "night-hours"
+        start: "0 22 * * *"      # 10 PM daily
+        end: "0 6 * * *"         # 6 AM daily
+        desiredReplicas: 2
+```
+
+**Migration from HPA to KEDA:**
+
+1. Disable existing HPA: `autoscaling.enabled: false`
+2. Enable KEDA with equivalent settings: `kedaAutoscaling.enabled: true`
+3. Map CPU threshold: `kedaAutoscaling.triggers.cpu.threshold: 80` (same as HPA `cpuUtilizationPercentage`)
+4. Test in non-production first
+5. Monitor scaling behavior for 24-48 hours
+
+**Key Configuration Options:**
+
+| Helm-Chart variable                    | Description | default value |
+|----------------------------------------|-------------|---------------|
+| `kedaAutoscaling.enabled`              | Enable KEDA autoscaling | `false` |
+| `kedaAutoscaling.minReplicas`          | Minimum replica count | `2` |
+| `kedaAutoscaling.maxReplicas`          | Maximum replica count | `10` |
+| `kedaAutoscaling.pollingInterval`      | Metric check frequency (seconds) | `30` |
+| `kedaAutoscaling.cooldownPeriod`       | Scale-down cooldown (seconds) | `300` |
+| `kedaAutoscaling.triggers.cpu.enabled` | Enable CPU-based scaling | `true` |
+| `kedaAutoscaling.triggers.cpu.threshold` | CPU utilization percentage | `70` |
+| `kedaAutoscaling.triggers.memory.enabled` | Enable memory-based scaling | `true` |
+| `kedaAutoscaling.triggers.memory.threshold` | Memory utilization percentage | `85` |
+| `kedaAutoscaling.triggers.prometheus.enabled` | Enable custom metric scaling | `true` |
+| `kedaAutoscaling.triggers.cron.enabled` | Enable schedule-based scaling | `false` |
+
+For complete configuration options and troubleshooting, see `specs/001-adding-keda-i/quickstart.md`.
+
+**References:**
+- [KEDA Documentation](https://keda.sh/docs/)
+- [KEDA Scalers](https://keda.sh/docs/scalers/)
+- [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
 ### PodAntiaffinity & TopologyKey
 

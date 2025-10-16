@@ -104,10 +104,10 @@ kedaAutoscaling:
           policies:
           - type: Percent
             value: 100       # Max 100% increase per period
-            periodSeconds: 15
+            periodSeconds: 60
           - type: Pods
             value: 4         # Or max 4 pods per period
-            periodSeconds: 15
+            periodSeconds: 60
           
           # -- Policy selection (Max = use most aggressive policy)
           selectPolicy: Max
@@ -316,10 +316,10 @@ kedaAutoscaling:
           policies:
           - type: Percent
             value: 100
-            periodSeconds: 15
+            periodSeconds: 60
           - type: Pods
             value: 4
-            periodSeconds: 15
+            periodSeconds: 60
           selectPolicy: Max
   
   triggers:

@@ -178,10 +178,10 @@ kedaAutoscaling:
           policies:
             - type: Percent
               value: 100
-              periodSeconds: 15
+              periodSeconds: 60
             - type: Pods
               value: 4
-              periodSeconds: 15
+              periodSeconds: 60
           selectPolicy: Max
 
   # Trigger configurations

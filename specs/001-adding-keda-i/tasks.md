@@ -30,9 +30,9 @@ description: "Implementation tasks for KEDA-based autoscaling feature"
 
 **Purpose**: Project initialization and version management
 
-- [ ] T001 Create feature branch `001-adding-keda-i` from main
-- [ ] T002 Update Chart.yaml version (MINOR bump) and add feature description in Chart.yaml
-- [ ] T003 [P] Create backup of existing values.yaml for reference
+- [X] T001 Create feature branch `001-adding-keda-i` from main
+- [X] T002 Update Chart.yaml version (MINOR bump) and add feature description in Chart.yaml
+- [X] T003 [P] Create backup of existing values.yaml for reference
 
 **Checkpoint**: Branch and versioning ready
 
@@ -44,13 +44,13 @@ description: "Implementation tasks for KEDA-based autoscaling feature"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Add complete `kedaAutoscaling` section to values.yaml with all configuration options per data-model.md
-- [ ] T005 Add inline documentation comments for all kedaAutoscaling configuration fields in values.yaml
-- [ ] T006 [P] Create validation logic in templates/\_helpers.tpl for mutual exclusion of HPA and KEDA (fail if both enabled)
-- [ ] T007 [P] Create validation logic in templates/\_helpers.tpl for minReplicas <= maxReplicas
-- [ ] T008 [P] Create validation logic in templates/\_helpers.tpl for required Prometheus serverAddress when prometheus trigger enabled
-- [ ] T009 Update templates/deployment-kong.yml to exclude replicas field when kedaAutoscaling.enabled is true (similar to existing autoscaling logic)
-- [ ] T010 Update templates/horizontal-pod-autoscaler.yaml condition to: `{{- if and .Values.autoscaling.enabled (not .Values.kedaAutoscaling.enabled) -}}`
+- [X] T004 Add complete `kedaAutoscaling` section to values.yaml with all configuration options per data-model.md
+- [X] T005 Add inline documentation comments for all kedaAutoscaling configuration fields in values.yaml
+- [X] T006 [P] Create validation logic in templates/_kong.tpl for mutual exclusion of HPA and KEDA (fail if both enabled)
+- [X] T007 [P] Create validation logic in templates/_kong.tpl for minReplicas <= maxReplicas
+- [X] T008 [P] Create validation logic in templates/_kong.tpl for required Prometheus serverAddress when prometheus trigger enabled
+- [X] T009 Update templates/deployment-kong.yml to exclude replicas field when kedaAutoscaling.enabled is true (similar to existing autoscaling logic)
+- [X] T010 Update templates/horizontal-pod-autoscaler.yaml condition to: `{{- if and .Values.autoscaling.enabled (not .Values.kedaAutoscaling.enabled) -}}`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -64,19 +64,19 @@ description: "Implementation tasks for KEDA-based autoscaling feature"
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Create templates/scaled-object-keda.yaml with conditional rendering based on kedaAutoscaling.enabled
-- [ ] T012 [US1] Add metadata section to templates/scaled-object-keda.yaml using kong.labels helper and autoscaling component label
-- [ ] T013 [US1] Add scaleTargetRef section in templates/scaled-object-keda.yaml pointing to deployment
-- [ ] T014 [US1] Add minReplicaCount and maxReplicaCount configuration in templates/scaled-object-keda.yaml from values
-- [ ] T015 [US1] Add pollingInterval and cooldownPeriod configuration in templates/scaled-object-keda.yaml from values
-- [ ] T016 [US1] Add fallback configuration section in templates/scaled-object-keda.yaml (conditional on fallback.enabled)
-- [ ] T017 [US1] Add advanced.horizontalPodAutoscalerConfig section in templates/scaled-object-keda.yaml (conditional on advanced config)
-- [ ] T018 [US1] Implement CPU trigger in templates/scaled-object-keda.yaml triggers section (conditional on triggers.cpu.enabled)
-- [ ] T019 [US1] Implement memory trigger in templates/scaled-object-keda.yaml triggers section (conditional on triggers.memory.enabled)
-- [ ] T020 [US1] Implement Prometheus/Victoria Metrics trigger in templates/scaled-object-keda.yaml with query templating support (conditional on triggers.prometheus.enabled)
-- [ ] T021 [US1] Add authenticationRef section for Prometheus trigger using ClusterTriggerAuthentication reference
-- [ ] T022 [US1] Test helm template rendering with CPU and memory triggers enabled
-- [ ] T023 [US1] Test helm lint passes with metric-based configuration
+- [X] T011 [US1] Create templates/scaled-object-keda.yaml with conditional rendering based on kedaAutoscaling.enabled
+- [X] T012 [US1] Add metadata section to templates/scaled-object-keda.yaml using kong.labels helper and autoscaling component label
+- [X] T013 [US1] Add scaleTargetRef section in templates/scaled-object-keda.yaml pointing to deployment
+- [X] T014 [US1] Add minReplicaCount and maxReplicaCount configuration in templates/scaled-object-keda.yaml from values
+- [X] T015 [US1] Add pollingInterval and cooldownPeriod configuration in templates/scaled-object-keda.yaml from values
+- [X] T016 [US1] Add fallback configuration section in templates/scaled-object-keda.yaml (conditional on fallback.enabled)
+- [X] T017 [US1] Add advanced.horizontalPodAutoscalerConfig section in templates/scaled-object-keda.yaml (conditional on advanced config)
+- [X] T018 [US1] Implement CPU trigger in templates/scaled-object-keda.yaml triggers section (conditional on triggers.cpu.enabled)
+- [X] T019 [US1] Implement memory trigger in templates/scaled-object-keda.yaml triggers section (conditional on triggers.memory.enabled)
+- [X] T020 [US1] Implement Prometheus/Victoria Metrics trigger in templates/scaled-object-keda.yaml with query templating support (conditional on triggers.prometheus.enabled)
+- [X] T021 [US1] Add authenticationRef section for Prometheus trigger using ClusterTriggerAuthentication reference
+- [X] T022 [US1] Test helm template rendering with CPU and memory triggers enabled
+- [X] T023 [US1] Test helm lint passes with metric-based configuration
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - metric-based autoscaling works independently with CPU and memory triggers
 
@@ -90,13 +90,13 @@ description: "Implementation tasks for KEDA-based autoscaling feature"
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Implement cron trigger loop in templates/scaled-object-keda.yaml (conditional on triggers.cron.enabled)
-- [ ] T025 [US2] Add timezone configuration for cron triggers in templates/scaled-object-keda.yaml with Europe/Berlin default
-- [ ] T026 [US2] Add start, end, and desiredReplicas fields for each cron schedule in templates/scaled-object-keda.yaml
-- [ ] T027 [US2] Add optional name field for cron schedules in templates/scaled-object-keda.yaml
-- [ ] T028 [US2] Test helm template rendering with multiple cron schedules configured
-- [ ] T029 [US2] Test helm lint passes with schedule-based configuration
-- [ ] T030 [US2] Verify cron and metric triggers can coexist in rendered template
+- [X] T024 [US2] Implement cron trigger loop in templates/scaled-object-keda.yaml (conditional on triggers.cron.enabled)
+- [X] T025 [US2] Add timezone configuration for cron triggers in templates/scaled-object-keda.yaml with Europe/Berlin default
+- [X] T026 [US2] Add start, end, and desiredReplicas fields for each cron schedule in templates/scaled-object-keda.yaml
+- [X] T027 [US2] Add optional name field for cron schedules in templates/scaled-object-keda.yaml
+- [X] T028 [US2] Test helm template rendering with multiple cron schedules configured
+- [X] T029 [US2] Test helm lint passes with schedule-based configuration
+- [X] T030 [US2] Verify cron and metric triggers can coexist in rendered template
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - schedule-based scaling works with or without metric-based scaling
 
@@ -110,14 +110,14 @@ description: "Implementation tasks for KEDA-based autoscaling feature"
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Verify cooldownPeriod configuration is properly applied in templates/scaled-object-keda.yaml (already implemented in T015)
-- [ ] T032 [US3] Verify stabilizationWindowSeconds for scaleDown is properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
-- [ ] T033 [US3] Verify stabilizationWindowSeconds for scaleUp is properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
-- [ ] T034 [US3] Verify scale-down policies (Percent type) are properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
-- [ ] T035 [US3] Verify scale-up policies (Percent and Pods types) are properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
-- [ ] T036 [US3] Test helm template rendering with conservative anti-flapping configuration
-- [ ] T037 [US3] Test helm template rendering with aggressive anti-flapping configuration
-- [ ] T038 [US3] Document anti-flapping tuning guidelines in quickstart.md
+- [X] T031 [US3] Verify cooldownPeriod configuration is properly applied in templates/scaled-object-keda.yaml (already implemented in T015)
+- [X] T032 [US3] Verify stabilizationWindowSeconds for scaleDown is properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
+- [X] T033 [US3] Verify stabilizationWindowSeconds for scaleUp is properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
+- [X] T034 [US3] Verify scale-down policies (Percent type) are properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
+- [X] T035 [US3] Verify scale-up policies (Percent and Pods types) are properly applied in templates/scaled-object-keda.yaml (already implemented in T017)
+- [X] T036 [US3] Test helm template rendering with conservative anti-flapping configuration
+- [X] T037 [US3] Test helm template rendering with aggressive anti-flapping configuration
+- [X] T038 [US3] Document anti-flapping tuning guidelines in quickstart.md
 
 **Checkpoint**: All user stories should now be independently functional - anti-flapping protection is properly configured
 
@@ -127,17 +127,17 @@ description: "Implementation tasks for KEDA-based autoscaling feature"
 
 **Purpose**: Complete documentation and final validation
 
-- [ ] T039 [P] Add KEDA autoscaling section to README.md with prerequisites and basic usage
-- [ ] T040 [P] Add detailed configuration examples to README.md (minimal, full, production)
-- [ ] T041 [P] Document migration from HPA to KEDA in README.md
-- [ ] T042 [P] Add KEDA feature entry to CHANGELOG.md with version and breaking changes note
-- [ ] T043 [P] Update quickstart.md with troubleshooting section for common KEDA issues
-- [ ] T044 [P] Add validation commands section to quickstart.md (kubectl get scaledobject, describe, etc.)
-- [ ] T045 [P] Document ClusterTriggerAuthentication setup requirements in quickstart.md
-- [ ] T046 Perform final helm lint validation on complete chart
-- [ ] T047 Perform helm template validation with all trigger combinations
-- [ ] T048 Test backward compatibility: verify existing deployments work without kedaAutoscaling enabled
-- [ ] T049 Test mutual exclusion: verify deployment fails when both autoscaling and kedaAutoscaling are enabled
+- [X] T039 [P] Add KEDA autoscaling section to README.md with prerequisites and basic usage
+- [X] T040 [P] Add detailed configuration examples to README.md (minimal, full, production)
+- [X] T041 [P] Document migration from HPA to KEDA in README.md
+- [X] T042 [P] ~~Add KEDA feature entry to CHANGELOG.md~~ (N/A - CHANGELOG.md is auto-generated by semantic-release bot)
+- [X] T043 [P] Update quickstart.md with troubleshooting section for common KEDA issues
+- [X] T044 [P] Add validation commands section to quickstart.md (kubectl get scaledobject, describe, etc.)
+- [X] T045 [P] Document ClusterTriggerAuthentication setup requirements in quickstart.md
+- [X] T046 Perform final helm lint validation on complete chart
+- [X] T047 Perform helm template validation with all trigger combinations
+- [X] T048 Test backward compatibility: verify existing deployments work without kedaAutoscaling enabled
+- [X] T049 Test mutual exclusion: verify deployment fails when both autoscaling and kedaAutoscaling are enabled
 - [ ] T050 Create example values files for common scenarios in specs/001-adding-keda-i/examples/ (optional)
 
 ---

@@ -50,10 +50,10 @@ spec:
           policies:
             - type: Percent
               value: 100
-              periodSeconds: 15
+              periodSeconds: 60
             - type: Pods
               value: 4
-              periodSeconds: 15
+              periodSeconds: 60
           selectPolicy: Max
 
   # Fallback configuration
@@ -357,10 +357,10 @@ advanced:
         policies:
           - type: Percent
             value: 100 # Max 100% increase per period
-            periodSeconds: 15
+            periodSeconds: 60
           - type: Pods
             value: 4 # Or max 4 pods per period
-            periodSeconds: 15
+            periodSeconds: 60
         selectPolicy: Max # Use the more aggressive policy
 ```
 

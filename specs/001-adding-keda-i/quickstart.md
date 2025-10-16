@@ -200,10 +200,10 @@ kedaAutoscaling:
           policies:
           - type: Percent
             value: 100
-            periodSeconds: 15
+            periodSeconds: 60
           - type: Pods
             value: 2
-            periodSeconds: 15
+            periodSeconds: 60
           selectPolicy: Max
   
   triggers:
@@ -588,7 +588,7 @@ kedaAutoscaling:
           policies:
           - type: Pods
             value: 3  # Add more pods per period
-            periodSeconds: 15
+            periodSeconds: 60
 ```
 
 ### Issue: KEDA and HPA conflict
@@ -705,7 +705,7 @@ kedaAutoscaling:
           policies:
           - type: Pods
             value: 5  # Aggressive scale-up
-            periodSeconds: 15
+            periodSeconds: 60
 ```
 
 ## Best Practices

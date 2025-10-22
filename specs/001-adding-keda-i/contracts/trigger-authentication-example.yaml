@@ -1,0 +1,31 @@
+# KEDA ClusterTriggerAuthentication Example for Victoria Metrics
+# 
+# NOTE: This template is NOT needed when using an existing ClusterTriggerAuthentication.
+# The ClusterTriggerAuthentication resource (e.g., "eni-keda-vmselect-creds") must be 
+# created separately by cluster administrators and is shared across all namespaces.
+#
+# This file is kept as a reference example showing what the ClusterTriggerAuthentication
+# resource should look like if you need to create it manually.
+#
+# Example ClusterTriggerAuthentication (created by cluster admin):
+#
+# apiVersion: keda.sh/v1alpha1
+# kind: ClusterTriggerAuthentication
+# metadata:
+#   name: eni-keda-vmselect-creds
+# spec:
+#   secretTargetRef:
+#   - parameter: username
+#     name: victoria-metrics-secret
+#     key: username
+#     namespace: monitoring
+#   - parameter: password
+#     name: victoria-metrics-secret
+#     key: password
+#     namespace: monitoring
+#
+# The chart will reference this ClusterTriggerAuthentication by name in the ScaledObject:
+#
+# authenticationRef:
+#   name: eni-keda-vmselect-creds
+#   kind: ClusterTriggerAuthentication

@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
 
-SPDX-License-Identifier: CC0-1.0   
+SPDX-License-Identifier: CC0-1.0
 -->
 
 # Gateway Helm Chart
@@ -50,16 +50,16 @@ The Gateway can be accessed via created Ingress/Route. See the Parameters sectio
 ### Community Edition
 
 Be aware that exposing the Admin-API for Community Edition can be dangerous, as the API is not protected by any RBAC. Thus it can be accessed by anyone having access to the API url. \
-Therefore the Admin-API-Ingress is disabled. For Mor details see [External access](#external-access).
+Therefore the Admin-API-Ingress is disabled. For Mor details see [External access](#External-access).
 
 By default, we protect the Admin API via a dedicated service and route together with the jwt-keycloak. You need to add the used issuer.
 
 ### SSL Verification
 
 If you enable SSL verification the Gateway will try to verify all traffic against a bundle of trusted CA certificates which needs to be specified explicitely.
-You can enable this by setting sslVerify to true in the ``values.yaml``.  If you do so, you must provide your own truststore by setting the ``trustedCaCertificates`` field with the content of your CA certificates in PEM format otherwise Kong won't start.
+You can enable this by setting sslVerify to true in the `values.yaml`. If you do so, you must provide your own truststore by setting the `trustedCaCertificates` field with the content of your CA certificates in PEM format otherwise Kong won't start.
 
-Example *values.yaml*:
+Example _values.yaml_:
 
 ```yaml
 trustedCaCertificates: |
@@ -74,7 +74,7 @@ trustedCaCertificates: |
   -----END CERTIFICATE-----
 ```
 
-Of course Helm let's you reference multiple values files when installing a deployment so you could also outsource ``trustedCaCertificates`` wo its own values file, for example ``my-trustes-ca-certificates.yaml``.
+Of course Helm let's you reference multiple values files when installing a deployment so you could also outsource `trustedCaCertificates` wo its own values file, for example `my-trustes-ca-certificates.yaml`.
 
 ### Supported TLS versions
 
@@ -82,9 +82,9 @@ Only TLS versions TLSv1.2 and TLSv.1.3 are allowed. TLSv1.1 is NOT supported.
 
 ### Server Certificate
 
-If "https" is used but no SNI is configured, the API gateway provides a default server certificate issued for "<https://localhost>". You can replace the default certificate by a custom server-certificate by specyfing the secret name in the variable ``defaultTlsSecret``.
+If "https" is used but no SNI is configured, the API gateway provides a default server certificate issued for "<https://localhost>". You can replace the default certificate by a custom server-certificate by specyfing the secret name in the variable `defaultTlsSecret`.
 
-Example *values.yaml*:
+Example _values.yaml_:
 
 ```yaml
 defaultTlsSecret: my-https-secret
@@ -92,7 +92,7 @@ defaultTlsSecret: my-https-secret
 
 Here are some examples how to create a corresponding secret from PEM files. For more details s. Kubernetes documentation.
 
-```bash
+```sh
 kubectl create secret tls my-https-secret --key=key.pem --cert=cert.pem
 oc create secret generic my-https-secret-2 --from-file=tls.key=key.pem  --from-file=tls.crt=cert.pem
 ```
@@ -112,7 +112,7 @@ If you deploy a new instance of this Gateway, make sure migrations is set to `bo
 ### Upgrade
 
 Upgrading to a newer version may require running migration steps (e.g. database changes). To run those jobs set "`migrations: upgrade`" in the `values.yaml`.
-As a result `job-kong-migrations-up.yml` will run.
+As a result `job-kong-pre-upgrade-migrations.yml` will run and `job-kong-post-upgrade-migrations.yml` will be run after successfull deployments to complete the upgrade.
 
 **Warning:** Uncomment "`migrations: upgrade`" if you deploy again after a successfull deployment or set it to "`migrations: bootstrap`". Otherwise migrations will be executed again.
 
@@ -126,18 +126,17 @@ Although updates in minor versions, whilst keeping the same major verison, do no
 ### To 1.24.0 and up
 
 This version introduces Kong 2.8.1 and requires migrations to be run.\
-It also requires to adapt to the changed ```securityContext``` settings of the ```plugins``` in the ````values.yaml```.
+It also requires to adapt to the changed `securityContext` settings of the `plugins` in the `values.yaml`.
 
 ### To 1.23.0 and up
 
-Version 1.23.0 introduces a new issuer service version. If in use, this requires to set values for the new secret ```secret-issuer-service.yml```. \
-Replace ```jsonWebKey: changeme``` and  ```publicKey: changeme```.
+Version 1.23.0 introduces a new issuer service version. If in use, this requires to set values for the new secret `secret-issuer-service.yml`. \
+Replace `jsonWebKey: changeme` and `publicKey: changeme`.
 
 ### From 1.5.x and lower to 1.6.x
 
 With introduction of Kong CE, a dedicated Admin-API handling has been introduced to proted the Admin-API. This required changes to the ingress of the Admin-API.
-Those changes are only reflected in the ```ingress-admin.yml``` and not in the ```route-admin.yml```. Using Kong CE will work, but deploying
-the Admin-API-Route will provide unsecured access to the Admin-API.
+Those changes are only reflected in the `ingress-admin.yml` and not in the `route-admin.yml`. Using Kong CE will work, but deploying the Admin-API-Route will provide unsecured access to the Admin-API.
 
 ### From 1.7.x and lower to 1.8.x and up
 
@@ -146,19 +145,18 @@ To avoid complications, we strongly recommend removing the existing Zipkin-Plugi
 
 Lookup all plugins and find the Zipkin-Plugin-ID:
 
-```bash
-curl -X GET https://admin-api-url.me/plugins
+```sh
+via GET on https://admin-api-url.me/plugins
 ```
 
 Deleting the existing plugin:
 
-```bash
-curl -X DELETE https://admin-api-url.me/plugins/<zipkinPluginId>
+```sh
+via DELETE on https://admin-api-url.me/plugins/<zipkinPluginId>
 ```
 
 ### From 2.x.x and lower to 3.x.x
 
-```bash
 We changed the integration of the ENI-plugins. Therefore names of the plugins changed and and eni-prefixed plugins have been removed from the image. Therefore the configuration of Kong itself, precisely the database, needs to be updated.
 You can do this by activating the jobs migration. This will delete the "old" ENI-plugins to allow the configuration of the new ones.
 
@@ -263,16 +261,23 @@ There are now two options of prodiving a secret to enable a smooth rotation of p
 
 For more information about the certificate rotation please refer to the [cert-manager](https://cert-manager.io/docs/) documentation as well as the documentation of the [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process).
 
+### From 7.x.x To Version 8.x.x ( :warning: !Breaking Change! :warning: )
+
+#### HPA configuration
+
+The HPA configuration has been renamed from `autoscaling` to `hpaAutoscaling` in `values.yaml`.
+You can now select between using hpaAutoscaling and kedaAutoscaling. More information about this is provided in [Autoscaling](#autoscaling).
+
 ## htpasswd
 
 You can create the htpasswd for admin user with Apache htpasswd tool.
 
 **Prerequisit:** existing gatewayAdminApiKey for the deployment.
 
-1. Execute the following statement: ```htpasswd -cb htpasswd admin gatewayAdminApiKey```
+1. Execute the following statement: `htpasswd -cb htpasswd admin gatewayAdminApiKey`
 2. Look up the htpasswd file you've just created and copy its content into the desired secret. \
    Make sure no spaces or line breaks are copied.
-3. Optional but recommended: check if htpasswd is valid: ```htpasswd -vb htpasswd admin gatewayAdminApiKey```
+3. Optional but recommended: check if htpasswd is valid: `htpasswd -vb htpasswd admin gatewayAdminApiKey`
 4. Deploy and check if setup jobs can access the Kong admin-api and also if amin-api is accessible via the admin-api-route.
 
 ## Advanced Features
@@ -282,21 +287,101 @@ The following paragraph explains which helm-chart settings are responsible, how 
 
 ### Autoscaling
 
+#### Standard HPA (Horizontal Pod Autoscaler)
+
 In some environments, especially in AWS "prod", we use the autoscaler to update workload ressources.
 
-The autoscaling ia documented [in the HPA section](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
+The autoscaling is documented [in the HPA section](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
 (Since chart version `5.4.0` we use kubernetes API `autoscaling/v2`)
 
 Following helm-chart variables controls the autoscaler properties for the Gateway:
 
-| Helm-Chart variable                    | Kubernetes property (HorizontalPodAutoscaler)     | default value | documentation link |
-|----------------------------------------|---------------------------------------------------|---------------|--------------------|
-| `autoscaling.enabled`                  |                                                   | false         |                    |
-| `autoscaling.minReplicas`              | `spec.minReplicas`                                | 3             | [k8s_hpe_spec]     |
-| `autoscaling.maxReplicas`              | `spec.maxReplicas`                                | 10            | [k8s_hpe_spec]     |
-| `autoscaling.cpuUtilizationPercentage` | `spec.metrics.resource.target.averageUtilization` | 80            | [k8s_hpe_spec]     |
+| Helm-Chart variable                       | Kubernetes property (HorizontalPodAutoscaler)     | default value | documentation link |
+| ----------------------------------------- | ------------------------------------------------- | ------------- | ------------------ |
+| `hpaAutoscaling.enabled`                  |                                                   | false         |                    |
+| `hpaAutoscaling.minReplicas`              | `spec.minReplicas`                                | 3             | [k8s_hpe_spec]     |
+| `hpaAutoscaling.maxReplicas`              | `spec.maxReplicas`                                | 10            | [k8s_hpe_spec]     |
+| `hpaAutoscaling.cpuUtilizationPercentage` | `spec.metrics.resource.target.averageUtilization` | 80            | [k8s_hpe_spec]     |
 
 [k8s_hpe_spec]: https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/horizontal-pod-autoscaler-v2/#HorizontalPodAutoscalerSpec
+
+#### KEDA-Based Autoscaling (Advanced)
+
+**Available since chart version `8.1.0`**
+
+[KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh/) provides advanced autoscaling capabilities beyond standard HPA, including:
+- **Multiple metric sources**: CPU, memory, custom metrics from Victoria Metrics, and time-based schedules
+- **Anti-flapping protection**: Sophisticated cooldown periods and stabilization windows
+- **Custom metrics**: Scale based on request rate, error rate, or any Prometheus/Victoria Metrics query
+- **Schedule-based scaling**: Pre-scale for known traffic patterns (business hours, weekends, etc.)
+
+**Prerequisites:**
+- KEDA must be installed in the cluster: `helm install keda kedacore/keda --namespace keda --create-namespace`
+- Kubernetes metrics server must be running (for CPU/memory scaling)
+- Victoria Metrics must be accessible (for custom metric scaling)
+- TriggerAuthentication or ClusterTriggerAuthentication resource must exist (for Victoria Metrics auth)
+
+**Important:** `kedaAutoscaling` and `autoscaling` (HPA) are mutually exclusive. Enable only one at a time.
+
+**Minimal Configuration Example** (CPU + Memory only):
+
+```yaml
+kedaAutoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+ 
+  triggers:
+    cpu:
+      enabled: true
+      threshold: 70  # Scale up when CPU > 70%
+   
+    memory:
+      enabled: true
+      threshold: 85  # Scale up when memory > 85%
+   
+    prometheus:
+      enabled: false
+   
+    cron:
+      enabled: false
+```
+
+For a complete configuration example with all available options, see the `values.yaml` file.
+
+**Key Configuration Options:**
+
+| Helm-Chart variable                                                  | Description                                      | Default |
+|----------------------------------------------------------------------|--------------------------------------------------|---------|
+| `kedaAutoscaling.enabled`                                            | Enable KEDA autoscaling                          | `false` |
+| `kedaAutoscaling.minReplicas`                                        | Minimum replica count                            | `2`     |
+| `kedaAutoscaling.maxReplicas`                                        | Maximum replica count                            | `10`    |
+| `kedaAutoscaling.pollingInterval`                                    | Metric check frequency (seconds)                 | `30`    |
+| `kedaAutoscaling.cooldownPeriod`                                     | Scale-down cooldown (seconds)                    | `300`   |
+| **CPU Triggers (Per-Container)**                                     |                                                  |         |
+| `kedaAutoscaling.triggers.cpu.enabled`                               | Enable CPU-based scaling for any container       | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.kong.enabled`               | Enable CPU monitoring for kong container         | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.kong.threshold`             | CPU threshold for kong container (%)             | `70`    |
+| `kedaAutoscaling.triggers.cpu.containers.jumper.enabled`             | Enable CPU monitoring for jumper container       | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.jumper.threshold`           | CPU threshold for jumper container (%)           | `70`    |
+| `kedaAutoscaling.triggers.cpu.containers.issuerService.enabled`      | Enable CPU monitoring for issuer-service         | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.issuerService.threshold`    | CPU threshold for issuer-service (%)             | `70`    |
+| **Memory Triggers (Per-Container)**                                  |                                                  |         |
+| `kedaAutoscaling.triggers.memory.enabled`                            | Enable memory-based scaling for any container    | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.kong.enabled`            | Enable memory monitoring for kong container      | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.kong.threshold`          | Memory threshold for kong container (%)          | `85`    |
+| `kedaAutoscaling.triggers.memory.containers.jumper.enabled`          | Enable memory monitoring for jumper container    | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.jumper.threshold`        | Memory threshold for jumper container (%)        | `85`    |
+| `kedaAutoscaling.triggers.memory.containers.issuerService.enabled`   | Enable memory monitoring for issuer-service      | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.issuerService.threshold` | Memory threshold for issuer-service (%)          | `85`    |
+| **Other Triggers**                                                   |                                                  |         |
+| `kedaAutoscaling.triggers.prometheus.enabled`                        | Enable custom metric scaling (Victoria Metrics)  | `true`  |
+| `kedaAutoscaling.triggers.cron.enabled`                              | Enable schedule-based scaling                    | `false` |
+
+**References:**
+- [KEDA Documentation](https://keda.sh/docs/)
+- [KEDA Scalers](https://keda.sh/docs/scalers/)
+- [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
 ### PodAntiaffinity & TopologyKey
 
@@ -304,7 +389,7 @@ In Kubernetes it is recommended to distribute the pods over several nodes. If a 
 For this reason we provide the `topologyKey` flag in our helm-chart.
 
 | Helm-Chart variable | Kubernetes property (Deployment,Pod)        | default value                        | documentation link |
-|---------------------|---------------------------------------------|--------------------------------------|--------------------|
+| ------------------- | ------------------------------------------- | ------------------------------------ | ------------------ |
 | `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | kubernetes.io/hostname **AWS**       | [topologyKey]      |
 | `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | topology.kubernetes.io/zone **CaaS** | [topologyKey]      |
 
@@ -344,11 +429,11 @@ Each component within a stargate pod can be configured with its own settings for
 
 For this, each component has its own section in the `values.yaml` file with minimum defaults according to http path as well as own defaults where recommended. All values not defined there lead to usage of kubernetes defaults for those.
 
-| Component         | Helm values for health probe configs                                                      |
-|-------------------|-------------------------------------------------------------------------------------------|
-| `kong`            | `readinessProbe`,`livenessProbe`,`startupProbe`                                           |
-| `jumper`          | `jumper.readinessProbe`,`jumper.livenessProbe`,`jumper.startupProbe`                      |
-| `issuer-service`  | `issuerService.readinessProbe`,`issuerService.livenessProbe`,`issuerService.startupProbe` |
+| Component        | Helm values for health probe configs                                                      |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `kong`           | `readinessProbe`,`livenessProbe`,`startupProbe`                                           |
+| `jumper`         | `jumper.readinessProbe`,`jumper.livenessProbe`,`jumper.startupProbe`                      |
+| `issuer-service` | `issuerService.readinessProbe`,`issuerService.livenessProbe`,`issuerService.startupProbe` |
 
 For example the default for the kong container is the following which allows to change and overwrite all available properties without the need of redefining all defaults from kubernetes here in the chart:
 
@@ -387,7 +472,7 @@ The problem is similar to the following already reported but still open [issue #
 The solution to the problem seems to be in asynchronous refresh or routes and tuning with the following Kong variables:
 
 | Helm-Chart variable        | Kong property                      | default value | documentation link              |
-|----------------------------|------------------------------------|---------------|---------------------------------|
+| -------------------------- | ---------------------------------- | ------------- | ------------------------------- |
 | nginxWorkerProcesses       | KONG_NGINX_WORKER_PROCESSES        | 4             |                                 |
 | workerConsistency          | KONG_WORKER_CONSISTENCY            | eventual      | [worker_consistency]            |
 | workerStateUpdateFrequency | KONG_DB_UPDATE_FREQUENCY           | 10            | [db_update_frequency]           |
@@ -417,7 +502,6 @@ This is a short overlook about important parameters in the `values.yaml`.
 | adminApi.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"Prefix"}]}]` | Set usual ingress array of hosts |
 | adminApi.ingress.tls | list | `[]` |  |
 | adminApi.tls.enabled | bool | `false` | Access Admin API via https instead of http   |
-| autoscaling.enabled | bool | `false` |  |
 | circuitbreaker.enabled | bool | `false` | enable deployment of circuitbreaker component |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | default value for imagePullPolicy |
 | circuitbreaker.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | circuitbreaker container default resource configuration |
@@ -450,6 +534,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | global.tracing.defaultServiceName | string | `"stargate"` | Name of the service shown in e.g. Jaeger |
 | global.tracing.sampleRatio | int | `1` | How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests. |
 | global.zone | string | `"zoneName"` | Overwrites the setting determined by the platform storageClassName: gp2 environment: "" |
+| hpaAutoscaling.enabled | bool | `false` |  |
 | irixBrokerRoute.enabled | bool | `false` |  |
 | irixBrokerRoute.name | string | `"user-login"` |  |
 | irixBrokerRoute.upstream.path | string | `"/auth/realms/eni-login"` |  |
@@ -470,7 +555,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | jumper.existingJwkSecretName | string | `nil` | configure manually externally managed secret for oauth access token issueing (as alternative for keyRotation.enabled=true)  |
 | jumper.internetFacingZones | list | `[]` | list of zones that are considered internet facing |
 | jumper.issuerUrl | string | `"https://localhost:443"` |  |
-| jumper.jvmOpts | string | `"-XX:MaxRAMPercentage=75.0 -XshowSettings:vm"` |  |
+| jumper.jvmOpts | string | `"-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"` |  |
 | jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/actuator/health/liveness","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | jumper livenessProbe configuration |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` |  |
 | jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":5}` | jumper readinessProbe configuration |
@@ -488,6 +573,50 @@ This is a short overlook about important parameters in the `values.yaml`.
 | jumper.zoneHealth.enabled | bool | `false` |  |
 | jumper.zoneHealth.keyChannel | string | `"stargate-zone-status"` |  |
 | jumper.zoneHealth.requestRate | int | `10000` |  |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig | object | `{"behavior":{"scaleDown":{"policies":[{"periodSeconds":60,"type":"Percent","value":10}],"selectPolicy":"Min","stabilizationWindowSeconds":300},"scaleUp":{"policies":[{"periodSeconds":60,"type":"Percent","value":100},{"periodSeconds":60,"type":"Pods","value":4}],"selectPolicy":"Max","stabilizationWindowSeconds":0}}}` | HPA behavior configuration (scale-up/scale-down policies) |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.policies | list | `[{"periodSeconds":60,"type":"Percent","value":10}]` | Scale-down policies (multiple policies can be defined) |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.selectPolicy | string | `"Min"` | Policy selection (Min = most conservative, Max = most aggressive) |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.stabilizationWindowSeconds | int | `300` | Stabilization window for scale-down (seconds) KEDA waits this long before scaling down to ensure load is sustained |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig.behavior.scaleUp.policies | list | `[{"periodSeconds":60,"type":"Percent","value":100},{"periodSeconds":60,"type":"Pods","value":4}]` | Scale-up policies |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig.behavior.scaleUp.selectPolicy | string | `"Max"` | Policy selection (Max = use most aggressive policy) |
+| kedaAutoscaling.advanced.horizontalPodAutoscalerConfig.behavior.scaleUp.stabilizationWindowSeconds | int | `0` | Stabilization window for scale-up (seconds) 0 = immediate scale-up for availability |
+| kedaAutoscaling.advanced.restoreToOriginalReplicaCount | bool | `false` | Restore to original replica count when ScaledObject is deleted |
+| kedaAutoscaling.cooldownPeriod | int | `300` | Cooldown period in seconds (minimum time between scale-down actions) Prevents rapid scale-down oscillations Recommended: 300 seconds (5 minutes) for stable workloads |
+| kedaAutoscaling.enabled | bool | `false` | Enable KEDA-based autoscaling (disables standard HPA if enabled) |
+| kedaAutoscaling.fallback.enabled | bool | `false` | Enable fallback to a fixed replica count when all triggers fail |
+| kedaAutoscaling.fallback.replicas | int | `10` | Number of replicas to maintain when all triggers fail (e.g. maxReplicas) |
+| kedaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas (must be >= minReplicas) |
+| kedaAutoscaling.minReplicas | int | `2` | Minimum number of replicas (must be >= 1) |
+| kedaAutoscaling.pollingInterval | int | `30` | Polling interval in seconds (how often KEDA checks metrics) Lower values = more responsive but more API calls Recommended: 30-60 seconds for balanced behavior |
+| kedaAutoscaling.triggers.cpu.containers | object | `{"issuerService":{"enabled":true,"threshold":70},"jumper":{"enabled":true,"threshold":70},"kong":{"enabled":true,"threshold":70}}` | Per-container CPU thresholds Each container in the pod can have its own threshold If ANY container exceeds its threshold, scaling is triggered |
+| kedaAutoscaling.triggers.cpu.containers.issuerService.enabled | bool | `true` | Enable CPU monitoring for issuer-service container |
+| kedaAutoscaling.triggers.cpu.containers.issuerService.threshold | int | `70` | CPU utilization threshold percentage (0-100) |
+| kedaAutoscaling.triggers.cpu.containers.jumper.enabled | bool | `true` | Enable CPU monitoring for jumper container |
+| kedaAutoscaling.triggers.cpu.containers.jumper.threshold | int | `70` | CPU utilization threshold percentage (0-100) |
+| kedaAutoscaling.triggers.cpu.containers.kong.enabled | bool | `true` | Enable CPU monitoring for kong container |
+| kedaAutoscaling.triggers.cpu.containers.kong.threshold | int | `70` | CPU utilization threshold percentage (0-100) Recommended: 60-80% for headroom |
+| kedaAutoscaling.triggers.cpu.enabled | bool | `true` | Enable CPU-based scaling for any container |
+| kedaAutoscaling.triggers.cron.enabled | bool | `false` | Enable cron-based (schedule) scaling |
+| kedaAutoscaling.triggers.cron.schedules | list | `[]` | List of cron schedules Each schedule defines a time window and desired replica count Multiple schedules can overlap (highest desiredReplicas wins) |
+| kedaAutoscaling.triggers.cron.timezone | string | `"Europe/Berlin"` | Timezone for cron schedules Use IANA timezone database names for automatic DST handling Europe/Berlin automatically handles CET (UTC+1) and CEST (UTC+2) transitions Format: IANA timezone (e.g., "Europe/Berlin", "America/New_York", "Asia/Tokyo") See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones |
+| kedaAutoscaling.triggers.memory.containers | object | `{"issuerService":{"enabled":true,"threshold":85},"jumper":{"enabled":true,"threshold":85},"kong":{"enabled":true,"threshold":85}}` | Per-container memory thresholds Each container in the pod can have its own threshold If ANY container exceeds its threshold, scaling is triggered |
+| kedaAutoscaling.triggers.memory.containers.issuerService.enabled | bool | `true` | Enable memory monitoring for issuer-service container |
+| kedaAutoscaling.triggers.memory.containers.issuerService.threshold | int | `85` | Memory utilization threshold percentage (0-100) |
+| kedaAutoscaling.triggers.memory.containers.jumper.enabled | bool | `true` | Enable memory monitoring for jumper container |
+| kedaAutoscaling.triggers.memory.containers.jumper.threshold | int | `85` | Memory utilization threshold percentage (0-100) |
+| kedaAutoscaling.triggers.memory.containers.kong.enabled | bool | `true` | Enable memory monitoring for kong container |
+| kedaAutoscaling.triggers.memory.containers.kong.threshold | int | `85` | Memory utilization threshold percentage (0-100) Recommended: 80-90% (higher than CPU due to less elasticity) |
+| kedaAutoscaling.triggers.memory.enabled | bool | `true` | Enable memory-based scaling for any container |
+| kedaAutoscaling.triggers.prometheus.activationThreshold | string | `""` | Activation threshold (optional) Minimum metric value to activate this scaler Prevents scaling from 0 on minimal load |
+| kedaAutoscaling.triggers.prometheus.authModes | string | `"basic"` | Authentication mode for Victoria Metrics Options: "basic", "bearer", "tls" |
+| kedaAutoscaling.triggers.prometheus.authentication | object | `{"kind":"ClusterTriggerAuthentication","name":"eni-keda-vmselect-creds"}` | Authentication configuration Reference to existing TriggerAuthentication or ClusterTriggerAuthentication resource - ClusterTriggerAuthentication: cluster-scoped resource that can be shared across namespaces - TriggerAuthentication: namespace-scoped resource (useful for namespace-restricted environments) |
+| kedaAutoscaling.triggers.prometheus.authentication.kind | string | `"ClusterTriggerAuthentication"` | Authentication kind: "ClusterTriggerAuthentication" or "TriggerAuthentication" Use "TriggerAuthentication" for namespace-scoped environments Use "ClusterTriggerAuthentication" for cluster-wide shared credentials |
+| kedaAutoscaling.triggers.prometheus.authentication.name | string | `"eni-keda-vmselect-creds"` | Name of the TriggerAuthentication or ClusterTriggerAuthentication resource This resource must be created separately and contain Victoria Metrics credentials Example ClusterTriggerAuthentication:   apiVersion: keda.sh/v1alpha1   kind: ClusterTriggerAuthentication   metadata:     name: eni-keda-vmselect-creds   spec:     secretTargetRef:     - parameter: username       name: victoria-metrics-secret       key: username     - parameter: password       name: victoria-metrics-secret       key: password  Example TriggerAuthentication (namespace-scoped):   apiVersion: keda.sh/v1alpha1   kind: TriggerAuthentication   metadata:     name: vmselect-creds     namespace: my-namespace   spec:     secretTargetRef:     - parameter: username       name: victoria-metrics-secret       key: username     - parameter: password       name: victoria-metrics-secret       key: password |
+| kedaAutoscaling.triggers.prometheus.enabled | bool | `true` | Enable Prometheus/Victoria Metrics based scaling |
+| kedaAutoscaling.triggers.prometheus.metricName | string | `"kong_request_rate"` | Metric name (used for identification in KEDA) |
+| kedaAutoscaling.triggers.prometheus.query | string | `"sum(rate(kong_http_requests_total{tardis_telekom_de_zone=\"{{ .Values.global.zone }}\"}[1m]))"` | PromQL query to execute Must return a single numeric value Can use Helm template variables (e.g., {{ .Values.global.zone }}) Example queries:   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m])) |
+| kedaAutoscaling.triggers.prometheus.serverAddress | string | `""` | Victoria Metrics server address (REQUIRED if enabled) Example: "http://vmauth-raccoon.monitoring.svc.cluster.local:8427" Can use template variables: "{{ .Values.global.vmauth.url }}" |
+| kedaAutoscaling.triggers.prometheus.threshold | string | `"100"` | Threshold value for the metric Scales up when query result exceeds this value For request rate: total requests/second across all pods |
 | keyRotation.additionalSpecValues | object | `{}` | provide alternative configuration for cert-managers Certificate resource |
 | keyRotation.enabled | bool | `false` | enable automatic cert / key rotation for access token issueing based on cert-manager and gateway-rotator |
 | livenessProbe | object | `{"failureThreshold":4,"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"periodSeconds":20,"timeoutSeconds":5}` | kong livenessProbe configuration |
@@ -543,20 +672,20 @@ If the Gateway deployment fails to come up, please have a look at the logs of th
 
 **Log message:**
 
-```text
+```
 Error: /usr/local/share/lua/5.1/opt/kong/cmd/start.lua:37: nginx configuration is invalid (exit code 1):
 nginx: [emerg] SSL_CTX_load_verify_locations("/usr/local/opt/kong/tif/trusted-ca-certificates.pem") failed (SSL: error:0B084088:x509 certificate routines:X509_load_cert_crl_file:no certificate or crl found)
 nginx: configuration file /opt/kong/nginx.conf test failed
 ```
 
-**Solution:**
-This error happens if ``sslVerify`` is set to true but no valid certificates could be found.
-Please make sue that ``trustedCaCertificates`` is set probably or set sslVerify to false if you don't wish to use ssl verification.
+**Solution:** 
+This error happens if `sslVerify` is set to true but no valid certificates could be found. 
+Please make sue that `trustedCaCertificates` is set probably or set sslVerify to false if you don't wish to use ssl verification.
 
 ## Compatibility
 
 | Environment | Compatible |
-|-------------|------------|
+| ----------- | ---------- |
 | OTC         | Yes        |
 | AppAgile    | Unverified |
 | AWS EKS     | Yes        |

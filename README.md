@@ -263,6 +263,13 @@ There are now two options of prodiving a secret to enable a smooth rotation of p
 
 For more information about the certificate rotation please refer to the [cert-manager](https://cert-manager.io/docs/) documentation as well as the documentation of the [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process).
 
+### From 7.x.x To Version 8.x.x ( :warning: !Breaking Change! :warning: )
+
+#### HPA configuration
+
+The HPA configuration has been renamed from `autoscaling` to `hpaAutoscaling` in `values.yaml`.
+You can now select between using hpaAutoscaling and kedaAutoscaling. More information about this is provided in [Autoscaling](#autoscaling).
+
 ## htpasswd
 
 You can create the htpasswd for admin user with Apache htpasswd tool.
@@ -282,6 +289,8 @@ The following paragraph explains which helm-chart settings are responsible, how 
 
 ### Autoscaling
 
+#### Standard HPA (Horizontal Pod Autoscaler)
+
 In some environments, especially in AWS "prod", we use the autoscaler to update workload ressources.
 
 The autoscaling ia documented [in the HPA section](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
@@ -289,14 +298,92 @@ The autoscaling ia documented [in the HPA section](https://kubernetes.io/docs/ta
 
 Following helm-chart variables controls the autoscaler properties for the Gateway:
 
-| Helm-Chart variable                    | Kubernetes property (HorizontalPodAutoscaler)     | default value | documentation link |
-|----------------------------------------|---------------------------------------------------|---------------|--------------------|
-| `autoscaling.enabled`                  |                                                   | false         |                    |
-| `autoscaling.minReplicas`              | `spec.minReplicas`                                | 3             | [k8s_hpe_spec]     |
-| `autoscaling.maxReplicas`              | `spec.maxReplicas`                                | 10            | [k8s_hpe_spec]     |
-| `autoscaling.cpuUtilizationPercentage` | `spec.metrics.resource.target.averageUtilization` | 80            | [k8s_hpe_spec]     |
+| Helm-Chart variable                       | Kubernetes property (HorizontalPodAutoscaler)     | default value | documentation link |
+|-------------------------------------------|---------------------------------------------------|---------------|--------------------|
+| `hpaAutoscaling.enabled`                  |                                                   | false         |                    |
+| `hpaAutoscaling.minReplicas`              | `spec.minReplicas`                                | 3             | [k8s_hpe_spec]     |
+| `hpaAutoscaling.maxReplicas`              | `spec.maxReplicas`                                | 10            | [k8s_hpe_spec]     |
+| `hpaAutoscaling.cpuUtilizationPercentage` | `spec.metrics.resource.target.averageUtilization` | 80            | [k8s_hpe_spec]     |
 
 [k8s_hpe_spec]: https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/horizontal-pod-autoscaler-v2/#HorizontalPodAutoscalerSpec
+
+#### KEDA-Based Autoscaling (Advanced)
+
+**Available since chart version `8.1.0`**
+
+[KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh/) provides advanced autoscaling capabilities beyond standard HPA, including:
+- **Multiple metric sources**: CPU, memory, custom metrics from Victoria Metrics, and time-based schedules
+- **Anti-flapping protection**: Sophisticated cooldown periods and stabilization windows
+- **Custom metrics**: Scale based on request rate, error rate, or any Prometheus/Victoria Metrics query
+- **Schedule-based scaling**: Pre-scale for known traffic patterns (business hours, weekends, etc.)
+
+**Prerequisites:**
+- KEDA must be installed in the cluster: `helm install keda kedacore/keda --namespace keda --create-namespace`
+- Kubernetes metrics server must be running (for CPU/memory scaling)
+- Victoria Metrics must be accessible (for custom metric scaling)
+- TriggerAuthentication or ClusterTriggerAuthentication resource must exist (for Victoria Metrics auth)
+
+**Important:** `kedaAutoscaling` and `autoscaling` (HPA) are mutually exclusive. Enable only one at a time.
+
+**Minimal Configuration Example** (CPU + Memory only):
+
+```yaml
+kedaAutoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  
+  triggers:
+    cpu:
+      enabled: true
+      threshold: 70  # Scale up when CPU > 70%
+    
+    memory:
+      enabled: true
+      threshold: 85  # Scale up when memory > 85%
+    
+    prometheus:
+      enabled: false
+    
+    cron:
+      enabled: false
+```
+
+For a complete configuration example with all available options, see the `values.yaml` file.
+
+**Key Configuration Options:**
+
+| Helm-Chart variable                                                  | Description                                      | Default |
+|----------------------------------------------------------------------|--------------------------------------------------|---------|
+| `kedaAutoscaling.enabled`                                            | Enable KEDA autoscaling                          | `false` |
+| `kedaAutoscaling.minReplicas`                                        | Minimum replica count                            | `2`     |
+| `kedaAutoscaling.maxReplicas`                                        | Maximum replica count                            | `10`    |
+| `kedaAutoscaling.pollingInterval`                                    | Metric check frequency (seconds)                 | `30`    |
+| `kedaAutoscaling.cooldownPeriod`                                     | Scale-down cooldown (seconds)                    | `300`   |
+| **CPU Triggers (Per-Container)**                                     |                                                  |         |
+| `kedaAutoscaling.triggers.cpu.enabled`                               | Enable CPU-based scaling for any container       | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.kong.enabled`               | Enable CPU monitoring for kong container         | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.kong.threshold`             | CPU threshold for kong container (%)             | `70`    |
+| `kedaAutoscaling.triggers.cpu.containers.jumper.enabled`             | Enable CPU monitoring for jumper container       | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.jumper.threshold`           | CPU threshold for jumper container (%)           | `70`    |
+| `kedaAutoscaling.triggers.cpu.containers.issuerService.enabled`      | Enable CPU monitoring for issuer-service         | `true`  |
+| `kedaAutoscaling.triggers.cpu.containers.issuerService.threshold`    | CPU threshold for issuer-service (%)             | `70`    |
+| **Memory Triggers (Per-Container)**                                  |                                                  |         |
+| `kedaAutoscaling.triggers.memory.enabled`                            | Enable memory-based scaling for any container    | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.kong.enabled`            | Enable memory monitoring for kong container      | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.kong.threshold`          | Memory threshold for kong container (%)          | `85`    |
+| `kedaAutoscaling.triggers.memory.containers.jumper.enabled`          | Enable memory monitoring for jumper container    | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.jumper.threshold`        | Memory threshold for jumper container (%)        | `85`    |
+| `kedaAutoscaling.triggers.memory.containers.issuerService.enabled`   | Enable memory monitoring for issuer-service      | `true`  |
+| `kedaAutoscaling.triggers.memory.containers.issuerService.threshold` | Memory threshold for issuer-service (%)          | `85`    |
+| **Other Triggers**                                                   |                                                  |         |
+| `kedaAutoscaling.triggers.prometheus.enabled`                        | Enable custom metric scaling (Victoria Metrics)  | `true`  |
+| `kedaAutoscaling.triggers.cron.enabled`                              | Enable schedule-based scaling                    | `false` |
+
+**References:**
+- [KEDA Documentation](https://keda.sh/docs/)
+- [KEDA Scalers](https://keda.sh/docs/scalers/)
+- [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
 ### PodAntiaffinity & TopologyKey
 

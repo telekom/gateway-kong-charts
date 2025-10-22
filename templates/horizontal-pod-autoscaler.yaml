@@ -1,4 +1,4 @@
-{{- if .Values.autoscaling.enabled -}}
+{{- if and .Values.hpaAutoscaling.enabled (not .Values.kedaAutoscaling.enabled) -}}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -8,13 +8,13 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Release.Name }}
-  minReplicas: {{ .Values.autoscaling.minReplicas | default .Values.replicas | default 3 }}
-  maxReplicas: {{ .Values.autoscaling.maxReplicas | default 10 }}
+  minReplicas: {{ .Values.hpaAutoscaling.minReplicas | default .Values.replicas | default 3 }}
+  maxReplicas: {{ .Values.hpaAutoscaling.maxReplicas | default 10 }}
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: {{ .Values.autoscaling.cpuUtilizationPercentage | default 80 }}
+        averageUtilization: {{ .Values.hpaAutoscaling.cpuUtilizationPercentage | default 80 }}
 {{- end }}

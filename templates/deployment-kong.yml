@@ -1,7 +1,7 @@
 {{- if and (not .Values.keyRotation.enabled) (or (not .Values.jumper.existingJwkSecretName) (not .Values.issuerService.existingJwkSecretName)) }}
 {{- fail (printf "Cannot deploy stargate due to missing jwk secret. Use keyRotation.enabled or jumper.existingJwkSecretName with issuerService.existingJwkSecretName to provide jwk secrets") }}
 {{- end }}
-{{- include "kong.keda.validate" . -}}
+{{- include "keda.validate" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

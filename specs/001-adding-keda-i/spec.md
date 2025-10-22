@@ -20,9 +20,10 @@ As a platform operator, I need the gateway to automatically scale up when traffi
 1. **Given** gateway is running with 2 replicas and low traffic, **When** traffic increases beyond the configured threshold, **Then** additional gateway pods are created within the configured scale-up window
 2. **Given** gateway is running with 5 replicas and traffic decreases, **When** traffic remains below threshold for the cooldown period, **Then** gateway pods are removed gradually to the minimum replica count
 3. **Given** gateway is under sustained high load, **When** scaling reaches the maximum replica limit, **Then** no further pods are created and existing pods handle the load
-4. **Given** autoscaling is enabled with CPU threshold at 70%, **When** average CPU usage across pods exceeds 70%, **Then** scaling is triggered within the configured evaluation window
-5. **Given** autoscaling is enabled with memory threshold at 80%, **When** average memory usage across pods exceeds 80%, **Then** scaling is triggered within the configured evaluation window
-6. **Given** both CPU and memory thresholds are configured, **When** either metric exceeds its threshold, **Then** scaling is triggered based on the metric that exceeds its threshold first
+4. **Given** autoscaling is enabled with CPU threshold at 70% for kong container, **When** kong container CPU usage exceeds 70%, **Then** scaling is triggered within the configured evaluation window
+5. **Given** autoscaling is enabled with memory threshold at 80% for jumper container, **When** jumper container memory usage exceeds 80%, **Then** scaling is triggered within the configured evaluation window
+6. **Given** both CPU and memory thresholds are configured for multiple containers, **When** any container's metric exceeds its threshold, **Then** scaling is triggered based on the first container that exceeds its threshold
+7. **Given** different thresholds are set for different containers, **When** kong CPU is at 75% and jumper CPU is at 60%, **Then** scaling is triggered only if kong's threshold (e.g., 70%) is exceeded
 
 ---
 
@@ -71,6 +72,9 @@ As a platform operator, I need the autoscaling system to prevent rapid scale-up 
 - What occurs during the transition from schedule-based minimum to metric-based scaling?
 - How does the system behave when CPU is high but memory is low, or vice versa?
 - What happens if memory thresholds are reached but CPU remains low for an extended period?
+- How does the system handle scaling when one container (e.g., kong) exceeds its threshold but other containers (jumper, issuer-service) are below their thresholds?
+- What occurs when different containers have significantly different resource utilization patterns?
+- How are triggers handled when a container is disabled (e.g., jumper.enabled: false) but its KEDA trigger is still configured?
 
 ## Requirements *(mandatory)*
 
@@ -78,14 +82,14 @@ As a platform operator, I need the autoscaling system to prevent rapid scale-up 
 
 - **FR-001**: Chart MUST support enabling/disabling autoscaling via a configuration flag that is independent of the existing HPA autoscaling
 - **FR-002**: Chart MUST allow configuration of minimum and maximum replica counts for autoscaling boundaries
-- **FR-003**: Chart MUST support scaling based on CPU utilization percentage as a metric
-- **FR-004**: Chart MUST support scaling based on memory utilization percentage as a metric
+- **FR-003**: Chart MUST support scaling based on CPU utilization percentage as a metric for individual containers (kong, jumper, issuer-service)
+- **FR-004**: Chart MUST support scaling based on memory utilization percentage as a metric for individual containers (kong, jumper, issuer-service)
 - **FR-005**: Chart MUST support scaling based on custom metrics (e.g., request rate, active connections, queue depth)
 - **FR-006**: Chart MUST support schedule-based scaling with configurable time windows and replica counts
 - **FR-007**: Chart MUST allow configuration of scale-up and scale-down cooldown periods to prevent flapping
 - **FR-008**: Chart MUST allow configuration of evaluation windows for metric-based scaling decisions
 - **FR-009**: Chart MUST support configuration of metric thresholds that trigger scaling actions
-- **FR-009a**: Chart MUST allow independent threshold configuration for CPU and memory metrics (e.g., CPU at 70%, memory at 80%)
+- **FR-009a**: Chart MUST allow independent threshold configuration for CPU and memory metrics per container (e.g., kong CPU at 70%, jumper CPU at 65%, kong memory at 80%)
 - **FR-010**: Chart MUST disable or remove standard HPA when KEDA-based autoscaling is enabled to prevent conflicts
 - **FR-011**: Chart MUST provide sensible default values for all autoscaling parameters that prevent aggressive scaling behavior
 - **FR-012**: Chart MUST validate that minimum replica count is less than or equal to maximum replica count
@@ -121,4 +125,5 @@ As a platform operator, I need the autoscaling system to prevent rapid scale-up 
 - **SC-006**: Schedule-based scaling transitions occur within 30 seconds of the configured schedule time
 - **SC-007**: Operators can successfully deploy the chart with autoscaling enabled using only documented configuration parameters
 - **SC-008**: Existing deployments can upgrade to the new chart version without autoscaling being automatically enabled (backward compatibility)
-- **SC-009**: Gateway scales based on memory utilization when memory threshold is exceeded, even if CPU utilization remains below its threshold
+- **SC-009**: Gateway scales based on memory utilization when memory threshold is exceeded for any container, even if CPU utilization remains below its threshold for all containers
+- **SC-010**: Gateway scales independently based on per-container metrics, allowing fine-grained control over scaling behavior for kong, jumper, and issuer-service containers

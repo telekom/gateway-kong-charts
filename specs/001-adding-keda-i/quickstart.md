@@ -89,11 +89,29 @@ kedaAutoscaling:
   triggers:
     cpu:
       enabled: true
-      threshold: 70  # Scale up when CPU > 70%
+      containers:
+        kong:
+          enabled: true
+          threshold: 70  # Scale up when kong CPU > 70%
+        jumper:
+          enabled: true
+          threshold: 70
+        issuerService:
+          enabled: true
+          threshold: 70
     
     memory:
       enabled: true
-      threshold: 85  # Scale up when memory > 85%
+      containers:
+        kong:
+          enabled: true
+          threshold: 85  # Scale up when kong memory > 85%
+        jumper:
+          enabled: true
+          threshold: 85
+        issuerService:
+          enabled: true
+          threshold: 85
     
     prometheus:
       enabled: false
@@ -207,15 +225,33 @@ kedaAutoscaling:
           selectPolicy: Max
   
   triggers:
-    # CPU scaling
+    # CPU scaling (per-container)
     cpu:
       enabled: true
-      threshold: 70
+      containers:
+        kong:
+          enabled: true
+          threshold: 70
+        jumper:
+          enabled: true
+          threshold: 70
+        issuerService:
+          enabled: true
+          threshold: 70
     
-    # Memory scaling
+    # Memory scaling (per-container)
     memory:
       enabled: true
-      threshold: 85
+      containers:
+        kong:
+          enabled: true
+          threshold: 85
+        jumper:
+          enabled: true
+          threshold: 85
+        issuerService:
+          enabled: true
+          threshold: 85
     
     # Victoria Metrics scaling
     prometheus:

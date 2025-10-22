@@ -122,34 +122,78 @@ kedaAutoscaling:
   triggers:
     
     # ==========================================================================
-    # CPU Resource Scaler
+    # CPU Resource Scalers (Per-Container)
     # ==========================================================================
-    # Scales based on CPU utilization percentage across all pods
+    # Scales based on CPU utilization percentage for individual containers
     # Requires: Kubernetes metrics server
+    # Multiple containers can be monitored independently
     
     cpu:
-      # -- Enable CPU-based scaling
+      # -- Enable CPU-based scaling for any container
       enabled: true
       
-      # -- CPU utilization threshold percentage (0-100)
-      # Scales up when average CPU across pods exceeds this value
-      # Recommended: 60-80% for headroom
-      threshold: 70
+      # -- Per-container CPU thresholds
+      # Each container in the pod can have its own threshold
+      # If ANY container exceeds its threshold, scaling is triggered
+      containers:
+        # Kong container (main API gateway)
+        kong:
+          # -- Enable CPU monitoring for kong container
+          enabled: true
+          # -- CPU utilization threshold percentage (0-100)
+          # Recommended: 60-80% for headroom
+          threshold: 70
+        
+        # Jumper container (JWT validation service)
+        jumper:
+          # -- Enable CPU monitoring for jumper container
+          enabled: true
+          # -- CPU utilization threshold percentage (0-100)
+          threshold: 70
+        
+        # Issuer Service container (certificate issuer)
+        issuerService:
+          # -- Enable CPU monitoring for issuer-service container
+          enabled: true
+          # -- CPU utilization threshold percentage (0-100)
+          threshold: 70
     
     # ==========================================================================
-    # Memory Resource Scaler
+    # Memory Resource Scalers (Per-Container)
     # ==========================================================================
-    # Scales based on memory utilization percentage across all pods
+    # Scales based on memory utilization percentage for individual containers
     # Requires: Kubernetes metrics server
+    # Multiple containers can be monitored independently
     
     memory:
-      # -- Enable memory-based scaling
+      # -- Enable memory-based scaling for any container
       enabled: true
       
-      # -- Memory utilization threshold percentage (0-100)
-      # Scales up when average memory across pods exceeds this value
-      # Recommended: 80-90% (higher than CPU due to less elasticity)
-      threshold: 85
+      # -- Per-container memory thresholds
+      # Each container in the pod can have its own threshold
+      # If ANY container exceeds its threshold, scaling is triggered
+      containers:
+        # Kong container (main API gateway)
+        kong:
+          # -- Enable memory monitoring for kong container
+          enabled: true
+          # -- Memory utilization threshold percentage (0-100)
+          # Recommended: 80-90% (higher than CPU due to less elasticity)
+          threshold: 85
+        
+        # Jumper container (JWT validation service)
+        jumper:
+          # -- Enable memory monitoring for jumper container
+          enabled: true
+          # -- Memory utilization threshold percentage (0-100)
+          threshold: 85
+        
+        # Issuer Service container (certificate issuer)
+        issuerService:
+          # -- Enable memory monitoring for issuer-service container
+          enabled: true
+          # -- Memory utilization threshold percentage (0-100)
+          threshold: 85
     
     # ==========================================================================
     # Prometheus/Victoria Metrics Scaler
@@ -274,11 +318,29 @@ kedaAutoscaling:
   triggers:
     cpu:
       enabled: true
-      threshold: 70
+      containers:
+        kong:
+          enabled: true
+          threshold: 70
+        jumper:
+          enabled: true
+          threshold: 70
+        issuerService:
+          enabled: true
+          threshold: 70
     
     memory:
       enabled: true
-      threshold: 85
+      containers:
+        kong:
+          enabled: true
+          threshold: 85
+        jumper:
+          enabled: true
+          threshold: 85
+        issuerService:
+          enabled: true
+          threshold: 85
     
     prometheus:
       enabled: false
@@ -325,11 +387,29 @@ kedaAutoscaling:
   triggers:
     cpu:
       enabled: true
-      threshold: 70
+      containers:
+        kong:
+          enabled: true
+          threshold: 70
+        jumper:
+          enabled: true
+          threshold: 70
+        issuerService:
+          enabled: true
+          threshold: 70
     
     memory:
       enabled: true
-      threshold: 85
+      containers:
+        kong:
+          enabled: true
+          threshold: 85
+        jumper:
+          enabled: true
+          threshold: 85
+        issuerService:
+          enabled: true
+          threshold: 85
     
     prometheus:
       enabled: true
@@ -388,11 +468,29 @@ kedaAutoscaling:
   triggers:
     cpu:
       enabled: true
-      threshold: 60          # Lower threshold for more headroom
+      containers:
+        kong:
+          enabled: true
+          threshold: 60          # Lower threshold for more headroom
+        jumper:
+          enabled: true
+          threshold: 65
+        issuerService:
+          enabled: true
+          threshold: 65
     
     memory:
       enabled: true
-      threshold: 80
+      containers:
+        kong:
+          enabled: true
+          threshold: 80
+        jumper:
+          enabled: true
+          threshold: 80
+        issuerService:
+          enabled: true
+          threshold: 80
     
     prometheus:
       enabled: true
@@ -575,7 +673,16 @@ kedaAutoscaling:
   triggers:
     cpu:
       enabled: true
-      threshold: 80
+      containers:
+        kong:
+          enabled: true
+          threshold: 80
+        jumper:
+          enabled: true
+          threshold: 80
+        issuerService:
+          enabled: true
+          threshold: 80
     memory:
       enabled: false
     prometheus:

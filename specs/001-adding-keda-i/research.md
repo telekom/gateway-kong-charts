@@ -314,18 +314,19 @@ KEDA evaluates all triggers and uses **OR logic**:
 
 Configuration:
 
-- CPU threshold: 70%
-- Memory threshold: 85%
+- CPU thresholds: 70% (per-container: kong, jumper, issuerService)
+- Memory thresholds: 85% (per-container: kong, jumper, issuerService)
 - Request rate threshold: 100 req/s
 - Cron: 5 replicas during business hours
 
 Behavior:
 
 1. **Business hours, low load**: Cron sets minimum to 5 replicas
-2. **Business hours, high CPU (80%)**: Scales above 5 based on CPU
-3. **Business hours, high memory (90%), low CPU (50%)**: Scales based on memory
+2. **Business hours, high kong CPU (80%)**: Scales above 5 based on kong container CPU
+3. **Business hours, high jumper memory (90%), low CPU (50%)**: Scales based on jumper container memory
 4. **Off-hours, low load**: Scales down to minReplicas (e.g., 2)
 5. **Off-hours, traffic spike**: Scales up based on request rate despite off-hours
+6. **Any container exceeds threshold**: Triggers scaling even if other containers are below their thresholds
 
 ### Stabilization Windows
 

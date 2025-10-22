@@ -249,9 +249,10 @@ Each story builds on the previous but remains independently testable by enabling
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Test configurations:
-  - US1 only: `kedaAutoscaling.enabled=true`, `triggers.cpu.enabled=true`, `triggers.memory.enabled=true`
+  - US1 only: `kedaAutoscaling.enabled=true`, `triggers.cpu.enabled=true` with per-container configuration, `triggers.memory.enabled=true` with per-container configuration
   - US2 only: `kedaAutoscaling.enabled=true`, `triggers.cron.enabled=true`
   - US3: Test with oscillating thresholds and verify cooldown/stabilization behavior
+  - Per-container: Test with different thresholds for kong, jumper, and issuerService containers
 - Avoid: vague tasks, breaking backward compatibility, enabling KEDA by default
 
 ---

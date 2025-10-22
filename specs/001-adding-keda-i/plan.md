@@ -186,15 +186,33 @@ kedaAutoscaling:
 
   # Trigger configurations
   triggers:
-    # CPU resource scaler
+    # CPU resource scalers (per-container)
     cpu:
       enabled: true
-      threshold: 70 # percentage
+      containers:
+        kong:
+          enabled: true
+          threshold: 70 # percentage
+        jumper:
+          enabled: true
+          threshold: 70 # percentage
+        issuerService:
+          enabled: true
+          threshold: 70 # percentage
 
-    # Memory resource scaler
+    # Memory resource scalers (per-container)
     memory:
       enabled: true
-      threshold: 85 # percentage
+      containers:
+        kong:
+          enabled: true
+          threshold: 85 # percentage
+        jumper:
+          enabled: true
+          threshold: 85 # percentage
+        issuerService:
+          enabled: true
+          threshold: 85 # percentage
 
     # Prometheus/Victoria Metrics scaler
     prometheus:

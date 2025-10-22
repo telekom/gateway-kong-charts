@@ -44,20 +44,54 @@ spec:
   # Scaling triggers
   triggers:
   
-  # CPU Resource Scaler
+  # CPU Resource Scalers (Per-Container)
   {{- if .Values.kedaAutoscaling.triggers.cpu.enabled }}
+  {{- if .Values.kedaAutoscaling.triggers.cpu.containers.kong.enabled }}
   - type: cpu
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.cpu.threshold | default 70 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.kong.threshold | default 70 | quote }}
+      containerName: "kong"
+  {{- end }}
+  {{- if and .Values.jumper.enabled .Values.kedaAutoscaling.triggers.cpu.containers.jumper.enabled }}
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.jumper.threshold | default 70 | quote }}
+      containerName: "jumper"
+  {{- end }}
+  {{- if and .Values.issuerService.enabled .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.enabled }}
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.threshold | default 70 | quote }}
+      containerName: "issuer-service"
+  {{- end }}
   {{- end }}
   
-  # Memory Resource Scaler
+  # Memory Resource Scalers (Per-Container)
   {{- if .Values.kedaAutoscaling.triggers.memory.enabled }}
+  {{- if .Values.kedaAutoscaling.triggers.memory.containers.kong.enabled }}
   - type: memory
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.memory.threshold | default 85 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.kong.threshold | default 85 | quote }}
+      containerName: "kong"
+  {{- end }}
+  {{- if and .Values.jumper.enabled .Values.kedaAutoscaling.triggers.memory.containers.jumper.enabled }}
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.jumper.threshold | default 85 | quote }}
+      containerName: "jumper"
+  {{- end }}
+  {{- if and .Values.issuerService.enabled .Values.kedaAutoscaling.triggers.memory.containers.issuerService.enabled }}
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.issuerService.threshold | default 85 | quote }}
+      containerName: "issuer-service"
+  {{- end }}
   {{- end }}
   
   # Prometheus/Victoria Metrics Scaler

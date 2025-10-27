@@ -248,12 +248,324 @@ jobs: {}
 
 replicas: 1
 
-autoscaling:
+hpaAutoscaling:
   enabled: false
   # minReplicas is using replicas as default, if replicas is not set, default is 3 
   #minReplicas: $replicas
   #maxReplicas: 10
   #cpuUtilizationPercentage: 80
+
+# ============================================================================
+# KEDA-Based Autoscaling Configuration
+# ============================================================================
+# KEDA (Kubernetes Event-Driven Autoscaling) provides advanced autoscaling
+# capabilities including custom metrics, schedule-based scaling, and
+# sophisticated anti-flapping protection.
+#
+# Prerequisites:
+# - KEDA must be installed in the cluster (helm install keda kedacore/keda)
+# - Victoria Metrics must be accessible for custom metric scaling
+# - Kubernetes metrics server must be running for CPU/memory scaling
+#
+# Note: kedaAutoscaling and autoscaling (HPA) are mutually exclusive.
+# Enable only one at a time.
+# ============================================================================
+
+kedaAutoscaling:
+  # -- Enable KEDA-based autoscaling (disables standard HPA if enabled)
+  enabled: false
+  
+  # ============================================================================
+  # Replica Boundaries
+  # ============================================================================
+  
+  # -- Minimum number of replicas (must be >= 1)
+  minReplicas: 2
+  
+  # -- Maximum number of replicas (must be >= minReplicas)
+  maxReplicas: 10
+  
+  # ============================================================================
+  # Timing Configuration (Anti-Flapping)
+  # ============================================================================
+  
+  # -- Polling interval in seconds (how often KEDA checks metrics)
+  # Lower values = more responsive but more API calls
+  # Recommended: 30-60 seconds for balanced behavior
+  pollingInterval: 30
+  
+  # -- Cooldown period in seconds (minimum time between scale-down actions)
+  # Prevents rapid scale-down oscillations
+  # Recommended: 300 seconds (5 minutes) for stable workloads
+  cooldownPeriod: 300
+  
+  # ============================================================================
+  # Fallback Configuration
+  # ============================================================================
+  # Defines behavior when all scaling triggers fail (e.g., metrics unavailable)
+  
+  fallback:
+    # -- Enable fallback to a fixed replica count when all triggers fail
+    enabled: false
+    
+    # -- Number of replicas to maintain when all triggers fail (e.g. maxReplicas)
+    replicas: 10
+  
+  # ============================================================================
+  # Advanced HPA Behavior Configuration
+  # ============================================================================
+  # Fine-tune scaling behavior using Kubernetes HPA v2 behavior policies
+  
+  advanced:
+    # -- Restore to original replica count when ScaledObject is deleted
+    restoreToOriginalReplicaCount: false
+    
+    # -- HPA behavior configuration (scale-up/scale-down policies)
+    horizontalPodAutoscalerConfig:
+      behavior:
+        # Scale-down behavior (conservative to prevent flapping)
+        scaleDown:
+          # -- Stabilization window for scale-down (seconds)
+          # KEDA waits this long before scaling down to ensure load is sustained
+          stabilizationWindowSeconds: 300
+          
+          # -- Scale-down policies (multiple policies can be defined)
+          policies:
+          - type: Percent
+            value: 10        # Max 10% reduction per period
+            periodSeconds: 60
+          
+          # -- Policy selection (Min = most conservative, Max = most aggressive)
+          selectPolicy: Min
+        
+        # Scale-up behavior (aggressive for availability)
+        scaleUp:
+          # -- Stabilization window for scale-up (seconds)
+          # 0 = immediate scale-up for availability
+          stabilizationWindowSeconds: 0
+          
+          # -- Scale-up policies
+          policies:
+          - type: Percent
+            value: 100       # Max 100% increase per period
+            periodSeconds: 60
+          - type: Pods
+            value: 4         # Or max 4 pods per period
+            periodSeconds: 60
+          
+          # -- Policy selection (Max = use most aggressive policy)
+          selectPolicy: Max
+  
+  # ============================================================================
+  # Scaling Triggers
+  # ============================================================================
+  # Multiple triggers can be enabled simultaneously (OR logic)
+  # If ANY trigger suggests scale-up → scale up
+  # If ALL triggers suggest scale-down → scale down (after cooldown)
+  
+  triggers:
+    
+    # ==========================================================================
+    # CPU Resource Scalers (Per-Container)
+    # ==========================================================================
+    # Scales based on CPU utilization percentage for individual containers
+    # Requires: Kubernetes metrics server
+    # Multiple containers can be monitored independently
+    
+    cpu:
+      # -- Enable CPU-based scaling for any container
+      enabled: true
+      
+      # -- Per-container CPU thresholds
+      # Each container in the pod can have its own threshold
+      # If ANY container exceeds its threshold, scaling is triggered
+      containers:
+        # Kong container (main API gateway)
+        kong:
+          # -- Enable CPU monitoring for kong container
+          enabled: true
+          # -- CPU utilization threshold percentage (0-100)
+          # Recommended: 60-80% for headroom
+          threshold: 70
+        
+        # Jumper container (JWT validation service)
+        jumper:
+          # -- Enable CPU monitoring for jumper container
+          enabled: true
+          # -- CPU utilization threshold percentage (0-100)
+          threshold: 70
+        
+        # Issuer Service container (certificate issuer)
+        issuerService:
+          # -- Enable CPU monitoring for issuer-service container
+          enabled: true
+          # -- CPU utilization threshold percentage (0-100)
+          threshold: 70
+    
+    # ==========================================================================
+    # Memory Resource Scalers (Per-Container)
+    # ==========================================================================
+    # Scales based on memory utilization percentage for individual containers
+    # Requires: Kubernetes metrics server
+    # Multiple containers can be monitored independently
+    
+    memory:
+      # -- Enable memory-based scaling for any container
+      enabled: true
+      
+      # -- Per-container memory thresholds
+      # Each container in the pod can have its own threshold
+      # If ANY container exceeds its threshold, scaling is triggered
+      containers:
+        # Kong container (main API gateway)
+        kong:
+          # -- Enable memory monitoring for kong container
+          enabled: true
+          # -- Memory utilization threshold percentage (0-100)
+          # Recommended: 80-90% (higher than CPU due to less elasticity)
+          threshold: 85
+        
+        # Jumper container (JWT validation service)
+        jumper:
+          # -- Enable memory monitoring for jumper container
+          enabled: true
+          # -- Memory utilization threshold percentage (0-100)
+          threshold: 85
+        
+        # Issuer Service container (certificate issuer)
+        issuerService:
+          # -- Enable memory monitoring for issuer-service container
+          enabled: true
+          # -- Memory utilization threshold percentage (0-100)
+          threshold: 85
+    
+    # ==========================================================================
+    # Prometheus/Victoria Metrics Scaler
+    # ==========================================================================
+    # Scales based on custom metrics from Victoria Metrics
+    # Requires: Victoria Metrics accessible, authentication configured
+    
+    prometheus:
+      # -- Enable Prometheus/Victoria Metrics based scaling
+      enabled: true
+      
+      # -- Victoria Metrics server address (REQUIRED if enabled)
+      # Example: "http://vmauth-raccoon.monitoring.svc.cluster.local:8427"
+      # Can use template variables: "{{ .Values.global.vmauth.url }}"
+      serverAddress: ""
+      
+      # -- Metric name (used for identification in KEDA)
+      metricName: "kong_request_rate"
+      
+      # -- PromQL query to execute
+      # Must return a single numeric value
+      # Can use Helm template variables (e.g., {{ .Values.global.zone }})
+      # Example queries:
+      #   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))
+      #   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m]))
+      query: 'sum(rate(kong_http_requests_total{tardis_telekom_de_zone="{{ .Values.global.zone }}"}[1m]))'
+      
+      # -- Threshold value for the metric
+      # Scales up when query result exceeds this value
+      # For request rate: total requests/second across all pods
+      threshold: "100"
+      
+      # -- Activation threshold (optional)
+      # Minimum metric value to activate this scaler
+      # Prevents scaling from 0 on minimal load
+      activationThreshold: ""
+      
+      # -- Authentication mode for Victoria Metrics
+      # Options: "basic", "bearer", "tls"
+      authModes: "basic"
+      
+      # -- Authentication configuration
+      # Reference to existing TriggerAuthentication or ClusterTriggerAuthentication resource
+      # - ClusterTriggerAuthentication: cluster-scoped resource that can be shared across namespaces
+      # - TriggerAuthentication: namespace-scoped resource (useful for namespace-restricted environments)
+      authentication:
+        # -- Authentication kind: "ClusterTriggerAuthentication" or "TriggerAuthentication"
+        # Use "TriggerAuthentication" for namespace-scoped environments
+        # Use "ClusterTriggerAuthentication" for cluster-wide shared credentials
+        kind: "ClusterTriggerAuthentication"
+        
+        # -- Name of the TriggerAuthentication or ClusterTriggerAuthentication resource
+        # This resource must be created separately and contain Victoria Metrics credentials
+        # Example ClusterTriggerAuthentication:
+        #   apiVersion: keda.sh/v1alpha1
+        #   kind: ClusterTriggerAuthentication
+        #   metadata:
+        #     name: eni-keda-vmselect-creds
+        #   spec:
+        #     secretTargetRef:
+        #     - parameter: username
+        #       name: victoria-metrics-secret
+        #       key: username
+        #     - parameter: password
+        #       name: victoria-metrics-secret
+        #       key: password
+        #
+        # Example TriggerAuthentication (namespace-scoped):
+        #   apiVersion: keda.sh/v1alpha1
+        #   kind: TriggerAuthentication
+        #   metadata:
+        #     name: vmselect-creds
+        #     namespace: my-namespace
+        #   spec:
+        #     secretTargetRef:
+        #     - parameter: username
+        #       name: victoria-metrics-secret
+        #       key: username
+        #     - parameter: password
+        #       name: victoria-metrics-secret
+        #       key: password
+        name: "eni-keda-vmselect-creds"
+    
+    # ==========================================================================
+    # Cron-Based Scalers
+    # ==========================================================================
+    # Scales based on time schedules (predictable traffic patterns)
+    # Multiple schedules can be defined for different time windows
+    
+    cron:
+      # -- Enable cron-based (schedule) scaling
+      enabled: false
+      
+      # -- Timezone for cron schedules
+      # Use IANA timezone database names for automatic DST handling
+      # Europe/Berlin automatically handles CET (UTC+1) and CEST (UTC+2) transitions
+      # Format: IANA timezone (e.g., "Europe/Berlin", "America/New_York", "Asia/Tokyo")
+      # See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      timezone: "Europe/Berlin"
+      
+      # -- List of cron schedules
+      # Each schedule defines a time window and desired replica count
+      # Multiple schedules can overlap (highest desiredReplicas wins)
+      schedules: []
+      # Example schedules:
+      # - name: "business-hours-scale-up"
+      #   start: "0 8 * * 1-5"      # 8 AM Monday-Friday
+      #   end: "0 18 * * 1-5"       # 6 PM Monday-Friday
+      #   desiredReplicas: 5
+      # 
+      # - name: "weekend-scale-down"
+      #   start: "0 0 * * 6-7"      # Midnight Saturday-Sunday
+      #   end: "0 23 * * 6-7"       # 11 PM Saturday-Sunday
+      #   desiredReplicas: 2
+      #
+      # - name: "night-scale-down"
+      #   start: "0 22 * * *"       # 10 PM every day
+      #   end: "0 6 * * *"          # 6 AM every day
+      #   desiredReplicas: 2
+      #
+      # Cron expression format:
+      # ┌───────────── minute (0 - 59)
+      # │ ┌───────────── hour (0 - 23)
+      # │ │ ┌───────────── day of month (1 - 31)
+      # │ │ │ ┌───────────── month (1 - 12)
+      # │ │ │ │ ┌───────────── day of week (0 - 6) (Sunday to Saturday)
+      # │ │ │ │ │
+      # * * * * *
 
 strategy: {}
   #rollingUpdate:
@@ -269,7 +581,6 @@ resources:
 
 # log_format select the pre-configured log formats for nginx
 # It can have one of the values: default, json or plain.
-# Details are specified in templates/configmap-nginx-kong-template.yaml and nginx/nginx_kong.lua
 # Formats: debug, default, json
 logFormat: json
 
@@ -438,7 +749,7 @@ jumper:
   #defaultServiceName: "stargate"
   stargateUrl: https://stargate-integration.test.dhei.telekom.de
   publishEventUrl: http://producer.integration:8080/v1/events
-  jvmOpts: "-XX:MaxRAMPercentage=75.0 -XshowSettings:vm"
+  jvmOpts: "-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"
   #maxHttpHeaderSize: 16KB
   #fpaProxyHost
   #fpaProxyPort

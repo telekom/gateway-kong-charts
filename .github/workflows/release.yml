@@ -20,6 +20,10 @@ jobs:
   release:
     if: ${{ github.ref == 'refs/heads/main' && github.event.inputs.do_release == 'yes' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

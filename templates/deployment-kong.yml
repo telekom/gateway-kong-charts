@@ -1,6 +1,7 @@
 {{- if and (not .Values.keyRotation.enabled) (or (not .Values.jumper.existingJwkSecretName) (not .Values.issuerService.existingJwkSecretName)) }}
 {{- fail (printf "Cannot deploy stargate due to missing jwk secret. Use keyRotation.enabled or jumper.existingJwkSecretName with issuerService.existingJwkSecretName to provide jwk secrets") }}
 {{- end }}
+{{- include "keda.validate" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -10,7 +11,7 @@ metadata:
   {{- include "kong.checksums" $ | nindent 4 }}
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
-{{- if not .Values.autoscaling.enabled }}
+{{- if not (or .Values.hpaAutoscaling.enabled .Values.kedaAutoscaling.enabled) }}
   replicas: {{ .Values.replicas | default 1 }}
 {{- end }}
 {{- if .Values.strategy.rollingUpdate }}

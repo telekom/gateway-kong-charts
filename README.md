@@ -268,6 +268,32 @@ For more information about the certificate rotation please refer to the [cert-ma
 The HPA configuration has been renamed from `autoscaling` to `hpaAutoscaling` in `values.yaml`.
 You can now select between using hpaAutoscaling and kedaAutoscaling. More information about this is provided in [Autoscaling](#autoscaling).
 
+#### Migration to gateway-kong-image 1.1.0
+
+This release upgrades the default image to version 1.1.0, which is based on Kong 3.9.1. This upgrade requires an important step during the Helm upgrade process.
+
+##### Required Migration Step
+
+For a successful upgrade, you must set the `migrations: upgrade` Helm value to trigger the necessary Kong migration jobs. After a successful upgrade, this value can be safely removed. The migration process is idempotent, so multiple Helm upgrades with this property will not cause issues.
+
+⚠️ Warning: This upgrade will run Kong migration scripts that modify the database. Please create a consistent backup before upgrading. The Kong Admin API must be disabled during both the backup creation and the upgrade process. Once the upgrade is complete and the gateway is running correctly, the Admin API can be re-enabled. The control plane will then synchronize the Kong configuration to the desired state.
+
+##### Sample Upgrade Process
+
+A simple upgrade process would look like the following (assuming you're in the root directory of the Helm chart with an existing release):
+
+```bash
+helm upgrade <releasename> . -f <customvaluefilereference> --set migrations=upgrade
+```
+
+##### Rollback Considerations
+
+While initial testing suggests that a database upgraded to gateway-kong-image 1.1.0 (Kong 3.9.1) can still be used with Helm chart version 7.x.x, this compatibility cannot be guaranteed for all Kong features. In case of a rollback:
+
+Be prepared to restore the previous database state
+Be aware that rolling back to an older database state will likely cause synchronization issues between gateway-kong and the control plane
+If rollback is necessary, you will need to trigger a full reconfiguration to synchronize with changes in the control plane
+
 ## htpasswd
 
 You can create the htpasswd for admin user with Apache htpasswd tool.

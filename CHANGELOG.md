@@ -3,6 +3,39 @@
 Please refer to the README for additional upgrade instructions.
 
 
+# [8.0.0](https://github.com/telekom/gateway-kong-charts/compare/7.4.3...8.0.0) (2025-10-27)
+
+
+### Bug Fixes
+
+* make db port configurable for bootstrap and migration jobs ([aa814d3](https://github.com/telekom/gateway-kong-charts/commit/aa814d3da96a4fbd9af5a16e2572363283950102))
+
+
+### Features
+
+* upgrade chart template and nginx configuration for kong 3.9.1 migration ([#8](https://github.com/telekom/gateway-kong-charts/issues/8)) ([7553607](https://github.com/telekom/gateway-kong-charts/commit/755360772092336366f45870f062c6fe2cc8db81)), closes [#DHEI-18702](https://github.com/telekom/gateway-kong-charts/issues/DHEI-18702)
+
+
+### BREAKING CHANGES
+
+* This version upgrades to gateway-kong-image 1.1.0 using kong 3.9.1
+
+* feat: upgrade chart template and nginx configuration to match kong 3.9.1
+* chore: use gateway_consumer in nginx_kong plugin
+* fix: use gateway_consumer from kong.ctx.shared
+* feat: remove nginx-kong-template from chart
+* fix: add podSecurityContext for migrations jobs
+* fix: new jumper w java 21 auto picks up this env var
+* feat: jumper 4.2.1 introduction as default
+* fix: bump jumper to 4.2.2
+* feat: switch to kong build 1.1.0 with kong 3.9.1
+* feat: add keda autoscaling
+  - Add KEDA ScaledObject template with per-container CPU/memory triggers
+  - Add Prometheus/Victoria Metrics trigger support
+  - Add cron-based scaling support
+  - Configure HPA behavior policies for scale-up/down
+  - Move HPA config from `autoscaling` to `hpaAutoscaling`
+
 ## [7.4.3](https://github.com/telekom/gateway-kong-charts/compare/7.4.2...7.4.3) (2025-08-22)
 
 

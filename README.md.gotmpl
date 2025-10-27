@@ -333,7 +333,7 @@ Following helm-chart variables controls the autoscaler properties for the Gatewa
 
 #### KEDA-Based Autoscaling (Advanced)
 
-**Available since chart version `8.1.0`**
+**Available since chart version `8.0.0`**
 
 [KEDA (Kubernetes Event-Driven Autoscaling)](https://keda.sh/) provides advanced autoscaling capabilities beyond standard HPA, including:
 - **Multiple metric sources**: CPU, memory, custom metrics from Victoria Metrics, and time-based schedules

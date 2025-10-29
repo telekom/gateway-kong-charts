@@ -409,6 +409,125 @@ For a complete configuration example with all available options, see the `values
 - [KEDA Scalers](https://keda.sh/docs/scalers/)
 - [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
+### Argo Rollouts (Progressive Delivery - BETA)
+
+**Available since chart version `8.1.0`**
+
+Please note that the helm value api is in early state and values as well as templates are suspect to change, which might break your configuration.
+
+[Argo Rollouts](https://argoproj.github.io/rollouts/) provides advanced deployment capabilities with progressive delivery strategies like canary and blue-green deployments. When enabled, Argo Rollouts manages the rollout process while maintaining the existing Deployment resource through `workloadRef`.
+
+**Features:**
+- **Canary Deployments**: Gradually shift traffic from stable to new version with configurable steps
+- **Blue-Green Deployments**: Run two identical production environments (blue and green)
+- **Automated Analysis**: Optional metric-based validation using Prometheus/Victoria Metrics
+- **Traffic Management**: NGINX Ingress-based traffic splitting with canary annotations
+- **Automated Rollbacks**: Automatic rollback based on analysis metrics (error rate, success rate)
+
+**Prerequisites:**
+- Argo Rollouts must be installed in the cluster: `kubectl create namespace argo-rollouts && kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml`
+- NGINX Ingress Controller (for traffic routing)
+- Prometheus/Victoria Metrics (optional, for automated analysis)
+
+**Important:** `argoRollouts` and `hpaAutoscaling` (HPA) are mutually exclusive. KEDA autoscaling can be used together with Argo Rollouts.
+
+**Minimal Configuration Example** (Canary without analysis):
+
+```yaml
+argoRollouts:
+  enabled: true
+ 
+  strategy:
+    type: canary
+    canary:
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 2m
+        - setWeight: 50
+        - pause:
+            duration: 5m
+```
+
+**Advanced Configuration Example** (Canary with automated analysis):
+
+```yaml
+argoRollouts:
+  enabled: true
+ 
+  strategy:
+    type: canary
+    canary:
+      additionalProperties:
+        maxUnavailable: "50%"
+        maxSurge: "25%"
+        scaleDownDelaySeconds: 60
+     
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 2m
+        - setWeight: 50
+        - pause:
+            duration: 5m
+     
+      analysis:
+        templates:
+          - templateName: success-rate-analysis
+        startingStep: 1
+ 
+  analysisTemplates:
+    enabled: true
+   
+    successRate:
+      enabled: true
+      interval: 30s
+      count: 0
+      failureLimit: 3
+      successCondition: "all(result, # >= 0.95)"
+      prometheusAddress: "http://prometheus.monitoring.svc.cluster.local:8427"
+      authentication:
+        enabled: true
+        secretName: "victoria-metrics-secret"
+        basicKey: "basic-auth"
+```
+
+**Blue-Green Deployment Example**:
+
+```yaml
+argoRollouts:
+  enabled: true
+ 
+  strategy:
+    type: blueGreen
+    blueGreen:
+      autoPromotionEnabled: false    # Manual promotion required
+      scaleDownDelaySeconds: 30      # Wait before scaling down old version
+      prePromotionAnalysis:          # Optional: analysis before promotion
+        templates:
+          - templateName: success-rate-analysis
+```
+
+**Key Configuration Options:**
+
+| Helm-Chart variable                                    | Description                                           | Default  |
+|--------------------------------------------------------|-------------------------------------------------------|----------|
+| `argoRollouts.enabled`                                 | Enable Argo Rollouts progressive delivery             | `false`  |
+| `argoRollouts.strategy.type`                           | Strategy type: "canary" or "blueGreen"                | `canary` |
+| `argoRollouts.strategy.canary.steps`                   | Canary rollout steps (weight, pause, analysis)        | See docs |
+| `argoRollouts.strategy.canary.analysis.startingStep`   | Step at which to start background analysis            | (unset)  |
+| `argoRollouts.strategy.blueGreen`                      | Blue-green strategy configuration (autoPromotionEnabled, scaleDownDelaySeconds, etc.) | See docs |
+| `argoRollouts.analysisTemplates.enabled`               | Enable automated analysis templates                   | `true`   |
+| `argoRollouts.analysisTemplates.errorRate.enabled`     | Enable error rate analysis                            | `true`   |
+| `argoRollouts.analysisTemplates.successRate.enabled`   | Enable success rate analysis                          | `true`   |
+
+For detailed configuration, examples, and troubleshooting, see the [Argo Rollouts Feature Documentation](docs/ARGO_ROLLOUTS_FEATURE.md).
+
+**References:**
+- [Argo Rollouts Documentation](https://argoproj.github.io/rollouts/)
+- [Argo Rollouts Canary Strategy](https://argoproj.github.io/rollouts/features/canary/)
+- [Argo Rollouts Analysis](https://argoproj.github.io/rollouts/features/analysis/)
+
 ### PodAntiaffinity & TopologyKey
 
 In Kubernetes it is recommended to distribute the pods over several nodes. If a kubernetes node gets into problems, there are enough pods on other nodes to take on the load.
@@ -528,6 +647,39 @@ This is a short overlook about important parameters in the `values.yaml`.
 | adminApi.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"Prefix"}]}]` | Set usual ingress array of hosts |
 | adminApi.ingress.tls | list | `[]` |  |
 | adminApi.tls.enabled | bool | `false` | Access Admin API via https instead of http   |
+| argoRollouts.analysisTemplates.enabled | bool | `true` | Enable creation of AnalysisTemplates |
+| argoRollouts.analysisTemplates.errorRate.authentication | object | `{"basicKey":"basic-auth","enabled":true,"secretName":"victoria-metrics-secret"}` | Prometheus authentication using Basic Auth Credentials are read from a Kubernetes secret in the same namespace |
+| argoRollouts.analysisTemplates.errorRate.authentication.basicKey | string | `"basic-auth"` | Secret key containing base64 encoded user:password combination to be used as Basic Auth header |
+| argoRollouts.analysisTemplates.errorRate.authentication.enabled | bool | `true` | Enable authentication for Prometheus queries |
+| argoRollouts.analysisTemplates.errorRate.authentication.secretName | string | `"victoria-metrics-secret"` | Secret name containing Prometheus credentials This secret must exist in the same namespace as the Rollout Example secret creation:   apiVersion: v1   kind: Secret   metadata:     name: victoria-metrics-secret   type: Opaque   stringData:     username: "my-username"     password: "my-password" |
+| argoRollouts.analysisTemplates.errorRate.count | int | `0` | Number of measurements to take |
+| argoRollouts.analysisTemplates.errorRate.enabled | bool | `true` | Enable error rate analysis |
+| argoRollouts.analysisTemplates.errorRate.failureLimit | int | `2` | Number of failed measurements that trigger rollback |
+| argoRollouts.analysisTemplates.errorRate.interval | string | `"30s"` | Analysis interval (how often to check) |
+| argoRollouts.analysisTemplates.errorRate.prometheusAddress | string | `""` | Prometheus server address (must be accessible) Example: "http://prometheus.monitoring.svc.cluster.local:8427" |
+| argoRollouts.analysisTemplates.errorRate.query | string | `"sum(irate(\nnginx_ingress_controller_request_duration_seconds_count{exported_namespace=\"{{`{{ args.namespace }}`}}\",exported_service=\"{{`{{ args.service-name }}`}}\",ingress=\"{{`{{ args.service-name }}`}}\",canary!=\"\",status!~\"5..\"}[1m]\n)) /\nsum(irate(\nnginx_ingress_controller_request_duration_seconds_count{exported_namespace=\"{{`{{ args.namespace }}`}}\",exported_service=\"{{`{{ args.service-name }}`}}\",ingress=\"{{`{{ args.service-name }}`}}\",canary!=\"\"}[1m]\n))\n"` | Error rate threshold (5% = 0.05) PromQL query to calculate error rate over last 5 minutes |
+| argoRollouts.analysisTemplates.errorRate.successCondition | string | `"all(result, # < 0.05)"` | Success criteria (PromQL query must return < threshold) |
+| argoRollouts.analysisTemplates.successRate.authentication | object | `{"basicKey":"basic-auth","enabled":true,"secretName":"victoria-metrics-secret"}` | Prometheus authentication using Basic Auth Credentials are read from a Kubernetes secret in the same namespace |
+| argoRollouts.analysisTemplates.successRate.authentication.basicKey | string | `"basic-auth"` | Secret key containing base64 encoded user:password combination to be used as Basic Auth header |
+| argoRollouts.analysisTemplates.successRate.authentication.enabled | bool | `true` | Enable authentication for Prometheus queries |
+| argoRollouts.analysisTemplates.successRate.authentication.secretName | string | `"victoria-metrics-secret"` | Secret name containing Prometheus credentials |
+| argoRollouts.analysisTemplates.successRate.count | int | `0` | Number of measurements to take |
+| argoRollouts.analysisTemplates.successRate.enabled | bool | `true` | Enable success rate analysis |
+| argoRollouts.analysisTemplates.successRate.failureLimit | int | `3` | Number of failed measurements that trigger rollback |
+| argoRollouts.analysisTemplates.successRate.interval | string | `"30s"` | Analysis interval |
+| argoRollouts.analysisTemplates.successRate.prometheusAddress | string | `""` | Prometheus server address |
+| argoRollouts.analysisTemplates.successRate.query | string | `"sum(irate(\n  nginx_ingress_controller_request_duration_seconds_count{exported_namespace=\"{{`{{ args.namespace }}`}}\",exported_service=\"{{`{{ args.service-name }}`}}\",ingress=\"{{`{{ args.service-name }}`}}\",canary!=\"\",status!~\"(4|5).*\"}[1m]\n)) /\nsum(irate(\n  nginx_ingress_controller_request_duration_seconds_count{exported_namespace=\"{{`{{ args.namespace }}`}}\",exported_service=\"{{`{{ args.service-name }}`}}\",ingress=\"{{`{{ args.service-name }}`}}\",canary!=\"\"}[1m]\n))\n"` | Success rate threshold (95% = 0.95) PromQL query to calculate success rate over last 1 minute |
+| argoRollouts.analysisTemplates.successRate.successCondition | string | `"all(result, # >= 0.95)"` | Success criteria (PromQL query must return > threshold) |
+| argoRollouts.enabled | bool | `false` | Enable Argo Rollouts progressive delivery (replaces standard Deployment) |
+| argoRollouts.strategy.blueGreen | object | `{"autoPromotionEnabled":false}` | blueGreen strategy configuration (except activeService and previewService - these are handled by template) |
+| argoRollouts.strategy.canary | object | `{"additionalProperties":{"maxSurge":"25%","maxUnavailable":"50%","scaleDownDelaySeconds":60},"analysis":{"args":[],"startingStep":null,"templates":[{"templateName":"success-rate-analysis"}]},"steps":[{"setWeight":10},{"pause":{"duration":"2m"}}]}` | Canary strategy configuration |
+| argoRollouts.strategy.canary.additionalProperties.maxSurge | string | `"25%"` | Maximum number of extra pods that can be created during rollout (number or percentage) |
+| argoRollouts.strategy.canary.additionalProperties.maxUnavailable | string | `"50%"` | Maximum number of pods that can be unavailable during rollout (number or percentage) |
+| argoRollouts.strategy.canary.additionalProperties.scaleDownDelaySeconds | int | `60` | Time to wait before scaling down the old ReplicaSet after successful rollout (in seconds) |
+| argoRollouts.strategy.canary.analysis.args | list | `[]` | Arguments to pass to the analysis template |
+| argoRollouts.strategy.canary.analysis.startingStep | string | `nil` | Canary step at which to start the analysis (1-based index) |
+| argoRollouts.strategy.canary.analysis.templates | list | `[{"templateName":"success-rate-analysis"}]` | AnalysisTemplate references for background analysis |
+| argoRollouts.strategy.type | string | `"canary"` | Deployment strategy type: "canary" or "blueGreen" |
 | circuitbreaker.enabled | bool | `false` | enable deployment of circuitbreaker component |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | default value for imagePullPolicy |
 | circuitbreaker.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | circuitbreaker container default resource configuration |
@@ -641,7 +793,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | kedaAutoscaling.triggers.prometheus.enabled | bool | `true` | Enable Prometheus/Victoria Metrics based scaling |
 | kedaAutoscaling.triggers.prometheus.metricName | string | `"kong_request_rate"` | Metric name (used for identification in KEDA) |
 | kedaAutoscaling.triggers.prometheus.query | string | `"sum(rate(kong_http_requests_total{tardis_telekom_de_zone=\"{{ .Values.global.zone }}\"}[1m]))"` | PromQL query to execute Must return a single numeric value Can use Helm template variables (e.g., {{ .Values.global.zone }}) Example queries:   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m])) |
-| kedaAutoscaling.triggers.prometheus.serverAddress | string | `""` | Victoria Metrics server address (REQUIRED if enabled) Example: "http://vmauth-raccoon.monitoring.svc.cluster.local:8427" Can use template variables: "{{ .Values.global.vmauth.url }}" |
+| kedaAutoscaling.triggers.prometheus.serverAddress | string | `""` | Victoria Metrics server address (REQUIRED if enabled) Example: "http://prometheus.monitoring.svc.cluster.local:8427" Can use template variables: "{{ .Values.global.vmauth.url }}" |
 | kedaAutoscaling.triggers.prometheus.threshold | string | `"100"` | Threshold value for the metric Scales up when query result exceeds this value For request rate: total requests/second across all pods |
 | keyRotation.additionalSpecValues | object | `{}` | provide alternative configuration for cert-managers Certificate resource |
 | keyRotation.enabled | bool | `false` | enable automatic cert / key rotation for access token issueing based on cert-manager and gateway-rotator |

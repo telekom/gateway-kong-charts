@@ -4,7 +4,7 @@ SPDX-PackageSupplier = "Deutsche Telekom AG <opensource@telekom.de>"
 SPDX-PackageDownloadLocation = "https://github.com/telekom/gateway-kong-chart"
 
 [[annotations]]
-path = ["CHANGELOG.md"]
+path = ["CHANGELOG.md", "docs/*.md"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Copyright 2025 Deutsche Telekom AG"
 SPDX-License-Identifier = "CC0-1.0"

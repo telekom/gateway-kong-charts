@@ -409,6 +409,125 @@ For a complete configuration example with all available options, see the `values
 - [KEDA Scalers](https://keda.sh/docs/scalers/)
 - [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
+### Argo Rollouts (Progressive Delivery - BETA)
+
+**Available since chart version `8.1.0`**
+
+Please note that the helm value api is in early state and values as well as templates are suspect to change, which might break your configuration.
+
+[Argo Rollouts](https://argoproj.github.io/rollouts/) provides advanced deployment capabilities with progressive delivery strategies like canary and blue-green deployments. When enabled, Argo Rollouts manages the rollout process while maintaining the existing Deployment resource through `workloadRef`.
+
+**Features:**
+- **Canary Deployments**: Gradually shift traffic from stable to new version with configurable steps
+- **Blue-Green Deployments**: Run two identical production environments (blue and green)
+- **Automated Analysis**: Optional metric-based validation using Prometheus/Victoria Metrics
+- **Traffic Management**: NGINX Ingress-based traffic splitting with canary annotations
+- **Automated Rollbacks**: Automatic rollback based on analysis metrics (error rate, success rate)
+
+**Prerequisites:**
+- Argo Rollouts must be installed in the cluster: `kubectl create namespace argo-rollouts && kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml`
+- NGINX Ingress Controller (for traffic routing)
+- Prometheus/Victoria Metrics (optional, for automated analysis)
+
+**Important:** `argoRollouts` and `hpaAutoscaling` (HPA) are mutually exclusive. KEDA autoscaling can be used together with Argo Rollouts.
+
+**Minimal Configuration Example** (Canary without analysis):
+
+```yaml
+argoRollouts:
+  enabled: true
+  
+  strategy:
+    type: canary
+    canary:
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 2m
+        - setWeight: 50
+        - pause:
+            duration: 5m
+```
+
+**Advanced Configuration Example** (Canary with automated analysis):
+
+```yaml
+argoRollouts:
+  enabled: true
+  
+  strategy:
+    type: canary
+    canary:
+      additionalProperties:
+        maxUnavailable: "50%"
+        maxSurge: "25%"
+        scaleDownDelaySeconds: 60
+      
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 2m
+        - setWeight: 50
+        - pause:
+            duration: 5m
+      
+      analysis:
+        templates:
+          - templateName: success-rate-analysis
+        startingStep: 1
+  
+  analysisTemplates:
+    enabled: true
+    
+    successRate:
+      enabled: true
+      interval: 30s
+      count: 0
+      failureLimit: 3
+      successCondition: "all(result, # >= 0.95)"
+      prometheusAddress: "http://prometheus.monitoring.svc.cluster.local:8427"
+      authentication:
+        enabled: true
+        secretName: "victoria-metrics-secret"
+        basicKey: "basic-auth"
+```
+
+**Blue-Green Deployment Example**:
+
+```yaml
+argoRollouts:
+  enabled: true
+  
+  strategy:
+    type: blueGreen
+    blueGreen:
+      autoPromotionEnabled: false    # Manual promotion required
+      scaleDownDelaySeconds: 30      # Wait before scaling down old version
+      prePromotionAnalysis:          # Optional: analysis before promotion
+        templates:
+          - templateName: success-rate-analysis
+```
+
+**Key Configuration Options:**
+
+| Helm-Chart variable                                    | Description                                           | Default  |
+|--------------------------------------------------------|-------------------------------------------------------|----------|
+| `argoRollouts.enabled`                                 | Enable Argo Rollouts progressive delivery             | `false`  |
+| `argoRollouts.strategy.type`                           | Strategy type: "canary" or "blueGreen"                | `canary` |
+| `argoRollouts.strategy.canary.steps`                   | Canary rollout steps (weight, pause, analysis)        | See docs |
+| `argoRollouts.strategy.canary.analysis.startingStep`   | Step at which to start background analysis            | (unset)  |
+| `argoRollouts.strategy.blueGreen`                      | Blue-green strategy configuration (autoPromotionEnabled, scaleDownDelaySeconds, etc.) | See docs |
+| `argoRollouts.analysisTemplates.enabled`               | Enable automated analysis templates                   | `true`   |
+| `argoRollouts.analysisTemplates.errorRate.enabled`     | Enable error rate analysis                            | `true`   |
+| `argoRollouts.analysisTemplates.successRate.enabled`   | Enable success rate analysis                          | `true`   |
+
+For detailed configuration, examples, and troubleshooting, see the [Argo Rollouts Feature Documentation](docs/ARGO_ROLLOUTS_FEATURE.md).
+
+**References:**
+- [Argo Rollouts Documentation](https://argoproj.github.io/rollouts/)
+- [Argo Rollouts Canary Strategy](https://argoproj.github.io/rollouts/features/canary/)
+- [Argo Rollouts Analysis](https://argoproj.github.io/rollouts/features/analysis/)
+
 ### PodAntiaffinity & TopologyKey
 
 In Kubernetes it is recommended to distribute the pods over several nodes. If a kubernetes node gets into problems, there are enough pods on other nodes to take on the load.

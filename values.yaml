@@ -450,7 +450,7 @@ kedaAutoscaling:
       enabled: true
       
       # -- Victoria Metrics server address (REQUIRED if enabled)
-      # Example: "http://vmauth-raccoon.monitoring.svc.cluster.local:8427"
+      # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
       # Can use template variables: "{{ .Values.global.vmauth.url }}"
       serverAddress: ""
       
@@ -962,3 +962,171 @@ pdb:
   minAvailable:
   # --  maxUnavailable pods in number or percent (defaults to 1 if unset and minAvailable also unset)
   maxUnavailable:
+
+# ============================================================================
+# Argo Rollouts Configuration
+# ============================================================================
+# Argo Rollouts provides advanced deployment capabilities with progressive 
+# delivery strategies like canary and blue-green deployments.
+#
+# Prerequisites:
+# - Argo Rollouts must be installed in the cluster
+# - For metric-based analysis, a metrics provider (Prometheus/Victoria Metrics) must be accessible
+#
+# Note: argoRollouts is mutually exclusive with standard Deployment.
+# When enabled, a Rollout resource replaces the Deployment using workloadRef.
+# ============================================================================
+
+argoRollouts:
+  # -- Enable Argo Rollouts progressive delivery (replaces standard Deployment)
+  enabled: false
+  
+  # ============================================================================
+  # Rollout Strategy Configuration
+  # ============================================================================
+  strategy:
+    # -- Deployment strategy type: "canary" or "blueGreen"
+    type: canary
+    
+    # -- Canary strategy configuration
+    canary:
+      additionalProperties:
+        # -- Maximum number of pods that can be unavailable during rollout (number or percentage)
+        maxUnavailable: "50%"
+
+        # -- Maximum number of extra pods that can be created during rollout (number or percentage)
+        maxSurge: "25%"
+        # -- Time to wait before scaling down the old ReplicaSet after successful rollout (in seconds)
+        scaleDownDelaySeconds: 60
+
+      # ============================================================================
+      # Canary Steps Configuration
+      # ============================================================================
+      # Define the progression of traffic shift during canary deployment
+      # Each step can set weight, pause duration, or trigger analysis
+      
+      steps:
+        # Step 1: Route 10% of traffic to canary
+        - setWeight: 10
+        # Step 2: Pause for 2 minutes
+        - pause:
+            duration: 2m
+        # Final step: Full promotion (100% to canary, 0% to stable)
+
+      # ============================================================================
+      # Analysis Configuration
+      # ============================================================================
+      # Optional background analysis that runs continuously during canary
+      
+      analysis:
+        # -- AnalysisTemplate references for background analysis
+        templates:
+          - templateName: success-rate-analysis
+        # -- Arguments to pass to the analysis template
+        args: []
+        # -- Canary step at which to start the analysis (1-based index)
+        startingStep:
+
+    # -- blueGreen strategy configuration (except activeService and previewService - these are handled by template)
+    blueGreen:
+      autoPromotionEnabled: false
+
+  # ============================================================================
+  # Analysis Templates Configuration
+  # ============================================================================
+  # Define metrics and success criteria for automated rollout validation
+  
+  analysisTemplates:
+    # -- Enable creation of AnalysisTemplates
+    enabled: true
+    
+    # ============================================================================
+    # Error Rate Analysis Template
+    # ============================================================================
+    # Validates that error rate stays below acceptable threshold
+    
+    errorRate:
+      # -- Enable error rate analysis
+      enabled: true
+      # -- Analysis interval (how often to check)
+      interval: 30s
+      # -- Number of measurements to take
+      count: 0
+      # -- Number of failed measurements that trigger rollback
+      failureLimit: 2
+      # -- Success criteria (PromQL query must return < threshold)
+      successCondition: "all(result, # < 0.05)"
+      # -- Error rate threshold (5% = 0.05)
+      # PromQL query to calculate error rate over last 5 minutes
+      query: |
+        sum(irate(
+        nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!="",status!~"5.."}[1m]
+        )) /
+        sum(irate(
+        nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!=""}[1m]
+        ))
+      # -- Prometheus server address (must be accessible)
+      # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
+      prometheusAddress: ""
+      
+      # -- Prometheus authentication using Basic Auth
+      # Credentials are read from a Kubernetes secret in the same namespace
+      authentication:
+        # -- Enable authentication for Prometheus queries
+        enabled: true
+        
+        # -- Secret name containing Prometheus credentials
+        # This secret must exist in the same namespace as the Rollout
+        # Example secret creation:
+        #   apiVersion: v1
+        #   kind: Secret
+        #   metadata:
+        #     name: victoria-metrics-secret
+        #   type: Opaque
+        #   stringData:
+        #     username: "my-username"
+        #     password: "my-password"
+        secretName: "victoria-metrics-secret"
+        
+        # -- Secret key containing base64 encoded user:password combination to be used as Basic Auth header
+        basicKey: "basic-auth"
+
+    # ============================================================================
+    # Success Rate Analysis Template
+    # ============================================================================
+    # Validates that success rate stays above acceptable threshold
+    
+    successRate:
+      # -- Enable success rate analysis
+      enabled: true
+      # -- Analysis interval
+      interval: 30s
+      # -- Number of measurements to take
+      count: 0
+      # -- Number of failed measurements that trigger rollback
+      failureLimit: 3
+      # -- Success criteria (PromQL query must return > threshold)
+      successCondition: "all(result, # >= 0.95)"
+      # -- Success rate threshold (95% = 0.95)
+      # PromQL query to calculate success rate over last 1 minute
+      query: |
+        sum(irate(
+          nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!="",status!~"(4|5).*"}[1m]
+        )) /
+        sum(irate(
+          nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!=""}[1m]
+        ))
+      # -- Prometheus server address
+      prometheusAddress: ""
+      
+      # -- Prometheus authentication using Basic Auth
+      # Credentials are read from a Kubernetes secret in the same namespace
+      authentication:
+        # -- Enable authentication for Prometheus queries
+        enabled: true
+        
+        # -- Secret name containing Prometheus credentials
+        secretName: "victoria-metrics-secret"
+        
+        # -- Secret key containing base64 encoded user:password combination to be used as Basic Auth header
+        basicKey: "basic-auth"

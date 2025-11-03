@@ -1,10 +1,41 @@
-version = 1
-SPDX-PackageName = "gateway-kong-chart"
+version = 2
+SPDX-PackageName = "gateway-kong-charts"
 SPDX-PackageSupplier = "Deutsche Telekom AG <opensource@telekom.de>"
 SPDX-PackageDownloadLocation = "https://github.com/telekom/gateway-kong-chart"
 
 [[annotations]]
-path = ["CHANGELOG.md"]
+path = [
+    ".gitignore",
+    ".helmignore",
+    "CHANGELOG.md",
+    "README.md",
+    "README.md.gotmpl",
+    ".github/workflows/helm-lint.yml",
+    ".github/workflows/reuse-compliance.yml"
+    ]
 precedence = "aggregate"
-SPDX-FileCopyrightText = "Copyright 2025 Deutsche Telekom AG"
+SPDX-FileCopyrightText = "Copyright 2023-2025 Deutsche Telekom AG"
 SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = ["CODE_OF_CONDUCT.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2023 www.contributor-covenant.org"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = [
+    ".helmdocsignore",
+    "Chart.yaml",
+    "CODEOWNERS",
+    "release.config.js",
+    "values.yaml",
+    ".github/workflows/helm-docs.yml",
+    ".github/workflows/release.yml",
+    "charts/**",
+    "platforms/*",
+    "templates/*",
+    ]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Copyright 2023-2025 Deutsche Telekom AG"
+SPDX-License-Identifier = "Apache-2.0"

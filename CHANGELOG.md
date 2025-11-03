@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+# [8.1.0](https://github.com/telekom/gateway-kong-charts/compare/8.0.0...8.1.0) (2025-11-03)
+
+
+### Features
+
+* introduce argo rollouts ([731a6f6](https://github.com/telekom/gateway-kong-charts/commit/731a6f63c2ddc68bb4977a5cd343ababc9d64f72))
+
 # [8.0.0](https://github.com/telekom/gateway-kong-charts/compare/7.4.3...8.0.0) (2025-10-27)
 
 

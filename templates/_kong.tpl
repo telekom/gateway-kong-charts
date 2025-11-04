@@ -19,123 +19,43 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{- end -}}
 
 {{- define "kong.image" -}}
-{{- $imageName := "kong" -}}
-{{- $imageTag := "1.2.1" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/gateway" -}}
-{{- if .Values.image -}}
-  {{- if not (kindIs "string" .Values.image) -}}
-    {{ $imageRepository = .Values.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.image.name | default $imageName -}}
-    {{ $imageTag = .Values.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/io" .Values.global.image.organization -}}
-    {{- else -}}
-      {{- .Values.image -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
+{{- $imageRegistry := .Values.image.registry | default .Values.global.image.registry -}}
+{{- $imageOrganization := .Values.image.organization | default .Values.global.image.organization -}}
+{{- $imageName := .Values.image.name -}}
+{{- $imageTag := .Values.image.tag -}}
+{{- printf "%s/%s/%s:%s" $imageRegistry $imageOrganization $imageName $imageTag -}}
 {{- end -}}
 
 {{- define "job.image" -}}
-{{- $imageName := "tif-base-image" -}}
-{{- $imageTag := "1.0.0" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-common" -}}
-{{- if and .Values.job .Values.job.image -}}
-  {{- if not (kindIs "string" .Values.job.image) -}}
-    {{ $imageRepository = .Values.job.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.job.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.job.image.name | default $imageName -}}
-    {{ $imageTag = .Values.job.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.job.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-common" .Values.global.image.organization -}}
-    {{- else -}}
-      {{- .Values.job.image -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
+{{- $imageRegistry := .Values.job.image.registry | default .Values.global.image.registry -}}
+{{- $imageOrganization := .Values.job.image.organization | default .Values.global.image.organization -}}
+{{- $imageName := .Values.job.image.name -}}
+{{- $imageTag := .Values.job.image.tag -}}
+{{- printf "%s/%s/%s:%s" $imageRegistry $imageOrganization $imageName $imageTag -}}
 {{- end -}}
 
 {{- define "kong.jumper.image" -}}
-{{- $imageName := "jumper" -}}
-{{- $imageTag := "4.2.4" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/gateway" -}}
-{{- if .Values.jumper.image -}}
-  {{- if not (kindIs "string" .Values.jumper.image) -}}
-    {{ $imageRepository = .Values.jumper.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.jumper.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.jumper.image.name | default $imageName -}}
-    {{ $imageTag = .Values.jumper.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.jumper.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-      {{- .Values.jumper.image -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
+{{- $imageRegistry := .Values.jumper.image.registry | default .Values.global.image.registry -}}
+{{- $imageOrganization := .Values.jumper.image.organization | default .Values.global.image.organization -}}
+{{- $imageName := .Values.jumper.image.name -}}
+{{- $imageTag := .Values.jumper.image.tag -}}
+{{- printf "%s/%s/%s:%s" $imageRegistry $imageOrganization $imageName $imageTag -}}
 {{- end -}}
 
 {{- define "kong.issuerService.image" -}}
-{{- $imageName := "issuer-service" -}}
-{{- $imageTag := "2.2.1" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/gateway" -}}
-{{- if .Values.issuerService.image -}}
-  {{- if not (kindIs "string" .Values.issuerService.image) -}}
-    {{ $imageRepository = .Values.issuerService.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.issuerService.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.issuerService.image.name | default $imageName -}}
-    {{ $imageTag = .Values.issuerService.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.issuerService.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-    {{- end -}}
-    {{- .Values.issuerService.image -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
+{{- $imageRegistry := .Values.issuerService.image.registry | default .Values.global.image.registry -}}
+{{- $imageOrganization := .Values.issuerService.image.organization | default .Values.global.image.organization -}}
+{{- $imageName := .Values.issuerService.image.name -}}
+{{- $imageTag := .Values.issuerService.image.tag -}}
+{{- printf "%s/%s/%s:%s" $imageRegistry $imageOrganization $imageName $imageTag -}}
 {{- end -}}
 
 {{- define "kong.circuitbreaker.image" -}}
-{{- $imageName := "gateway-circuitbreaker" -}}
-{{- $imageTag := "2.1.0" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/hyperion" -}}
-{{- if .Values.circuitbreaker.image -}}
-  {{- if not (kindIs "string" .Values.circuitbreaker.image) -}}
-    {{ $imageRepository = .Values.circuitbreaker.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.circuitbreaker.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.circuitbreaker.image.name | default $imageName -}}
-    {{ $imageTag = .Values.circuitbreaker.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.circuitbreaker.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-    {{- end -}}
-    {{- .Values.circuitbreaker.image -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
+{{- $imageRegistry := .Values.circuitbreaker.image.registry | default .Values.global.image.registry -}}
+{{- $imageOrganization := .Values.circuitbreaker.image.organization | default .Values.global.image.organization -}}
+{{- $imageName := .Values.circuitbreaker.image.name -}}
+{{- $imageTag := .Values.circuitbreaker.image.tag -}}
+{{- printf "%s/%s/%s:%s" $imageRegistry $imageOrganization $imageName $imageTag -}}
 {{- end -}}
 
 {{- define "kong.issuerService.env" }}

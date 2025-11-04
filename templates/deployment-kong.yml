@@ -1,3 +1,9 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
 {{- if and (not .Values.keyRotation.enabled) (or (not .Values.jumper.existingJwkSecretName) (not .Values.issuerService.existingJwkSecretName)) }}
 {{- fail (printf "Cannot deploy stargate due to missing jwk secret. Use keyRotation.enabled or jumper.existingJwkSecretName with issuerService.existingJwkSecretName to provide jwk secrets") }}
 {{- end }}

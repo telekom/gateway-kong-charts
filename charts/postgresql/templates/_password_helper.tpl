@@ -1,3 +1,9 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
 # This is just a helper function for recursive regexp validation
 # regexMatchList := (match first) && (regexMatchList rest)
 {{- define "passutil.regexMatchList" -}}

@@ -1,4 +1,16 @@
 {{/*
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{/*
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{/*
 KEDA Autoscaling Validation
 */}}
 {{- define "keda.validate" -}}

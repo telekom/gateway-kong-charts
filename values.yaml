@@ -26,20 +26,16 @@ global:
       #external-dns.alpha.kubernetes.io/target: ""
       #kubernetes.io/ingress.class: ""
 
-  # change the values below to overwrite the repository globally
-  # set "force: true" to perform string replacement in "image: repository/organization/name:tag" too
-  # for example:
-  # image:
-  #   repository: mtr.devops.telekom.de
-  #   organization: tardis-common
-  #   force: false
+  # Default registry and namespace for all images
+  # Can be overridden per component (e.g., image.registry, jumper.image.registry)
+  # 
+  # Images are constructed as: {registry}/{namespace}/{repository}:{tag}
+  # Example: mtr.devops.telekom.de/eu_it_co_development/o28m/gateway-kong:1.1.0
   image:
-    # -- Set default repository for all images
-    #repository: mtr.devops.telekom.de
-    # -- Set default organisation for all images
-    #organization: tardis-common
-    # -- Replace repository/organisation also if image is set as custom  "image:" value
-    force: false
+    # -- Default registry for all images
+    registry: mtr.devops.telekom.de
+    # -- Default namespace for all images
+    namespace: eu_it_co_development/o28m
 
   # If imagePullSecrets is not empty, a pull secret will be deployed for each entry otherwise 
   # no pull secret will be deployed
@@ -102,15 +98,15 @@ global:
 # -- List of (template) yaml files fo which a checksum annotation will be created
 templateChangeTriggers: []
 
-# You can force using a specific image here:
-#image: 
-  #repository: mtr.devops.telekom.de
-  #organization: tardis-internal/gateway
-  #name: kong
-  #tag: 1.0.1
-# Or use the flattened string form:
-#image: mtr.devops.telekom.de/tardis-internal/gateway/kong:1.0.1
-#imagePullPolicy: IfNotPresent
+# -- Kong Gateway image configuration (inherits global.image.registry and global.image.namespace)
+image:
+  # registry: ""  # Uncomment to override global.image.registry
+  # namespace: ""  # Uncomment to override global.image.namespace
+  repository: gateway-kong
+  tag: "1.2.1"
+
+# -- Image pull policy for Kong container
+imagePullPolicy: IfNotPresent
 
 # Determine the migrations behaviour (bootstrap, upgrade, jobs)
 # bootstrap: setting up a new deployments database
@@ -736,14 +732,17 @@ irixBrokerRoute:
 jumper:
   # -- enable deployment of jumper conatiner inside gateway pod
   enabled: true
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: jumper-sse
-    #tag: 3.6.1
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/gateway/jumper:4.x.x
-  #imagePullPolicy: IfNotPresent
+  
+  # -- Jumper image configuration (inherits global.image.registry and global.image.namespace)
+  image:
+    # registry: ""  # Uncomment to override global.image.registry
+    # namespace: ""  # Uncomment to override global.image.namespace
+    repository: gateway-jumper
+    tag: "4.2.5"
+  
+  # -- Image pull policy for Jumper container
+  imagePullPolicy: IfNotPresent
+  
   issuerUrl: https://localhost:443
   #tracingUrl: http://guardians-drax-collector.skoll:9411
   #defaultServiceName: "stargate"
@@ -820,14 +819,16 @@ jumper:
 issuerService:
   # -- enable deployment of issuer-service container inside gateway pod
   enabled: true
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: issuer-service
-    #tag: 1.9.0
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/issuer-service:1.9.0
-  #imagePullPolicy: IfNotPresent
+  
+  # -- Issuer Service image configuration (inherits global.image.registry and global.image.namespace)
+  image:
+    # registry: ""  # Uncomment to override global.image.registry
+    # namespace: ""  # Uncomment to override global.image.namespace
+    repository: gateway-issuer-service-go
+    tag: "2.2.1"
+  
+  # -- Image pull policy for Issuer Service container
+  imagePullPolicy: IfNotPresent
 
   # When providing an existing secret, it has to compatible with a gateway-rotator managed one
   # Format is specified here https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process
@@ -875,15 +876,15 @@ issuerService:
 circuitbreaker:
   # -- enable deployment of circuitbreaker component
   enabled: false
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: circuitbreaker
-    #tag: 2.1.0
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/gateway-circuitbreaker:2.1.0
-
-  # -- default value for imagePullPolicy
+  
+  # -- Circuitbreaker image configuration (inherits global.image.registry and global.image.namespace)
+  image:
+    # registry: ""  # Uncomment to override global.image.registry
+    # namespace: ""  # Uncomment to override global.image.namespace
+    repository: gateway-circuitbreaker
+    tag: "2.1.0"
+  
+  # -- Image pull policy for Circuitbreaker container
   imagePullPolicy: IfNotPresent
 
   #interval: 60s
@@ -901,14 +902,14 @@ circuitbreaker:
       memory: 200Mi
 
 postgresql:
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-common
-    #name: postgres
-    #tag: 12.3-debian
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-common/postgres:12.3-debian
-  #imagePullPolicy: IfNotPresent
+  # -- PostgreSQL sub-chart image configuration
+  # -- PostgresQL image configuration (inherits global.image.registry and global.image.namespace)
+  image:
+    # registry: ""  # Uncomment to override global.image.registry
+    # namespace: ""  # Uncomment to override global.image.namespace
+    repository: postgresql
+    tag: "16.5"
+  # imagePullPolicy: IfNotPresent
 
   # -- postgresql container default resource configuration
   resources:
@@ -929,16 +930,13 @@ externalDatabase:
   #  <CA certificate in PEM format here>
   #  -----END CERTIFICATE-----
 
-job: {}
-# force specific image for jobs:
-#job:
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-common
-    #name: tif-base-image
-    #tag: 1.0.0
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-common/tif-base-image:1.0.0
+# -- Job image configuration (inherits global.image.registry and global.image.namespace)
+job:
+  image:
+    # registry: ""  # Uncomment to override global.image.registry
+    # namespace: ""  # Uncomment to override global.image.namespace
+    repository: bash-curl
+    tag: "8.13.0"
 
 # enabling keyRotration requires a working cert-manager as well as the gateway-rotator
 # alternatively use jumper.existingJwkSecretName and issuerService.existingJwkSecretName to provide compatible secret

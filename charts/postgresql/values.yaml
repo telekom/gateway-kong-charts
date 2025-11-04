@@ -10,6 +10,11 @@ global:
   #pathToSecret: "path/to/secret" 
   #storageClassName: gp2
   
+  # Default image configuration (can be overridden by parent chart's global.image values)
+  image:
+    registry: mtr.devops.telekom.de
+    namespace: eu_it_co_development/o28m
+  
   passwordRules:
     enabled: false
     length: 12
@@ -48,15 +53,15 @@ global:
   nameOverride: ""
   fullnameOverride: ""
 
-# You can force using a specific image here:
-#image:
-  #repository: mtr.devops.telekom.de
-  #organization: tardis-common
-  #name: postgres
-  #tag: 12.3-debian
-# Or use the flattened string form:
-#image: mtr.devops.telekom.de/tardis-common/postgres:12.3-debian
-#imagePullPolicy: IfNotPresent
+# -- PostgreSQL image configuration (inherits global.image values)
+image:
+  # registry: ""  # Uncomment to override global.image.registry
+  # namespace: ""  # Uncomment to override global.image.namespace
+  repository: postgresql
+  tag: "16.5"
+
+# -- Image pull policy for PostgreSQL container
+imagePullPolicy: IfNotPresent
 
 
 #podSecurityContext:

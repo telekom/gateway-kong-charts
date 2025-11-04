@@ -11,8 +11,8 @@ metadata:
   name: {{ .Release.Name }}-kong-bootstrap
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
-  backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
-  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
+  backoffLimit: {{ .Values.setupJobs.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds }}
   ttlSecondsAfterFinished: 60
   template:
     spec:

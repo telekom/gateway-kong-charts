@@ -59,7 +59,7 @@ global:
     # -- Determine if the a database will be deployed togehter with Stargate (local) or is provided (external)
     location: local
     # -- Port of the database
-    #port: 5432
+    port: 5432
     # -- Name of the database
     database: kong
     # -- Name of the schema
@@ -224,32 +224,56 @@ disableUpstreamCache: false
 #podSecurityContext: {}
 #containerSecurityContext: {}
 
-#topologyKey: kubernetes.io/hostname
+# -- Topology key for pod anti-affinity (spread pods across nodes/zones)
+topologyKey: kubernetes.io/hostname
 
 jobs: {}
   #containerSecurityContext: {}
 
-#memCacheSize: 128m
-#nginxWorkerProcesses: auto
-#nginxHttpLuaSharedDict: prometheus_metrics 15m
-#nginxLargeClientBuffers: 4 8k
-#workerConsistency: eventual
-#workerStateUpdateFrequency: 10
-#dbUpdateFrequency: 10
-#dbUpdatePropagation: 0
+# -- Kong memory cache size for database entities
+memCacheSize: 128m
+# -- Number of nginx worker processes
+nginxWorkerProcesses: 4
+# -- Nginx HTTP Lua shared dictionary for storing metrics
+nginxHttpLuaSharedDict: "prometheus_metrics 15m"
+# -- Nginx large client header buffers configuration
+#nginxLargeClientBuffers: "8 16k"
+# -- Kong worker consistency mode (eventual or strict)
+workerConsistency: eventual
+# -- Frequency in seconds to poll for worker state updates
+workerStateUpdateFrequency: 10
+# -- Frequency in seconds to poll database for updates
+dbUpdateFrequency: 10
+# -- Delay in seconds before propagating database updates
+dbUpdatePropagation: 0
+# -- HTTP client body buffer size (optional override)
 #httpClientBodyBufferSize: 4m
+# -- Trusted IPs for real IP detection (optional override)
 #trustedIps: 100.70.0.0/16
+# -- Header to use for real IP detection (optional override)
 #realIpHeader: x-original-forwarded-for
+# -- Whether to recursively search for client IP (optional override)
 #realIpRecursive: OFF
 
+# -- Number of Kong pod replicas (ignored when HPA, KEDA, or Argo Rollouts is enabled)
 replicas: 1
 
+# -- Deployment strategy configuration
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25%
+    maxSurge: 25%
+
+# -- Horizontal Pod Autoscaler configuration
 hpaAutoscaling:
   enabled: false
-  # minReplicas is using replicas as default, if replicas is not set, default is 3 
-  #minReplicas: $replicas
-  #maxReplicas: 10
-  #cpuUtilizationPercentage: 80
+  # -- Minimum number of replicas
+  minReplicas: 3
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  cpuUtilizationPercentage: 80
 
 # ============================================================================
 # KEDA-Based Autoscaling Configuration
@@ -563,10 +587,6 @@ kedaAutoscaling:
       # │ │ │ │ │
       # * * * * *
 
-strategy: {}
-  #rollingUpdate:
-    #maxUnavailable: 25%
-
 resources:
   limits:
     cpu: 2500m
@@ -609,10 +629,9 @@ startupProbe:
 
 setupJobs:
   # -- How often should be retried to run the job successfully
-  #backoffLimit: 15
-  # -- How long should be retried to run the job successfully
-  #activeDeadlineSeconds: 3600
-  #Resources need to be discussed
+  backoffLimit: 15
+  # -- How long (in seconds) should be retried to run the job successfully
+  activeDeadlineSeconds: 3600
   # -- resource defaults configured for the setupJobs
   resources:
     limits:
@@ -666,7 +685,8 @@ plugins:
     podMonitor:
       # -- Enables a podmonitor which can be used by the prometheus operator to collect metrics
       enabled: false
-      #selector: "guardians-raccoon"
+      # -- Default selector label for pod monitor
+      selector: "guardians-raccoon"
       # -- HTTP scheme to use for scraping
       # scheme: http
       # -- Interval at which metrics should be scraped
@@ -742,6 +762,9 @@ jumper:
   
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent
+  
+  # -- Port for Jumper container
+  port: 8080
   
   issuerUrl: https://localhost:443
   #tracingUrl: http://guardians-drax-collector.skoll:9411
@@ -887,8 +910,10 @@ circuitbreaker:
   # -- Image pull policy for Circuitbreaker container
   imagePullPolicy: IfNotPresent
 
-  #interval: 60s
-  #count: 4
+  # -- Interval for circuitbreaker checks
+  interval: 60s
+  # -- Number of failures before triggering circuit breaker
+  count: 4
 
   #containerSecurityContext: {}
 

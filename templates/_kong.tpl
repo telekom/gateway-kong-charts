@@ -72,9 +72,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 - name: KONG_URL
   value: {{ include "kong.adminApi.localhost" $ }}
 - name: INTERVAL
-  value: {{ .Values.circuitbreaker.interval | default "60s" | quote }}
+  value: {{ .Values.circuitbreaker.interval | quote }}
 - name: COUNT
-  value: {{ .Values.circuitbreaker.count | default "4" | quote}}
+  value: {{ .Values.circuitbreaker.count | quote}}
 {{- end -}}
 
 {{- define "kong.bundledTrustedCaCertificates" }}
@@ -317,14 +317,14 @@ false
 
 {{- define "kong.nginx.directives" }}
 - name: KONG_NGINX_WORKER_PROCESSES
-  value: '{{ .Values.nginxWorkerProcesses | default "4" }}'
+  value: '{{ .Values.nginxWorkerProcesses }}'
 - name: KONG_NGINX_HTTP_INCLUDE
   value: '/opt/kong/nginx/servers.conf'
 - name: KONG_NGINX_HTTP_LUA_SHARED_DICT
-  value: '{{ .Values.nginxHttpLuaSharedDict | default "prometheus_metrics 15m" }}'
+  value: '{{ .Values.nginxHttpLuaSharedDict }}'
 {{- if .Values.nginxLargeClientBuffers }}
 - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
-  value: '{{ .Values.nginxLargeClientBuffers | default "4 8k" }}'
+  value: '{{ .Values.nginxLargeClientBuffers }}'
 {{- end -}}
 {{- if .Values.defaultTlsSecret }}
 - name: KONG_SSL_CERT
@@ -365,7 +365,7 @@ false
 - name: PGHOST
   value: {{ include "database.host" $ }}
 - name: PGPORT
-  value: {{ .Values.global.database.port | default "5432" | quote }}
+  value: {{ .Values.global.database.port | quote }}
 - name: PGDATABASE
   value: {{ .Values.global.database.database }}
 - name: PGUSER
@@ -412,15 +412,15 @@ false
 
 {{- define "kong.env" }}
 - name: KONG_MEM_CACHE_SIZE
-  value: '{{ .Values.memCacheSize | default "128m" }}'
+  value: '{{ .Values.memCacheSize }}'
 - name: KONG_WORKER_CONSISTENCY
-  value: '{{ .Values.workerConsistency | default "eventual" }}'
+  value: '{{ .Values.workerConsistency }}'
 - name: KONG_WORKER_STATE_UPDATE_FREQUENCY
-  value: '{{ .Values.workerStateUpdateFrequency | default "10" }}'
+  value: '{{ .Values.workerStateUpdateFrequency }}'
 - name: KONG_DB_UPDATE_FREQUENCY
-  value: '{{ .Values.dbUpdateFrequency | default "10" }}'
+  value: '{{ .Values.dbUpdateFrequency }}'
 - name: KONG_DB_UPDATE_PROPAGATION
-  value: '{{ .Values.dbUpdatePropagation | default "0" }}'
+  value: '{{ .Values.dbUpdatePropagation }}'
 - name: KONG_ANONYMOUS_REPORTS
   value: 'false'
 - name: KONG_NGINX_HTTP_CLIENT_BODY_BUFFER_SIZE
@@ -442,7 +442,7 @@ false
       name: {{ .Release.Name }}
       key: databasePassword
 - name: KONG_PG_PORT
-  value: '{{ .Values.global.database.port | default 5432 }}'
+  value: '{{ .Values.global.database.port }}'
 - name: KONG_PG_HOST
   value: '{{ include "database.host" $ }}'
 - name: KONG_PG_USER

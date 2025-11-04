@@ -20,7 +20,7 @@ spec:
       - {{ .Release.Namespace }}
   endpoints:
     - port: metrics
-      path: {{ .Values.plugins.prometheus.path | default "/metrics" }}
+      path: {{ .Values.plugins.prometheus.path }}
       metricRelabelings:
         - sourceLabels: [__name__]
           regex: "kong_eni_(.+)"

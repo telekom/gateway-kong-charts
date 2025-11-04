@@ -40,16 +40,16 @@ spec:
   metrics:
   - name: error-rate
     # -- How often to evaluate the metric
-    interval: {{ .Values.argoRollouts.analysisTemplates.errorRate.interval | default "30s" }}
+    interval: {{ .Values.argoRollouts.analysisTemplates.errorRate.interval }}
     
     # -- Total number of measurements to take
-    count: {{ .Values.argoRollouts.analysisTemplates.errorRate.count | default 0 }}
+    count: {{ .Values.argoRollouts.analysisTemplates.errorRate.count }}
     
     # -- Number of failures that trigger rollback
-    failureLimit: {{ .Values.argoRollouts.analysisTemplates.errorRate.failureLimit | default 2 }}
+    failureLimit: {{ .Values.argoRollouts.analysisTemplates.errorRate.failureLimit }}
     
     # -- Success condition (result must be less than threshold)
-    successCondition: {{ .Values.argoRollouts.analysisTemplates.errorRate.successCondition | default "result < 0.05" | quote }}
+    successCondition: {{ .Values.argoRollouts.analysisTemplates.errorRate.successCondition | quote }}
     
     # -- Metric provider configuration (Prometheus)
     provider:
@@ -104,16 +104,16 @@ spec:
   metrics:
   - name: success-rate
     # -- How often to evaluate the metric
-    interval: {{ .Values.argoRollouts.analysisTemplates.successRate.interval | default "30s" }}
+    interval: {{ .Values.argoRollouts.analysisTemplates.successRate.interval }}
     
     # -- Total number of measurements to take
-    count: {{ .Values.argoRollouts.analysisTemplates.successRate.count | default 0 }}
+    count: {{ .Values.argoRollouts.analysisTemplates.successRate.count }}
     
     # -- Number of failures that trigger rollback
-    failureLimit: {{ .Values.argoRollouts.analysisTemplates.successRate.failureLimit | default 3 }}
+    failureLimit: {{ .Values.argoRollouts.analysisTemplates.successRate.failureLimit }}
     
     # -- Success condition (result must be greater than threshold)
-    successCondition: {{ .Values.argoRollouts.analysisTemplates.successRate.successCondition | default "result > 0.95" | quote }}
+    successCondition: {{ .Values.argoRollouts.analysisTemplates.successRate.successCondition | quote }}
     
     # -- Metric provider configuration (Prometheus)
     provider:

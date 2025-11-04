@@ -14,8 +14,8 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
-  backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
-  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
+  backoffLimit: {{ .Values.setupJobs.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds }}
   template:
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}

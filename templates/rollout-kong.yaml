@@ -18,7 +18,7 @@ spec:
   # Replica Management
   # ============================================================================
   {{- if not .Values.kedaAutoscaling.enabled }}
-  replicas: {{ .Values.replicas | default 1 }}
+  replicas: {{ .Values.replicas }}
   {{- end }}
   
   # ============================================================================

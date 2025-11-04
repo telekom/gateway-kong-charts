@@ -19,18 +19,22 @@ metadata:
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
 {{- if not (or .Values.hpaAutoscaling.enabled .Values.kedaAutoscaling.enabled .Values.argoRollouts.enabled) }}
-  replicas: {{ .Values.replicas | default 1 }}
+  replicas: {{ .Values.replicas }}
 {{- else }}
 {{- if (and .Values.argoRollouts.enabled .Values.argoRollouts.workloadRef.explicitDownscale) }}
   replicas: 0
 {{- end }}
+<<<<<<< HEAD
 {{- end }}
 {{- if .Values.strategy.rollingUpdate }}
+=======
+>>>>>>> c810cf8 (feat: add explicit defaults for deployment and component configuration)
   strategy:
-    type: RollingUpdate
+    type: {{ .Values.strategy.type }}
+{{- if eq .Values.strategy.type "RollingUpdate" }}
     rollingUpdate:
-      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable | default "25%" }}
-      maxSurge: 25%
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
 {{- end }}
   selector: 
     matchLabels: {{ include "kong.selector" $ | nindent 6 }}
@@ -71,7 +75,7 @@ spec:
                       operator: In
                       values:
                         - {{ .Release.Name }}-kong
-                topologyKey: {{ include "platformSpecificValue" (list $ . ".Values.topologyKey") | default "kubernetes.io/hostname" }}
+                topologyKey: {{ include "platformSpecificValue" (list $ . ".Values.topologyKey") }}
 {{- end }}
       securityContext: {{ include "platformSpecificValue" (list $ . ".Values.podSecurityContext") | default "{}" | nindent 8 }}
       containers:
@@ -86,14 +90,14 @@ spec:
             exec:
               command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
         ports:
-        - containerPort: {{ .Values.jumper.port | default 8080 }}
+        - containerPort: {{ .Values.jumper.port }}
           name: jumper
           protocol: TCP
         volumeMounts:
           {{- include "kong.jumper.volumeMounts" $ | indent 8 }}
         env:
         - name: JUMPER_PORT
-          value: {{ .Values.jumper.port | default 8080 | quote }}
+          value: {{ .Values.jumper.port | quote }}
         {{- with .Values.jumper.environment }}
         {{- . | toYaml | nindent 8 }}
         {{- end }}

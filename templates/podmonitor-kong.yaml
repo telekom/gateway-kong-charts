@@ -10,12 +10,12 @@ kind: PodMonitor
 metadata:
   name: {{ .Release.Name }}
   labels: {{ include "kong.labels" $ | nindent 4 }}
-    release: {{ .Values.plugins.prometheus.podMonitor.selector | default "guardians-raccoon" }}
+    release: {{ .Values.plugins.prometheus.podMonitor.selector }}
   namespace: {{ .Release.Namespace }}
 spec:
   podMetricsEndpoints:
     - port: metrics
-      path: {{ .Values.plugins.prometheus.path | default "/metrics" }}
+      path: {{ .Values.plugins.prometheus.path }}
       {{- if .Values.plugins.prometheus.podMonitor.scheme }}
       scheme: {{ .Values.plugins.prometheus.podMonitor.scheme }}
       {{- end }}

@@ -21,24 +21,24 @@ spec:
     {{- end }}
   
   # Replica boundaries
-  minReplicaCount: {{ .Values.kedaAutoscaling.minReplicas | default 2 }}
-  maxReplicaCount: {{ .Values.kedaAutoscaling.maxReplicas | default 10 }}
+  minReplicaCount: {{ .Values.kedaAutoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.kedaAutoscaling.maxReplicas }}
   
   # Polling and cooldown configuration
-  pollingInterval: {{ .Values.kedaAutoscaling.pollingInterval | default 30 }}
-  cooldownPeriod: {{ .Values.kedaAutoscaling.cooldownPeriod | default 300 }}
+  pollingInterval: {{ .Values.kedaAutoscaling.pollingInterval }}
+  cooldownPeriod: {{ .Values.kedaAutoscaling.cooldownPeriod }}
   
   # Fallback configuration (when all triggers fail)
   {{- if .Values.kedaAutoscaling.fallback.enabled }}
   fallback:
     failureThreshold: 3
-    replicas: {{ .Values.kedaAutoscaling.fallback.replicas | default 3 }}
+    replicas: {{ .Values.kedaAutoscaling.fallback.replicas }}
   {{- end }}
   
   # Advanced HPA behavior configuration
   {{- if .Values.kedaAutoscaling.advanced }}
   advanced:
-    restoreToOriginalReplicaCount: {{ .Values.kedaAutoscaling.advanced.restoreToOriginalReplicaCount | default false }}
+    restoreToOriginalReplicaCount: {{ .Values.kedaAutoscaling.advanced.restoreToOriginalReplicaCount }}
     {{- if .Values.kedaAutoscaling.advanced.horizontalPodAutoscalerConfig }}
     horizontalPodAutoscalerConfig:
       {{- toYaml .Values.kedaAutoscaling.advanced.horizontalPodAutoscalerConfig | nindent 6 }}
@@ -54,21 +54,21 @@ spec:
   - type: cpu
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.kong.threshold | default 70 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.kong.threshold | quote }}
       containerName: "kong"
   {{- end }}
   {{- if and .Values.jumper.enabled .Values.kedaAutoscaling.triggers.cpu.containers.jumper.enabled }}
   - type: cpu
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.jumper.threshold | default 70 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.jumper.threshold | quote }}
       containerName: "jumper"
   {{- end }}
   {{- if and .Values.issuerService.enabled .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.enabled }}
   - type: cpu
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.threshold | default 70 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.threshold | quote }}
       containerName: "issuer-service"
   {{- end }}
   {{- end }}
@@ -79,21 +79,21 @@ spec:
   - type: memory
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.kong.threshold | default 85 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.kong.threshold | quote }}
       containerName: "kong"
   {{- end }}
   {{- if and .Values.jumper.enabled .Values.kedaAutoscaling.triggers.memory.containers.jumper.enabled }}
   - type: memory
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.jumper.threshold | default 85 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.jumper.threshold | quote }}
       containerName: "jumper"
   {{- end }}
   {{- if and .Values.issuerService.enabled .Values.kedaAutoscaling.triggers.memory.containers.issuerService.enabled }}
   - type: memory
     metricType: Utilization
     metadata:
-      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.issuerService.threshold | default 85 | quote }}
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.issuerService.threshold | quote }}
       containerName: "issuer-service"
   {{- end }}
   {{- end }}
@@ -103,10 +103,10 @@ spec:
   - type: prometheus
     metadata:
       serverAddress: {{ required "kedaAutoscaling.triggers.prometheus.serverAddress is required when prometheus trigger is enabled" .Values.kedaAutoscaling.triggers.prometheus.serverAddress }}
-      metricName: {{ .Values.kedaAutoscaling.triggers.prometheus.metricName | default "kong_request_rate" }}
+      metricName: {{ .Values.kedaAutoscaling.triggers.prometheus.metricName }}
       # Query is rendered with Helm template variables
       query: {{ tpl .Values.kedaAutoscaling.triggers.prometheus.query . | quote }}
-      threshold: {{ .Values.kedaAutoscaling.triggers.prometheus.threshold | default "100" | quote }}
+      threshold: {{ .Values.kedaAutoscaling.triggers.prometheus.threshold | quote }}
       {{- if .Values.kedaAutoscaling.triggers.prometheus.activationThreshold }}
       activationThreshold: {{ .Values.kedaAutoscaling.triggers.prometheus.activationThreshold | quote }}
       {{- end }}
@@ -116,7 +116,7 @@ spec:
     {{- if .Values.kedaAutoscaling.triggers.prometheus.authentication.name }}
     authenticationRef:
       name: {{ .Values.kedaAutoscaling.triggers.prometheus.authentication.name }}
-      kind: {{ .Values.kedaAutoscaling.triggers.prometheus.authentication.kind | default "ClusterTriggerAuthentication" }}
+      kind: {{ .Values.kedaAutoscaling.triggers.prometheus.authentication.kind }}
     {{- end }}
   {{- end }}
   
@@ -125,7 +125,7 @@ spec:
   {{- range .Values.kedaAutoscaling.triggers.cron.schedules }}
   - type: cron
     metadata:
-      timezone: {{ $.Values.kedaAutoscaling.triggers.cron.timezone | default "Europe/Berlin" }}
+      timezone: {{ $.Values.kedaAutoscaling.triggers.cron.timezone }}
       start: {{ .start | quote }}
       end: {{ .end | quote }}
       desiredReplicas: {{ .desiredReplicas | quote }}

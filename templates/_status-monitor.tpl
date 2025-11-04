@@ -1,3 +1,9 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
 {{- define "common.status-monitor.labels" -}}
 tardis.telekom.de/cluster: {{ .Values.global.cluster | default "Default" | quote }}
 tardis.telekom.de/namespace: {{ .Release.Namespace | default "Undefined" | quote }}

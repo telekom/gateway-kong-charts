@@ -14,9 +14,9 @@ metadata:
     {{- include "kong.labels" $ | nindent 4 }}
 {{- include "kong.merged.proxy.annotations" $ | nindent 2 }}
 spec:
-  {{- if .Values.proxy.ingress.className }}
-  ingressClassName: {{ .Values.proxy.ingress.className }}
-  {{- end }}
+{{- if or .Values.proxy.ingress.className .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.proxy.ingress.className | default .Values.global.ingress.ingressClassName }}
+{{- end }}
   {{- if .Values.proxy.ingress.tls }}
   tls:
     {{- range .Values.proxy.ingress.tls }}

@@ -6,12 +6,10 @@ global:
   metadata:
     pipeline: {}
 
-  # -- Available platforms: kubernetes (default), aws, caas. Setting any value with no specific platform values.yaml will result in fallback to kubernetes
-  platform: kubernetes
   #pathToSecret: "path/to/secret" 
 
-  # -- Overwrites the setting determined by the platform
-  #storageClassName: gp2
+  # -- Storage class name for PVCs (defaults to cluster default storage class if not set)
+  #storageClassName: ""
   #environment: ""
   zone: "zoneName"
   # -- Define global labels
@@ -20,6 +18,8 @@ global:
     tardis.telekom.de/group: tardis
   product: "stargate"
   ingress:
+    # -- Default ingress class name for all ingress resources (can be overridden per-ingress)
+    # If not set, uses cluster default ingress class
     #ingressClassName: ""
     # -- Set annotations for all ingress, can be extended by ingress specific ones
     annotations: {}
@@ -136,8 +136,8 @@ adminApi:
   ingress:
     # -- Create ingress for Admin API. Default depends on Edition (CE: false, EE: true)
     enabled: true
-    # -- Set ingress className for the Admin API ingress
-    # className: ""
+    # -- Set ingress className for the Admin API ingress (overrides global.ingress.ingressClassName)
+    #className: ""
     # -- Merges specific into global ingress annotations
     annotations: {}
     # -- Set usual ingress array of hosts
@@ -164,8 +164,8 @@ proxy:
   ingress:
     # -- Create ingress for proxy
     enabled: true
-    # -- Set ingressClassName for the proxy ingress
-    # className: ""
+    # -- Set ingressClassName for the proxy ingress (overrides global.ingress.ingressClassName)
+    #className: ""
     # -- Merges specific into global ingress annotations
     annotations: {}
     hosts:
@@ -221,14 +221,40 @@ ssl:
 
 disableUpstreamCache: false
 
-#podSecurityContext: {}
-#containerSecurityContext: {}
+# -- Pod security context for Kong deployment (hardened defaults)
+podSecurityContext:
+  runAsUser: 100
+  runAsGroup: 1000
+  fsGroup: 1000
+  supplementalGroups: [1000]
 
-# -- Topology key for pod anti-affinity (spread pods across nodes/zones)
+# -- Container security context for Kong container (hardened defaults)
+containerSecurityContext:
+  runAsUser: 100
+  runAsGroup: 1000
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  privileged: false
+  capabilities:
+    drop:
+    - ALL
+
+# -- Topology key for pod anti-affinity (spread pods across zones for high availability)
 topologyKey: kubernetes.io/hostname
 
-jobs: {}
-  #containerSecurityContext: {}
+# -- Job container security context
+jobs:
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
 # -- Kong memory cache size for database entities
 memCacheSize: 128m
@@ -640,9 +666,30 @@ setupJobs:
     requests:
       cpu: 50m
       memory: 200Mi
-  #containerSecurityContext: {}
+  # -- Container security context for setup jobs
+  containerSecurityContext:
+    runAsUser: 100
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
 plugins:
+  # -- Container security context for plugin containers
+  containerSecurityContext:
+    runAsUser: 100
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
   # -- additional enabled plugins for kong besides `bundled,jwt-keycloak`
   enabled:
     - rate-limiting-merged
@@ -805,7 +852,17 @@ jumper:
   #- {name: foo, value: bar}
   environment: []
 
-  #containerSecurityContext: {}
+  # -- Container security context for Jumper
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
   zoneHealth:
     defaultHealth: true
     databaseHost: localhost
@@ -881,7 +938,17 @@ issuerService:
     periodSeconds: 1
     failureThreshold: 60
 
-  #containerSecurityContext: {}
+  # -- Container security context for Issuer Service
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
   # -- generic injection possibility for additional environment variables
   #- {name: foo, value: bar}
@@ -915,7 +982,17 @@ circuitbreaker:
   # -- Number of failures before triggering circuit breaker
   count: 4
 
-  #containerSecurityContext: {}
+  # -- Container security context for Circuitbreaker
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
   # -- circuitbreaker container default resource configuration
   resources:

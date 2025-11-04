@@ -25,13 +25,66 @@ This Gateway requires a PostgreSQL database that will be preconfigured by the Ga
 
 ## Configuration
 
-### Platform
+### Platform Configuration
 
-You can select a platform (e.g. caas) to use predefined settings (e.g. securityContext) specifically dedicated to the platform. \
-Note that you can overwrite platform specific values in the values.yaml. \
-To add a new platform specific values.yaml, add the required values as platforName.yaml to the platforms folder.
+**Since v9.0.0:** Platform-specific values are no longer configured via `global.platform` and `platforms/` folder.
 
-**Note:** Setting platform specific values for the sub-chart by the platform specific platformName.yaml of your main-chart will not work, as the sub-chart platforms have precedence.
+The chart now uses hardened defaults compatible with DTIT CaaS as the baseline configuration, including:
+- Security contexts with non-root users
+- Read-only root filesystems
+- Dropped capabilities
+- Zone-level pod anti-affinity (`topology.kubernetes.io/zone`)
+
+#### Platform-Specific Overrides
+
+If your platform requires adjustments, override the default values using standard Helm mechanisms:
+
+```bash
+# Create a platform-specific values file
+cat > my-platform-values.yaml <<EOF
+global:
+  ingress:
+    ingressClassName: my-ingress-class
+EOF
+
+# Apply overrides during installation
+helm install my-release . -f my-platform-values.yaml
+```
+
+#### Migration from v8
+
+If you were using `global.platform` in v8, remove that setting and apply platform-specific overrides via separate values files.
+
+### Ingress Configuration
+
+The chart uses the cluster's default ingress class. You can set a global default or configure per-ingress:
+
+```yaml
+# Option 1: Set global default (applies to all ingress resources)
+global:
+  ingress:
+    ingressClassName: nginx
+
+# Option 2: Override per-ingress (takes precedence over global)
+proxy:
+  ingress:
+    className: alb  # Override for proxy ingress only
+
+adminApi:
+  ingress:
+    className: nginx  # Override for admin API ingress only
+```
+
+**Cascading behavior:** Component-specific `className` → `global.ingress.ingressClassName` → cluster default
+
+### Storage Configuration
+
+The chart uses the cluster's default storage class for persistent volumes. To use a specific storage class, set:
+
+```yaml
+global:
+  storageClassName: my-storage-class
+```
 
 ### Database Configuration
 

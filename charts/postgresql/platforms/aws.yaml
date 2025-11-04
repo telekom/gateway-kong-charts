@@ -1,6 +1,0 @@
-# SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
-#
-# SPDX-License-Identifier: Apache-2.0
-
-persistence:
-  storageClassName: gp2

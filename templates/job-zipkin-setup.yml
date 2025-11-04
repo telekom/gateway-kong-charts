@@ -19,11 +19,11 @@ spec:
   template:
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
-      securityContext: {{ include "platformSpecificValue" (list $ . ".Values.podSecurityContext") | default "{}" | nindent 8 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
       - name: zipkin-setup
         image: {{ include "job.image" $ }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jobs.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         env:
         - name: X_TARDIS_GATEWAY_ADMIN
           valueFrom:
@@ -59,7 +59,7 @@ spec:
                 "default_service_name" : "{{ .Values.plugins.zipkin.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
                 "local_component_name" : "{{ .Values.plugins.zipkin.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
                 "environment" : "{{ .Values.plugins.zipkin.environment | default .Values.global.environment | default .Values.global.metadata.environment | default "default" }}",
-                "zone" : "{{ .Values.plugins.zipkin.zone | default .Values.global.zone | default .Values.global.platform  | default "unknown" }}",
+                "zone" : "{{ .Values.plugins.zipkin.zone | default .Values.global.zone | default "unknown" }}",
                 "force_sample" : {{ .Values.plugins.zipkin.forceSample | default true }},
                 "header_type" : "{{ .Values.plugins.zipkin.headerType | default "b3" }}"
               }

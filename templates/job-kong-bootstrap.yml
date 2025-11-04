@@ -17,12 +17,12 @@ spec:
   template:
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
-      securityContext: {{ include "platformSpecificValue" (list $ . ".Values.postgresql.podSecurityContext") | default "fsGroup: 999" | nindent 8 }}
+      securityContext: {{ .Values.postgresql.podSecurityContext | toYaml | nindent 8 }}
       initContainers:
       - name: "check-database"
         image: '{{ include "postgresql.dbCheck.image" $ }}'
         imagePullPolicy: {{ .Values.postgresql.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.postgresql.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.postgresql.containerSecurityContext | toYaml | nindent 10 }}
         command: ['/bin/bash']
         args: ['-c', 'until pg_isready -U {{ .Values.global.database.username }}; do echo waiting for database; sleep 2; done;']
         env:
@@ -31,7 +31,7 @@ spec:
       - name: kong-bootstrap
         image: {{ include "kong.image" $ }}
         imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
         env:
         {{- include "kong.migrations.env" $ | indent 8 }}
         command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong migrations bootstrap" ]

@@ -56,7 +56,7 @@ spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       affinity:
         podAntiAffinity:
-{{- if and (eq .Values.global.podAntiAffinity.required true) (ne .Values.global.platform "caas") }}
+{{- if eq .Values.global.podAntiAffinity.required true }}
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
@@ -64,7 +64,7 @@ spec:
                 operator: In
                 values:
                   - {{ .Release.Name }}-kong
-            topologyKey: kubernetes.io/hostname
+            topologyKey: {{ .Values.topologyKey }}
 {{- else }}
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
@@ -75,15 +75,15 @@ spec:
                       operator: In
                       values:
                         - {{ .Release.Name }}-kong
-                topologyKey: {{ include "platformSpecificValue" (list $ . ".Values.topologyKey") }}
+                topologyKey: {{ .Values.topologyKey }}
 {{- end }}
-      securityContext: {{ include "platformSpecificValue" (list $ . ".Values.podSecurityContext") | default "{}" | nindent 8 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
 {{- if eq .Values.jumper.enabled true }}
       - name: jumper
         image: {{ include "kong.jumper.image" $ }}
         imagePullPolicy: {{ .Values.jumper.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jumper.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.jumper.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
         lifecycle:
           preStop:
@@ -120,7 +120,7 @@ spec:
       - name: issuer-service
         image: {{ include "kong.issuerService.image" $ }}
         imagePullPolicy: {{ .Values.issuerService.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.issuerService.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.issuerService.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.issuerService.resources | toYaml | nindent 10 }}
         lifecycle:
           preStop:
@@ -154,7 +154,7 @@ spec:
       - name: circuitbreaker
         image: {{ include "kong.circuitbreaker.image" $ }}
         imagePullPolicy: {{ .Values.circuitbreaker.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.circuitbreaker.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.circuitbreaker.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.circuitbreaker.resources | toYaml | nindent 10 }}
         ports:
         - name: circuitbreaker
@@ -168,7 +168,7 @@ spec:
       - name: kong
         image: {{ include "kong.image" $ }}
         imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
         env:
         {{- include "kong.nginx.directives" $ | indent 8 }}
         {{- include "kong.customPlugins.env" $ | indent 8 }}

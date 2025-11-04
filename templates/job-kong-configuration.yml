@@ -20,12 +20,12 @@ spec:
   template:
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
-      securityContext: {{ include "platformSpecificValue" (list $ . ".Values.podSecurityContext") | default "{}" | nindent 8 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
       - name: kong-admin-route
         image: {{ include "job.image" $ }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        securityContext: {{ include "platformSpecificValue" (list $ . ".Values.jobs.containerSecurityContext") | default "{}" | nindent 10 }}
+        securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         command: [ "/bin/sh" ]
         args: [ "-c", "/tmp/configuration.sh" ]
         env:

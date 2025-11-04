@@ -14,9 +14,9 @@ metadata:
     {{- include "kong.labels" $ | nindent 4 }}
 {{- include "kong.merged.adminApi.annotations" $ | nindent 2 }}
 spec:
-  {{- if .Values.adminApi.ingress.className }}
-  ingressClassName: {{ .Values.adminApi.ingress.className }}
-  {{- end }}
+{{- if or .Values.adminApi.ingress.className .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.adminApi.ingress.className | default .Values.global.ingress.ingressClassName }}
+{{- end }}
   {{- if .Values.adminApi.ingress.tls }}
   tls:
     {{- range .Values.adminApi.ingress.tls }}

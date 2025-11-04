@@ -63,12 +63,22 @@ image:
 # -- Image pull policy for PostgreSQL container
 imagePullPolicy: IfNotPresent
 
+# -- Pod security context for PostgreSQL
+podSecurityContext:
+  fsGroup: 999
+  supplementalGroups: [999]
 
-#podSecurityContext:
-  #fsGroup: 999
-  #supplementalGroups: 999
-
-#containerSecurityContext: {}
+# -- Container security context for PostgreSQL
+containerSecurityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  privileged: false
+  capabilities:
+    drop:
+    - ALL
 
 # database admin credentials
 #adminPassword: "changeme"
@@ -93,7 +103,8 @@ resources:
 
 persistence:
   keepOnDelete: false
-  #storageClassName: gp2
+  # -- Storage class name for PostgreSQL PVC (defaults to cluster default storage class if not set)
+  #storageClassName: ""
   resources:
     requests:
       storage: 1Gi

@@ -1,3 +1,9 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
 {{- define "postgresql.pvcName" -}}
 {{- printf "%s-database-pvc" .Release.Name -}}
 {{- end -}}

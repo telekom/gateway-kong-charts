@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # Changelog
 
 Please refer to the README for additional upgrade instructions.

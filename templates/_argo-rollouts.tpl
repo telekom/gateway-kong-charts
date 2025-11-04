@@ -1,4 +1,10 @@
 {{/*
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{/*
 Argo Rollouts helper templates for the stargate chart
 */}}
 

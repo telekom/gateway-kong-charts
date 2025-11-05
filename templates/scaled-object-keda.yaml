@@ -15,6 +15,10 @@ spec:
   # Target deployment to scale
   scaleTargetRef:
     name: {{ .Release.Name }}
+    {{- if .Values.argoRollouts.enabled }}
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    {{- end }}
   
   # Replica boundaries
   minReplicaCount: {{ .Values.kedaAutoscaling.minReplicas | default 2 }}

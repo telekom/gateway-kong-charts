@@ -1047,7 +1047,7 @@ argoRollouts:
     
     errorRate:
       # -- Enable error rate analysis
-      enabled: true
+      enabled: false
       # -- Analysis interval (how often to check)
       interval: 30s
       # -- Number of measurements to take
@@ -1060,11 +1060,12 @@ argoRollouts:
       # PromQL query to calculate error rate over last 5 minutes
       query: |
         sum(irate(
-        nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!="",status!~"5.."}[1m]
+        kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary",code!~"5.."}[1m]
         )) /
         sum(irate(
-        nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!=""}[1m]
+        kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
         ))
+
       # -- Prometheus server address (must be accessible)
       # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
       prometheusAddress: ""
@@ -1111,11 +1112,12 @@ argoRollouts:
       # PromQL query to calculate success rate over last 1 minute
       query: |
         sum(irate(
-          nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!="",status!~"(4|5).*"}[1m]
+          kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary",code!~"(4|5).*"}[1m]
         )) /
         sum(irate(
-          nginx_ingress_controller_request_duration_seconds_count{exported_namespace="{{`{{ args.namespace }}`}}",exported_service="{{`{{ args.service-name }}`}}",ingress="{{`{{ args.service-name }}`}}",canary!=""}[1m]
+          kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
         ))
+
       # -- Prometheus server address
       prometheusAddress: ""
       

@@ -52,6 +52,14 @@ spec:
       canaryService: "{{ .Release.Name }}-proxy-canary"
       # -- Name of the stable service (receives stable traffic)
       stableService: "{{ .Release.Name }}-proxy"
+
+      canaryMetadata:
+        labels:
+          role: canary
+      stableMetadata:
+        labels:
+          role: stable
+
       trafficRouting:
         nginx:
           stableIngress: "{{ .Release.Name }}-proxy"
@@ -79,10 +87,14 @@ spec:
         {{- range .Values.argoRollouts.strategy.canary.analysis.templates }}
         - templateName: {{ $.Release.Name }}-{{ .templateName }}
         {{- end }}
-        {{- if .Values.argoRollouts.strategy.canary.analysis.args }}
         args:
+          - name: namespace
+            value: {{ .Release.Namespace }}
+          - name: zone
+            value: {{ .Values.global.zone | quote }}
+        {{- if .Values.argoRollouts.strategy.canary.analysis.args }}
         {{- with .Values.argoRollouts.strategy.canary.analysis.args }}
-          {{- toYaml . }}
+          {{- toYaml . | nindent 10  }}
         {{- end }}
         {{- end }}
       {{- end }}

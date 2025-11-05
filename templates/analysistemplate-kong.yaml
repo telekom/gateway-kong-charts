@@ -14,10 +14,10 @@ metadata:
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
   args:
-    - name: service-name
-      value: {{ .Release.Name }}-proxy
     - name: namespace
-      value: {{ .Release.Namespace }}
+    - name: zone
+    - name: route-regex
+      value: ".*"
     {{- if and .Values.argoRollouts.analysisTemplates.errorRate.authentication .Values.argoRollouts.analysisTemplates.errorRate.authentication.enabled }}
     # Reference credentials from Kubernetes secret for Prometheus authentication
 
@@ -53,7 +53,7 @@ spec:
         
         # -- PromQL query to calculate error rate
         query: |
-          {{- tpl .Values.argoRollouts.analysisTemplates.errorRate.query . | nindent 10 }}
+          {{- .Values.argoRollouts.analysisTemplates.errorRate.query | nindent 10 }}
         
         {{- if and .Values.argoRollouts.analysisTemplates.errorRate.authentication .Values.argoRollouts.analysisTemplates.errorRate.authentication.enabled }}
         headers:
@@ -79,10 +79,10 @@ spec:
   # ============================================================================
   # Can be passed from Rollout resource for dynamic configuration
   args:
-  - name: service-name
-    value: {{ .Release.Name }}-proxy
   - name: namespace
-    value: {{ .Release.Namespace }}
+  - name: zone
+  - name: route-regex
+    value: ".*"
   {{- if and .Values.argoRollouts.analysisTemplates.successRate.authentication .Values.argoRollouts.analysisTemplates.successRate.authentication.enabled }}
   # Reference credentials from Kubernetes secret for Prometheus authentication
   - name: prometheusBasic
@@ -117,8 +117,8 @@ spec:
         
         # -- PromQL query to calculate success rate
         query: |
-          {{- tpl .Values.argoRollouts.analysisTemplates.successRate.query . | nindent 10 }}
-        
+          {{- .Values.argoRollouts.analysisTemplates.successRate.query | nindent 10 }}
+
         {{- if and .Values.argoRollouts.analysisTemplates.successRate.authentication .Values.argoRollouts.analysisTemplates.successRate.authentication.enabled }}
         headers:
           - key: Authorization

@@ -1008,9 +1008,9 @@ argoRollouts:
       steps:
         # Step 1: Route 10% of traffic to canary
         - setWeight: 10
-        # Step 2: Pause for 2 minutes
+        # Step 2: Pause for 5 minutes
         - pause:
-            duration: 2m
+            duration: 5m
         # Final step: Full promotion (100% to canary, 0% to stable)
 
       # ============================================================================

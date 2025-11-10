@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [8.1.2](https://github.com/telekom/gateway-kong-charts/compare/8.1.1...8.1.2) (2025-11-10)
+
+
+### Bug Fixes
+
+* upgrade gateway-jumper to default 4.2.4 ([63c925d](https://github.com/telekom/gateway-kong-charts/commit/63c925de6fd0ab19139fc3913d7875ea596b9843))
+
 ## [8.1.1](https://github.com/telekom/gateway-kong-charts/compare/8.1.0...8.1.1) (2025-11-10)
 
 

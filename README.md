@@ -672,13 +672,13 @@ This is a short overlook about important parameters in the `values.yaml`.
 | argoRollouts.analysisTemplates.successRate.successCondition | string | `"all(result, # >= 0.95)"` | Success criteria (PromQL query must return > threshold) |
 | argoRollouts.enabled | bool | `false` | Enable Argo Rollouts progressive delivery (replaces standard Deployment) |
 | argoRollouts.strategy.blueGreen | object | `{"autoPromotionEnabled":false}` | blueGreen strategy configuration (except activeService and previewService - these are handled by template) |
-| argoRollouts.strategy.canary | object | `{"additionalProperties":{"maxSurge":"25%","maxUnavailable":"50%","scaleDownDelaySeconds":60},"analysis":{"args":[],"startingStep":null,"templates":[{"templateName":"success-rate-analysis"}]},"steps":[{"setWeight":10},{"pause":{"duration":"2m"}}]}` | Canary strategy configuration |
 | argoRollouts.strategy.canary.additionalProperties.maxSurge | string | `"25%"` | Maximum number of extra pods that can be created during rollout (number or percentage) |
 | argoRollouts.strategy.canary.additionalProperties.maxUnavailable | string | `"50%"` | Maximum number of pods that can be unavailable during rollout (number or percentage) |
 | argoRollouts.strategy.canary.additionalProperties.scaleDownDelaySeconds | int | `60` | Time to wait before scaling down the old ReplicaSet after successful rollout (in seconds) |
 | argoRollouts.strategy.canary.analysis.args | list | `[]` | Arguments to pass to the analysis template |
 | argoRollouts.strategy.canary.analysis.startingStep | string | `nil` | Canary step at which to start the analysis (1-based index) |
 | argoRollouts.strategy.canary.analysis.templates | list | `[{"templateName":"success-rate-analysis"}]` | AnalysisTemplate references for background analysis |
+| argoRollouts.strategy.canary.steps | list | `[{"setWeight":10},{"pause":{"duration":"5m"}}]` | Canary step definition with a weight of 10% and a pause of 5 minutes |
 | argoRollouts.strategy.type | string | `"canary"` | Deployment strategy type: "canary" or "blueGreen" |
 | circuitbreaker.enabled | bool | `false` | enable deployment of circuitbreaker component |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | default value for imagePullPolicy |

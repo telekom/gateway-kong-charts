@@ -988,7 +988,7 @@ argoRollouts:
     # -- Deployment strategy type: "canary" or "blueGreen"
     type: canary
     
-    # -- Canary strategy configuration
+    # Canary strategy configuration
     canary:
       additionalProperties:
         # -- Maximum number of pods that can be unavailable during rollout (number or percentage)
@@ -1004,7 +1004,8 @@ argoRollouts:
       # ============================================================================
       # Define the progression of traffic shift during canary deployment
       # Each step can set weight, pause duration, or trigger analysis
-      
+
+      # -- Canary step definition with a weight of 10% and a pause of 5 minutes
       steps:
         # Step 1: Route 10% of traffic to canary
         - setWeight: 10

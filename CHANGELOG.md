@@ -3,6 +3,15 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [8.1.1](https://github.com/telekom/gateway-kong-charts/compare/8.1.0...8.1.1) (2025-11-10)
+
+
+### Bug Fixes
+
+* keda reference to enabled rollouts for scaling ([b34574f](https://github.com/telekom/gateway-kong-charts/commit/b34574f1cdf0ac1246cfe2afbdc01a40b159d188))
+* set default canary time to 5 minutes to give metrics more time ([534adf5](https://github.com/telekom/gateway-kong-charts/commit/534adf52e10106f15c313bdfe10a46566138522d))
+* use role labels for querying rollouts analysis template + improved template args for metrics ([2115837](https://github.com/telekom/gateway-kong-charts/commit/2115837783bd78c373c98e29b4681f9628f8f014))
+
 # [8.1.0](https://github.com/telekom/gateway-kong-charts/compare/8.0.0...8.1.0) (2025-11-03)
 
 

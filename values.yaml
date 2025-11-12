@@ -423,7 +423,7 @@ kedaAutoscaling:
           enabled: true
           # -- Memory utilization threshold percentage (0-100)
           # Recommended: 80-90% (higher than CPU due to less elasticity)
-          threshold: 85
+          threshold: 95
         
         # Jumper container (JWT validation service)
         jumper:

@@ -14,6 +14,8 @@ metadata:
 spec:
 {{- if not (or .Values.hpaAutoscaling.enabled .Values.kedaAutoscaling.enabled .Values.argoRollouts.enabled) }}
   replicas: {{ .Values.replicas | default 1 }}
+{{- else }}
+  replicas: 0
 {{- end }}
 {{- if .Values.strategy.rollingUpdate }}
   strategy:

@@ -4,7 +4,7 @@
 
 apiVersion: v2
 name: stargate
-version: 8.1.2
+version: 8.1.3
 description: Kong API gateway provided by o28m
 dependencies:
 - name: postgresql

@@ -3,6 +3,14 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [8.1.3](https://github.com/telekom/gateway-kong-charts/compare/8.1.2...8.1.3) (2025-11-12)
+
+
+### Bug Fixes
+
+* increase memory utilization threshold for KEDA autoscaling ([7f43e64](https://github.com/telekom/gateway-kong-charts/commit/7f43e649c62a3e02c29f59b4874e536bbdda1ffb))
+* set replicas to 0 when autoscaling is enabled ([00b22db](https://github.com/telekom/gateway-kong-charts/commit/00b22dba0845152b9edb3779a8948be9023d8874))
+
 ## [8.1.2](https://github.com/telekom/gateway-kong-charts/compare/8.1.1...8.1.2) (2025-11-10)
 
 

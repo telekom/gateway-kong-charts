@@ -777,13 +777,13 @@ This is a short overlook about important parameters in the `values.yaml`.
 | kedaAutoscaling.triggers.cron.enabled | bool | `false` | Enable cron-based (schedule) scaling |
 | kedaAutoscaling.triggers.cron.schedules | list | `[]` | List of cron schedules Each schedule defines a time window and desired replica count Multiple schedules can overlap (highest desiredReplicas wins) |
 | kedaAutoscaling.triggers.cron.timezone | string | `"Europe/Berlin"` | Timezone for cron schedules Use IANA timezone database names for automatic DST handling Europe/Berlin automatically handles CET (UTC+1) and CEST (UTC+2) transitions Format: IANA timezone (e.g., "Europe/Berlin", "America/New_York", "Asia/Tokyo") See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones |
-| kedaAutoscaling.triggers.memory.containers | object | `{"issuerService":{"enabled":true,"threshold":85},"jumper":{"enabled":true,"threshold":85},"kong":{"enabled":true,"threshold":85}}` | Per-container memory thresholds Each container in the pod can have its own threshold If ANY container exceeds its threshold, scaling is triggered |
+| kedaAutoscaling.triggers.memory.containers | object | `{"issuerService":{"enabled":true,"threshold":85},"jumper":{"enabled":true,"threshold":85},"kong":{"enabled":true,"threshold":95}}` | Per-container memory thresholds Each container in the pod can have its own threshold If ANY container exceeds its threshold, scaling is triggered |
 | kedaAutoscaling.triggers.memory.containers.issuerService.enabled | bool | `true` | Enable memory monitoring for issuer-service container |
 | kedaAutoscaling.triggers.memory.containers.issuerService.threshold | int | `85` | Memory utilization threshold percentage (0-100) |
 | kedaAutoscaling.triggers.memory.containers.jumper.enabled | bool | `true` | Enable memory monitoring for jumper container |
 | kedaAutoscaling.triggers.memory.containers.jumper.threshold | int | `85` | Memory utilization threshold percentage (0-100) |
 | kedaAutoscaling.triggers.memory.containers.kong.enabled | bool | `true` | Enable memory monitoring for kong container |
-| kedaAutoscaling.triggers.memory.containers.kong.threshold | int | `85` | Memory utilization threshold percentage (0-100) Recommended: 80-90% (higher than CPU due to less elasticity) |
+| kedaAutoscaling.triggers.memory.containers.kong.threshold | int | `95` | Memory utilization threshold percentage (0-100) Recommended: 80-90% (higher than CPU due to less elasticity) |
 | kedaAutoscaling.triggers.memory.enabled | bool | `true` | Enable memory-based scaling for any container |
 | kedaAutoscaling.triggers.prometheus.activationThreshold | string | `""` | Activation threshold (optional) Minimum metric value to activate this scaler Prevents scaling from 0 on minimal load |
 | kedaAutoscaling.triggers.prometheus.authModes | string | `"basic"` | Authentication mode for Victoria Metrics Options: "basic", "bearer", "tls" |

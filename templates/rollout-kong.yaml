@@ -26,6 +26,8 @@ spec:
     name: {{ .Release.Name }}
     scaleDown: {{ .Values.argoRollouts.workloadRef.scaleDown | default "progressively" }}
   
+  progressDeadlineSeconds: {{ .Values.argoRollouts.progressDeadlineSeconds | default 1200 }}
+
   # ============================================================================
   # Selector
   # ============================================================================

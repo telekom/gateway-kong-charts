@@ -1000,8 +1000,9 @@ argoRollouts:
 
         # -- Maximum number of extra pods that can be created during rollout (number or percentage)
         maxSurge: "25%"
-        # -- Time to wait before scaling down the old ReplicaSet after successful rollout (in seconds)
-        scaleDownDelaySeconds: 60
+
+        # -- Enable dynamic stable scale (mutual exclusive to scaleDownDelaySeconds )
+        dynamicStableScale: true
 
       # ============================================================================
       # Canary Steps Configuration
@@ -1011,12 +1012,21 @@ argoRollouts:
 
       # -- Canary step definition with a weight of 10% and a pause of 5 minutes
       steps:
-        # Step 1: Route 10% of traffic to canary
         - setWeight: 10
-        # Step 2: Pause for 5 minutes
         - pause:
-            duration: 5m
-        # Final step: Full promotion (100% to canary, 0% to stable)
+            duration: 1m
+        - setWeight: 20
+        - pause:
+            duration: 1m
+        - setWeight: 40
+        - pause:
+            duration: 1m
+        - setWeight: 60
+        - pause:
+            duration: 1m            
+        - setWeight: 80
+        - pause:
+            duration: 1m
 
       # ============================================================================
       # Analysis Configuration

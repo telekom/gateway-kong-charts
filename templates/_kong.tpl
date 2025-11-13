@@ -14,7 +14,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 
 {{- define "kong.image" -}}
 {{- $imageName := "kong" -}}
-{{- $imageTag := "1.1.0" -}}
+{{- $imageTag := "1.2.1" -}}
 {{- $imageRepository := "mtr.devops.telekom.de" -}}
 {{- $imageOrganization := "tardis-internal/gateway" -}}
 {{- if .Values.image -}}

@@ -1,0 +1,16 @@
+{{/*
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.keyRotation.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "kong.labels" $ | nindent 4 }}
+spec:
+  selfSigned: {}
+{{- end }}

@@ -4,10 +4,11 @@ SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- if .Values.argoRollouts.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-proxy
+  name: {{ .Release.Name }}-proxy-canary
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
   selector: {{ include "kong.selector" $ | nindent 4 }}
@@ -22,3 +23,4 @@ spec:
     targetPort: 8000
 {{- end }}
     protocol: TCP
+{{- end }}

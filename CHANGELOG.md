@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [8.1.5](https://github.com/telekom/gateway-kong-charts/compare/8.1.4...8.1.5) (2025-11-13)
+
+
+### Bug Fixes
+
+* enable canary dynamicStableScale per default ([e8a9acb](https://github.com/telekom/gateway-kong-charts/commit/e8a9acbeb35e57d41db8a7d54fd4f706bacbeb10))
+
 ## [8.1.4](https://github.com/telekom/gateway-kong-charts/compare/8.1.3...8.1.4) (2025-11-13)
 
 

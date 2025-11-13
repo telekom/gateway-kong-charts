@@ -24,17 +24,15 @@ spec:
 {{- if (and .Values.argoRollouts.enabled .Values.argoRollouts.workloadRef.explicitDownscale) }}
   replicas: 0
 {{- end }}
-<<<<<<< HEAD
 {{- end }}
 {{- if .Values.strategy.rollingUpdate }}
-=======
->>>>>>> c810cf8 (feat: add explicit defaults for deployment and component configuration)
   strategy:
     type: {{ .Values.strategy.type }}
 {{- if eq .Values.strategy.type "RollingUpdate" }}
     rollingUpdate:
       maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
       maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+{{- end }}
 {{- end }}
   selector: 
     matchLabels: {{ include "kong.selector" $ | nindent 6 }}

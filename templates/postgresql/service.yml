@@ -19,4 +19,3 @@ spec:
     protocol: TCP
     targetPort: {{ .Values.global.database.port | default 5432 }}
 {{- end }}
-

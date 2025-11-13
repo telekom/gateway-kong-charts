@@ -10,17 +10,17 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ include "postgresql.pvcName" . }}
   labels: {{ include "postgresql.labels" $ | nindent 4 }}
-{{- if .Values.persistence }}
-  {{- if .Values.persistence.keepOnDelete }}
+{{- if .Values.postgresql.persistence }}
+  {{- if .Values.postgresql.persistence.keepOnDelete }}
   annotations:
     "helm.sh/resource-policy": keep
   {{- end -}}
 {{- end }}
 spec:
-{{- if or .Values.global.storageClassName .Values.persistence.storageClassName }}
-  storageClassName: {{ .Values.global.storageClassName | default .Values.persistence.storageClassName }}
+{{- if or .Values.global.storageClassName .Values.postgresql.persistence.storageClassName }}
+  storageClassName: {{ .Values.postgresql.persistence.storageClassName | default .Values.global.storageClassName }}
 {{- end }}
   accessModes:
     - ReadWriteOnce
-  resources: {{ .Values.persistence.resources | toYaml | nindent 4 }}
+  resources: {{ .Values.postgresql.persistence.resources | toYaml | nindent 4 }}
 {{- end }}

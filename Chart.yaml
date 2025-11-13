@@ -6,9 +6,6 @@ apiVersion: v2
 name: stargate
 version: 8.1.8
 description: Kong API gateway provided by o28m
-dependencies:
-- name: postgresql
-  version: 1.0.0
 maintainers:
 - name: Deutsche Telekom AG
   email: opensource@telekom.de

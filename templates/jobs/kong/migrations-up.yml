@@ -23,7 +23,7 @@ spec:
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       initContainers:
       - name: "check-database"
-        image: '{{ include "postgresql.dbCheck.image" $ }}'
+        image: '{{ include "postgresql.image" $ }}'
         imagePullPolicy: {{ .Values.postgresql.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.postgresql.containerSecurityContext | toYaml | nindent 10 }}
         command: ['/bin/bash']

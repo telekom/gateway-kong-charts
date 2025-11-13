@@ -19,18 +19,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}-postgresql
 {{- end -}}
 
 {{- define "postgresql.image" -}}
-{{- $imageRegistry := .Values.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.image.repository -}}
-{{- $imageTag := .Values.image.tag -}}
+{{- $imageRegistry := .Values.postgresql.image.registry | default .Values.global.image.registry -}}
+{{- $imageNamespace := .Values.postgresql.image.namespace | default .Values.global.image.namespace -}}
+{{- $imageRepository := .Values.postgresql.image.repository -}}
+{{- $imageTag := .Values.postgresql.image.tag -}}
 {{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
 {{- end -}}
 
 {{- define "postgresql.env" }}
 - name: PGDATA
-  value: {{ .Values.persistence.mountDir | default "/var/lib/postgresql/data" }}/pgdata
+  value: {{ .Values.postgresql.persistence.mountDir }}/pgdata
 - name: POSTGRES_USER
-  value: {{ .Values.global.database.username | default .Values.username }}
+  value: {{ .Values.global.database.username }}
 - name: POSTGRES_PASSWORD
   valueFrom:
     secretKeyRef:
@@ -38,7 +38,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}-postgresql
       key: databasePassword
 - name: POSTGRES_DB
   value: {{ .Values.global.database.database }}
-{{- if .Values.adminPassword }}
+{{- if .Values.postgresql.adminPassword }}
 - name: POSTGRES_ADMIN_PASSWORD
   valueFrom:
     secretKeyRef:
@@ -46,26 +46,25 @@ app.kubernetes.io/instance: {{ .Release.Name }}-postgresql
       key: adminPassword
 {{- end }}
 - name: POSTGRES_MAX_CONNECTIONS
-  value: "{{ .Values.maxConnections }}"
+  value: "{{ .Values.postgresql.maxConnections }}"
 - name: POSTGRES_SHARED_BUFFERS
-  value: {{ .Values.sharedBuffers }}
+  value: {{ .Values.postgresql.sharedBuffers }}
 - name: POSTGRES_MAX_PREPARED_TRANSACTIONS
-  value: "{{ .Values.maxPreparedTransactions }}"
+  value: "{{ .Values.postgresql.maxPreparedTransactions }}"
 {{- end -}}
 
 {{- define "postgresql.deploymentName" -}}
-{{- printf "%s-%s" .Release.Name .Chart.Name -}}
+{{- printf "%s-postgresql" .Release.Name -}}
 {{- end -}}
 
 {{- define "postgresql.pvcName" -}}
-{{- printf "%s-%s-data" .Release.Name .Chart.Name -}}
+{{- printf "%s-database-pvc" .Release.Name -}}
 {{- end -}}
 
 {{- define "postgresql.secretName" -}}
-{{- printf "%s-%s" .Release.Name .Chart.Name -}}
+{{- printf "%s-postgresql" .Release.Name -}}
 {{- end -}}
 
 {{- define "postgresql.serviceName" -}}
-{{- printf "%s-%s" .Release.Name .Chart.Name -}}
+{{- printf "%s-postgresql" .Release.Name -}}
 {{- end -}}
-

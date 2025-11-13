@@ -23,6 +23,25 @@ Each file contains copyright and license information, and license texts can be f
 
 This Gateway requires a PostgreSQL database that will be preconfigured by the Gateway's init container.
 
+## Installation
+
+### From OCI Registry (Recommended)
+
+```bash
+helm install stargate oci://ghcr.io/telekom/o28m-charts/stargate --version x.x.x -f values.yaml
+```
+
+### From Source
+
+```bash
+git clone https://github.com/telekom/gateway-kong-charts.git
+cd gateway-kong-charts
+helm install stargate . -f values.yaml
+```
+
+**Note:** The chart requires configuration via a values file. Refer to the [Configuration](#configuration) and [Parameters](#parameters)
+sections for required and optional values.
+
 ## Configuration
 
 ### Platform Configuration

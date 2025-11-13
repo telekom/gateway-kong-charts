@@ -680,6 +680,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | argoRollouts.strategy.canary.analysis.templates | list | `[{"templateName":"success-rate-analysis"}]` | AnalysisTemplate references for background analysis |
 | argoRollouts.strategy.canary.steps | list | `[{"setWeight":10},{"pause":{"duration":"5m"}}]` | Canary step definition with a weight of 10% and a pause of 5 minutes |
 | argoRollouts.strategy.type | string | `"canary"` | Deployment strategy type: "canary" or "blueGreen" |
+| argoRollouts.workloadRef.scaleDown | string | `"progressively"` | scaleDown strategy for Argo Rollouts deployment workloadRef |
 | circuitbreaker.enabled | bool | `false` | enable deployment of circuitbreaker component |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | default value for imagePullPolicy |
 | circuitbreaker.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | circuitbreaker container default resource configuration |

@@ -981,6 +981,10 @@ argoRollouts:
   # -- Enable Argo Rollouts progressive delivery (replaces standard Deployment)
   enabled: false
   
+  workloadRef:
+    # -- scaleDown strategy for Argo Rollouts deployment workloadRef
+    scaleDown: progressively
+
   # ============================================================================
   # Rollout Strategy Configuration
   # ============================================================================

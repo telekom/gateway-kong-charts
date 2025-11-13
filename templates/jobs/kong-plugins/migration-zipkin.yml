@@ -23,7 +23,7 @@ spec:
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
       - name: zipkin-deletion
-        image: {{ include "job.image" $ }}
+        image: {{ include "images.job" $ }}
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         env:
         - name: X_TARDIS_GATEWAY_ADMIN

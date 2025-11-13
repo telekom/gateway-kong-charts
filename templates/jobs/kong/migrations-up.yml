@@ -23,7 +23,7 @@ spec:
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       initContainers:
       - name: "check-database"
-        image: '{{ include "postgresql.image" $ }}'
+        image: '{{ include "images.postgresql" $ }}'
         imagePullPolicy: {{ .Values.postgresql.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.postgresql.containerSecurityContext | toYaml | nindent 10 }}
         command: ['/bin/bash']
@@ -32,7 +32,7 @@ spec:
         {{- include "kong.migrations.checkdatabase.env" $ | indent 8 }}
       containers:
       - name: kong-upgrade-migrations
-        image: {{ include "kong.image" $ }}
+        image: {{ include "images.kong" $ }}
         imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
         env:

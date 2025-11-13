@@ -18,46 +18,6 @@ app.kubernetes.io/part-of: tardis-runtime
 app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{- end -}}
 
-{{- define "kong.image" -}}
-{{- $imageRegistry := .Values.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.image.repository -}}
-{{- $imageTag := .Values.image.tag -}}
-{{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
-{{- end -}}
-
-{{- define "job.image" -}}
-{{- $imageRegistry := .Values.job.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.job.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.job.image.repository -}}
-{{- $imageTag := .Values.job.image.tag -}}
-{{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
-{{- end -}}
-
-{{- define "kong.jumper.image" -}}
-{{- $imageRegistry := .Values.jumper.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.jumper.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.jumper.image.repository -}}
-{{- $imageTag := .Values.jumper.image.tag -}}
-{{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
-{{- end -}}
-
-{{- define "kong.issuerService.image" -}}
-{{- $imageRegistry := .Values.issuerService.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.issuerService.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.issuerService.image.repository -}}
-{{- $imageTag := .Values.issuerService.image.tag -}}
-{{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
-{{- end -}}
-
-{{- define "kong.circuitbreaker.image" -}}
-{{- $imageRegistry := .Values.circuitbreaker.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.circuitbreaker.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.circuitbreaker.image.repository -}}
-{{- $imageTag := .Values.circuitbreaker.image.tag -}}
-{{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
-{{- end -}}
-
 {{- define "kong.issuerService.env" }}
 - name: CERT_MOUNT_PATH
   value: /data/keys

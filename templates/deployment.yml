@@ -79,7 +79,7 @@ spec:
       containers:
 {{- if eq .Values.jumper.enabled true }}
       - name: jumper
-        image: {{ include "kong.jumper.image" $ }}
+        image: {{ include "images.jumper" $ }}
         imagePullPolicy: {{ .Values.jumper.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.jumper.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
@@ -116,7 +116,7 @@ spec:
 {{- end }}
 {{- if eq .Values.issuerService.enabled true }}
       - name: issuer-service
-        image: {{ include "kong.issuerService.image" $ }}
+        image: {{ include "images.issuerService" $ }}
         imagePullPolicy: {{ .Values.issuerService.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.issuerService.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.issuerService.resources | toYaml | nindent 10 }}
@@ -150,7 +150,7 @@ spec:
 {{- end }}
 {{- if eq .Values.circuitbreaker.enabled true }}
       - name: circuitbreaker
-        image: {{ include "kong.circuitbreaker.image" $ }}
+        image: {{ include "images.circuitbreaker" $ }}
         imagePullPolicy: {{ .Values.circuitbreaker.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.circuitbreaker.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.circuitbreaker.resources | toYaml | nindent 10 }}
@@ -164,7 +164,7 @@ spec:
         {{- include "kong.circuitbreaker.env" $ | indent 8 }}
 {{- end }}
       - name: kong
-        image: {{ include "kong.image" $ }}
+        image: {{ include "images.kong" $ }}
         imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
         env:

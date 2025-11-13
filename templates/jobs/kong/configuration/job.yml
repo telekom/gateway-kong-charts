@@ -23,7 +23,7 @@ spec:
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
       - name: kong-admin-route
-        image: {{ include "job.image" $ }}
+        image: {{ include "images.job" $ }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         command: [ "/bin/sh" ]

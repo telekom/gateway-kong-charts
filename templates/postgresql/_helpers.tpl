@@ -18,14 +18,6 @@ app.kubernetes.io/part-of: tardis-runtime
 app.kubernetes.io/instance: {{ .Release.Name }}-postgresql
 {{- end -}}
 
-{{- define "postgresql.image" -}}
-{{- $imageRegistry := .Values.postgresql.image.registry | default .Values.global.image.registry -}}
-{{- $imageNamespace := .Values.postgresql.image.namespace | default .Values.global.image.namespace -}}
-{{- $imageRepository := .Values.postgresql.image.repository -}}
-{{- $imageTag := .Values.postgresql.image.tag -}}
-{{- printf "%s/%s/%s:%s" $imageRegistry $imageNamespace $imageRepository $imageTag -}}
-{{- end -}}
-
 {{- define "postgresql.env" }}
 - name: PGDATA
   value: {{ .Values.postgresql.persistence.mountDir }}/pgdata

@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [8.1.4](https://github.com/telekom/gateway-kong-charts/compare/8.1.3...8.1.4) (2025-11-13)
+
+
+### Bug Fixes
+
+* make Argo Rollouts scaleDown strategy configurable ([e20897c](https://github.com/telekom/gateway-kong-charts/commit/e20897c32455ee87f3890914d0430968f1cb299f))
+
 ## [8.1.3](https://github.com/telekom/gateway-kong-charts/compare/8.1.2...8.1.3) (2025-11-12)
 
 

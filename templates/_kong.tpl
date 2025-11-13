@@ -89,17 +89,21 @@ ops.eni.telekom.de/pipeline-force-redeploy: '{{ now | date "2006-01-02T15:04:05Z
 {{- end -}}
 {{- end -}}
 
-{{- define "kong.checksums" -}}
-checksum/secret-kong: {{ include (print $.Template.BasePath "/secret-kong.yml") . | sha256sum }}
-{{ include "argo.checksum" (list $ . ".Values.adminApi.htpasswd") }}
-{{ include "argo.checksum" (list $ . ".Values.adminApi.gatewayAdminApiKey") }}
-{{ include "argo.checksum" (list $ . ".Values.global.database.password") }}
-{{- if eq .Values.sslVerify true }}
-checksum/trusted-ca-certificates: {{ (include "kong.bundledTrustedCaCertificates" $ | default "# Set trustedCaCertificates in values.yaml") | sha256sum }}
-{{ include "argo.checksum" (list $ . ".Values.trustedCaCertificates") }}
-{{ if  .Values.plugins.zipkin.luaSslTrustedCertificate }}
-{{ include "argo.checksum" (list $ . ".Values.plugins.zipkin.luaSslTrustedCertificate") }}
+{{/*
+Generic helper to hash only the data section of any secret template.
+This prevents unnecessary pod restarts when only metadata (like chart version labels) changes.
+Usage: include "kong.secretDataHash" (dict "context" $ "template" "/secret.yml")
+*/}}
+{{- define "kong.secretDataHash" -}}
+{{- $rendered := include (print .context.Template.BasePath .template) .context -}}
+{{- $secret := fromYaml $rendered -}}
+{{- toJson $secret.data | sha256sum -}}
 {{- end -}}
+
+{{- define "kong.checksums" -}}
+checksum/secret-kong: {{ include "kong.secretDataHash" (dict "context" $ "template" "/secret-kong.yml") }}
+{{- if or (eq .Values.sslVerify true) .Values.plugins.zipkin.luaSslTrustedCertificate .Values.externalDatabase.sslVerify }}
+checksum/trusted-ca-certificates: {{ include "kong.secretDataHash" (dict "context" $ "template" "/secret-trusted-ca-certificates.yaml") }}
 {{- end -}}
 {{- range .Values.templateChangeTriggers }}
 checksum/{{ . }}: {{ include (print $.Template.BasePath "/" . ) $ | sha256sum }}

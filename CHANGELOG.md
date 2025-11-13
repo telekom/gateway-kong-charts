@@ -3,6 +3,13 @@
 Please refer to the README for additional upgrade instructions.
 
 
+## [8.1.6](https://github.com/telekom/gateway-kong-charts/compare/8.1.5...8.1.6) (2025-11-13)
+
+
+### Bug Fixes
+
+* bump default gateway-kong-image to 1.2.1 ([063ff52](https://github.com/telekom/gateway-kong-charts/commit/063ff52002ae5bcd8905ad2811ccc255684b7eda))
+
 ## [8.1.5](https://github.com/telekom/gateway-kong-charts/compare/8.1.4...8.1.5) (2025-11-13)
 
 

@@ -42,13 +42,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{ .Values.trustedCaCertificates }}
 {{ end -}}
 
-{{- define "kong.annotations" -}}
-ops.eni.telekom.de/pipeline-meta-ref: {{ .Release.Name }}-pipeline-metadata
-{{- if eq (toString .Values.global.metadata.pipeline.forceRedeploy) "true" }}
-ops.eni.telekom.de/pipeline-force-redeploy: '{{ now | date "2006-01-02T15:04:05Z07:00" }}'
-{{- end -}}
-{{- end -}}
-
 {{/*
 Generic helper to hash only the data section of any secret template.
 This prevents unnecessary pod restarts when only metadata (like chart version labels) changes.

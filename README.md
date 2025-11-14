@@ -776,7 +776,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | global.imagePullSecrets | string | `nil` | array of pull secret names to use for image pulling |
 | global.ingress.annotations | object | `{}` | Set annotations for all ingress, can be extended by ingress specific ones |
 | global.labels | object | `{"tardis.telekom.de/group":"tardis"}` | Define global labels |
-| global.metadata.pipeline | object | `{}` |  |
+| global.metadata | object | `{}` |  |
 | global.passwordRules.enabled | bool | `false` |  |
 | global.passwordRules.length | int | `12` |  |
 | global.passwordRules.mustMatch[0] | string | `"[a-z]"` |  |

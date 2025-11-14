@@ -14,7 +14,6 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}
   annotations:
-  {{- include "kong.annotations" $ | nindent 4 }}
   {{- include "kong.checksums" $ | nindent 4 }}
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
@@ -39,7 +38,6 @@ spec:
   template:
     metadata:
       annotations: 
-      {{- include "kong.annotations" $ | nindent 8 }}
       {{- include "kong.checksums" $ | nindent 8 }}
 {{- if eq .Values.plugins.prometheus.enabled true }}
         prometheus.io/path: '{{ .Values.plugins.prometheus.path }}'

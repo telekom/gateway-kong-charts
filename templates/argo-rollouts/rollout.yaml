@@ -10,8 +10,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: {{ .Release.Name }}
-  annotations:
-  {{- include "kong.annotations" $ | nindent 4 }}
   labels: {{ include "kong.labels" $ | nindent 4 }}
 spec:
   # ============================================================================

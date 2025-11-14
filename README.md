@@ -431,6 +431,12 @@ Please note that the helm value api is in early state and values as well as temp
 
 **Important:** `argoRollouts` and `hpaAutoscaling` (HPA) are mutually exclusive. KEDA autoscaling can be used together with Argo Rollouts.
 
+**Initial take over from an existing deployment**
+
+When Argo Rollouts takes over responsibility for the gateway pods, it controls scaling up the new ReplicaSet and scaling down the old one. This creates a situation where the old Deployment goes out of sync with Argo CD, which attempts to scale up the old Deployment again.
+Normally, the Helm chart does not render the replica field. However, during the initial takeover—especially when using autoscaling—you must explicitly set replicas to 0 once by configuring `argoRollouts.workloadRef.explicitDownscale=true`.
+After the first migration to Argo Rollouts, remove this property (it defaults to false) to resume normal operation.
+
 **Minimal Configuration Example** (Canary without analysis):
 
 ```yaml
@@ -461,7 +467,7 @@ argoRollouts:
       additionalProperties:
         maxUnavailable: "50%"
         maxSurge: "25%"
-        scaleDownDelaySeconds: 60
+        dynamicStableScale: true
      
       steps:
         - setWeight: 10
@@ -474,7 +480,6 @@ argoRollouts:
       analysis:
         templates:
           - templateName: success-rate-analysis
-        startingStep: 1
  
   analysisTemplates:
     enabled: true
@@ -680,6 +685,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | argoRollouts.strategy.canary.analysis.templates | list | `[{"templateName":"success-rate-analysis"}]` | AnalysisTemplate references for background analysis |
 | argoRollouts.strategy.canary.steps | list | `[{"setWeight":10},{"pause":{"duration":"1m"}},{"setWeight":20},{"pause":{"duration":"1m"}},{"setWeight":40},{"pause":{"duration":"1m"}},{"setWeight":60},{"pause":{"duration":"1m"}},{"setWeight":80},{"pause":{"duration":"1m"}}]` | Canary step definition with a weight of 10% and a pause of 5 minutes |
 | argoRollouts.strategy.type | string | `"canary"` | Deployment strategy type: "canary" or "blueGreen" |
+| argoRollouts.workloadRef.explicitDownscale | bool | `false` | enable explicit downscale of old Deployment during first take over of pod responsibility through argo rollouts together with argocd (see README.md for details) |
 | argoRollouts.workloadRef.scaleDown | string | `"progressively"` | scaleDown strategy for Argo Rollouts deployment workloadRef |
 | circuitbreaker.enabled | bool | `false` | enable deployment of circuitbreaker component |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | default value for imagePullPolicy |

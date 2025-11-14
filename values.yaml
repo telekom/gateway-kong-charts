@@ -984,6 +984,8 @@ argoRollouts:
   workloadRef:
     # -- scaleDown strategy for Argo Rollouts deployment workloadRef
     scaleDown: progressively
+    # -- enable explicit downscale of old Deployment during first take over of pod responsibility through argo rollouts together with argocd (see README.md for details)
+    explicitDownscale: false
 
   # ============================================================================
   # Rollout Strategy Configuration

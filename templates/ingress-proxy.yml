@@ -11,7 +11,7 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}-proxy
   labels:
-    {{- include "kong.labels" $ | nindent 4 }}
+    {{- include "app.labels.standard" $ | nindent 4 }}
 {{- include "kong.merged.proxy.annotations" $ | nindent 2 }}
 spec:
 {{- if or .Values.proxy.ingress.className .Values.global.ingress.ingressClassName }}

@@ -9,12 +9,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Release.Name }}
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
     release: {{ .Values.plugins.prometheus.serviceMonitor.selector }}
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    matchLabels: {{ include "kong.selector" $ | nindent 6 }}
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
@@ -81,15 +81,13 @@ spec:
       {{- end }}
       {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
       honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
-      {{- end }}  
+      {{- end }}
   targetLabels:
-  - tardis.telekom.de/cluster
-  - tardis.telekom.de/product
-  - tardis.telekom.de/subproduct
-  - tardis.telekom.de/namespace
-  - tardis.telekom.de/team
-  - tardis.telekom.de/environment
-  - tardis.telekom.de/zone
+  {{- range $k, $_ := .Values.global.labels }}
+  - {{ $k }}
+  {{- end }}
+  - ei.telekom.de/zone
+  - ei.telekom.de/environment
   - app
   - type
   - routeId

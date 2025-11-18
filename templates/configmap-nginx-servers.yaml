@@ -9,7 +9,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-nginx-servers
-  labels: {{- include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 data:
   servers.conf: |
       # Kong Prometheus Exporter

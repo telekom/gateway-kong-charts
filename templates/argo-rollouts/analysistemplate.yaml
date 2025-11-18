@@ -17,11 +17,12 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: {{ .Release.Name }}-error-rate-analysis
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
   args:
-    - name: namespace
+    - name: environment
     - name: zone
+    - name: instance
     - name: route-regex
       value: ".*"
     {{- if and .Values.argoRollouts.analysisTemplates.errorRate.authentication .Values.argoRollouts.analysisTemplates.errorRate.authentication.enabled }}
@@ -78,15 +79,16 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: {{ .Release.Name }}-success-rate-analysis
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
   # ============================================================================
   # Arguments
   # ============================================================================
   # Can be passed from Rollout resource for dynamic configuration
   args:
-  - name: namespace
+  - name: environment
   - name: zone
+  - name: instance
   - name: route-regex
     value: ".*"
   {{- if and .Values.argoRollouts.analysisTemplates.successRate.authentication .Values.argoRollouts.analysisTemplates.successRate.authentication.enabled }}

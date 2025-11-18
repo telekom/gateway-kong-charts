@@ -9,7 +9,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Release.Name }}-zipkin-setup
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -58,7 +58,7 @@ spec:
                 "include_credential" : {{ .Values.plugins.zipkin.includeCredential | default true }},
                 "default_service_name" : "{{ .Values.plugins.zipkin.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
                 "local_component_name" : "{{ .Values.plugins.zipkin.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
-                "environment" : "{{ .Values.plugins.zipkin.environment | default .Values.global.environment | default .Values.global.metadata.environment | default "default" }}",
+                "environment" : "{{ .Values.plugins.zipkin.environment | default .Values.global.environment | default "default" }}",
                 "zone" : "{{ .Values.plugins.zipkin.zone | default .Values.global.zone | default "unknown" }}",
                 "force_sample" : {{ .Values.plugins.zipkin.forceSample | default true }},
                 "header_type" : "{{ .Values.plugins.zipkin.headerType | default "b3" }}"

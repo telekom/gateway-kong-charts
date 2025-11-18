@@ -4,18 +4,23 @@ SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- define "postgresql.labels" -}}
-app: {{ .Release.Name }}
-helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-app.kubernetes.io/name: postgresql
-{{ include "postgresql.selector" . }}
-app.kubernetes.io/component: database
-app.kubernetes.io/part-of: tardis-runtime
-{{ .Values.global.labels | toYaml }}
-{{- end -}}
-
-{{- define "postgresql.selector" -}}
+{{/*
+Selector labels for PostgreSQL resources.
+These labels are used for Service selectors and must be stable (immutable).
+*/}}
+{{- define "postgresql.labels.selectorLabels" -}}
 app.kubernetes.io/instance: {{ .Release.Name }}-postgresql
+{{- end }}
+
+{{/*
+Standard labels for PostgreSQL resources.
+Combines selector labels, base labels and a component label.
+*/}}
+{{- define "postgresql.labels.standard" -}}
+{{- include "postgresql.labels.selectorLabels" . }}
+{{ include "common.labels.base" . }}
+{{ include "common.labels.classification" . }}
+app.kubernetes.io/component: database
 {{- end -}}
 
 {{- define "postgresql.env" }}

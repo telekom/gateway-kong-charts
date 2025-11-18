@@ -9,7 +9,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Release.Name }}-kong-bootstrap
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
   backoffLimit: {{ .Values.setupJobs.backoffLimit }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds }}

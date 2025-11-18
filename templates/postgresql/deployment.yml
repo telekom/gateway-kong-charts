@@ -9,7 +9,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "postgresql.deploymentName" . }}
-  labels: {{ include "postgresql.labels" $ | nindent 4 }}
+  labels: {{ include "postgresql.labels.standard" $ | nindent 4 }}
   {{- with .Values.postgresql.deployment.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -19,13 +19,11 @@ spec:
   strategy:
     type: Recreate
   selector:
-    matchLabels: {{ include "postgresql.selector" $ | nindent 6 }}
+    matchLabels: {{ include "postgresql.labels.selectorLabels" $ | nindent 6 }}
   template:
     metadata:
       labels:
-      {{- include "postgresql.labels" $ | nindent 8 }}
-      {{- include "common.status-monitor.labels" $ | nindent 8 }}
-      {{- include "database.status-monitor.labels" $ | nindent 8 }}
+      {{- include "postgresql.labels.standard" $ | nindent 8 }}
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       securityContext: {{ .Values.postgresql.podSecurityContext | toYaml | nindent 8 }}

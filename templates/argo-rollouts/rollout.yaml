@@ -10,7 +10,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: {{ .Release.Name }}
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
   # ============================================================================
   # Replica Management
@@ -36,7 +36,7 @@ spec:
   # Selector
   # ============================================================================
   selector:
-    matchLabels: {{ include "kong.selector" $ | nindent 6 }}
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
   
   # ============================================================================
   # Rollout Strategy
@@ -94,10 +94,12 @@ spec:
         - templateName: {{ $.Release.Name }}-{{ .templateName }}
         {{- end }}
         args:
-          - name: namespace
-            value: {{ .Release.Namespace }}
+          - name: environment
+            value: {{ .Values.global.environment }}
           - name: zone
             value: {{ .Values.global.zone | quote }}
+          - name: instance
+            value: {{ .Release.Name }}-kong
         {{- if .Values.argoRollouts.strategy.canary.analysis.args }}
         {{- with .Values.argoRollouts.strategy.canary.analysis.args }}
           {{- toYaml . | nindent 10  }}

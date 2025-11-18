@@ -3,19 +3,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 global:
-  metadata: {}
+  # -- The zone of the gateway instance.
+  # This needs to match up with configuration done in other components like the control plane.
+  zone: "default"
+  # -- Environment name (e.g. playground, preprod, ...)
+  environment: "default"
 
   #pathToSecret: "path/to/secret" 
 
   # -- Storage class name for PVCs (defaults to cluster default storage class if not set)
   #storageClassName: ""
-  #environment: ""
-  zone: "zoneName"
-  # -- Define global labels
-  labels:
-    # fluentd label
-    tardis.telekom.de/group: tardis
-  product: "stargate"
+
+  # -- Common labels applied to all Kubernetes resources
+  # If you have .Values.plugins.prometheus.servicemonitor.enabled=true, these labels will be transferred onto the ingested metrics.
+  labels: {}
+
   ingress:
     # -- Default ingress class name for all ingress resources (can be overridden per-ingress)
     # If not set, uses cluster default ingress class
@@ -508,7 +510,7 @@ kedaAutoscaling:
       # Example queries:
       #   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))
       #   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m]))
-      query: 'sum(rate(kong_http_requests_total{tardis_telekom_de_zone="{{ .Values.global.zone }}"}[1m]))'
+      query: 'sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ .Values.global.zone }}",ei_telekom_de_environment="{{ .Values.global.environment }}",app_kubernetes_io_instance="{{ .Release.Name }}-kong"}[1m]))'
       
       # -- Threshold value for the metric
       # Scales up when query result exceeds this value
@@ -702,9 +704,10 @@ plugins:
     enabled: true
     # -- pluginId for configuration in kong
     pluginId: b864d58b-7183-4889-8b32-0b92d6c4d513
-    # -- Set the Iris URL you want the Gateway to use for Admin API athentication
+    # -- The URL of the identity provider's rover realm.
+    # This is used for authenticating access to the Kong Admin API via the Rover realm
     allowedIss: 
-      - https://changeme/auth/realms/default
+      - https://<your-iris-host>/auth/realms/rover
 
   prometheus:
     # -- Controls whether to annotate pods with prometheus scraping information or not
@@ -812,10 +815,13 @@ jumper:
   # -- Port for Jumper container
   port: 8080
   
-  issuerUrl: https://localhost:443
+  # -- URL of the gateway-issuer-service, which is the issuer of the gateway tokens
+  # This should point to your gateway's auth realm endpoint
+  issuerUrl: https://<your-gateway-host>/auth/realms/default
   #tracingUrl: http://guardians-drax-collector.skoll:9411
   #defaultServiceName: "stargate"
-  stargateUrl: https://stargate-integration.test.dhei.telekom.de
+  # -- The gateway URL used for gateway-to-gateway communication
+  stargateUrl: https://<your-gateway-host>
   publishEventUrl: http://producer.integration:8080/v1/events
   jvmOpts: "-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"
   #maxHttpHeaderSize: 16KB
@@ -1220,10 +1226,10 @@ argoRollouts:
       # PromQL query to calculate error rate over last 5 minutes
       query: |
         sum(irate(
-        kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary",code!~"5.."}[1m]
+        kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary",code!~"5.."}[1m]
         )) /
         sum(irate(
-        kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
+        kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
         ))
 
       # -- Prometheus server address (must be accessible)
@@ -1272,10 +1278,10 @@ argoRollouts:
       # PromQL query to calculate success rate over last 1 minute
       query: |
         sum(irate(
-          kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary",code!~"(4|5).*"}[1m]
+          kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary",code!~"(4|5).*"}[1m]
         )) /
         sum(irate(
-          kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
+          kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
         ))
 
       # -- Prometheus server address

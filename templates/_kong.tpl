@@ -4,20 +4,6 @@ SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- define "kong.labels" -}}
-app: {{ .Release.Name }}
-helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-app.kubernetes.io/name: kong
-{{ include "kong.selector" . }}
-app.kubernetes.io/component: api-gateway
-app.kubernetes.io/part-of: tardis-runtime
-{{ .Values.global.labels | toYaml }}
-{{- end -}}
-
-{{- define "kong.selector" -}}
-app.kubernetes.io/instance: {{ .Release.Name }}-kong
-{{- end -}}
-
 {{- define "kong.issuerService.env" }}
 - name: CERT_MOUNT_PATH
   value: /data/keys

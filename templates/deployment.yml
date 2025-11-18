@@ -15,7 +15,7 @@ metadata:
   name: {{ .Release.Name }}
   annotations:
   {{- include "kong.checksums" $ | nindent 4 }}
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
 {{- if not (or .Values.hpaAutoscaling.enabled .Values.kedaAutoscaling.enabled .Values.argoRollouts.enabled) }}
   replicas: {{ .Values.replicas }}
@@ -34,7 +34,7 @@ spec:
 {{- end }}
 {{- end }}
   selector: 
-    matchLabels: {{ include "kong.selector" $ | nindent 6 }}
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
   template:
     metadata:
       annotations: 
@@ -45,9 +45,7 @@ spec:
         prometheus.io/port: '{{ .Values.plugins.prometheus.port }}'
 {{- end }}
       labels: 
-        {{- include "kong.labels" $ | nindent 8 }}
-        {{- include "common.status-monitor.labels" $ | nindent 8 }}
-        {{- include "status-monitor.labels" $ | nindent 8 }}
+        {{- include "app.labels.standard" $ | nindent 8 }}
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       affinity:
@@ -55,22 +53,14 @@ spec:
 {{- if eq .Values.global.podAntiAffinity.required true }}
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
-              matchExpressions:
-              - key: app.kubernetes.io/instance
-                operator: In
-                values:
-                  - {{ .Release.Name }}-kong
+              matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 16 }}
             topologyKey: {{ .Values.topologyKey }}
 {{- else }}
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/instance
-                      operator: In
-                      values:
-                        - {{ .Release.Name }}-kong
+                  matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 20 }}
                 topologyKey: {{ .Values.topologyKey }}
 {{- end }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}

@@ -9,7 +9,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: {{ .Release.Name }}
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
     release: {{ .Values.plugins.prometheus.podMonitor.selector }}
   namespace: {{ .Release.Namespace }}
 spec:
@@ -32,5 +32,5 @@ spec:
     matchNames:
       - {{ .Release.Namespace }}
   selector:
-    matchLabels: {{ include "kong.selector" $ | nindent 6 }}
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
 {{- end -}}

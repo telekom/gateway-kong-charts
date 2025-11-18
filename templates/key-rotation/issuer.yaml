@@ -10,7 +10,7 @@ kind: Issuer
 metadata:
   name: {{ .Release.Name }}
   labels:
-    {{- include "kong.labels" $ | nindent 4 }}
+    {{- include "app.labels.standard" $ | nindent 4 }}
 spec:
   selfSigned: {}
 {{- end }}

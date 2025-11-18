@@ -9,7 +9,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ include "postgresql.pvcName" . }}
-  labels: {{ include "postgresql.labels" $ | nindent 4 }}
+  labels: {{ include "postgresql.labels.standard" $ | nindent 4 }}
 {{- if .Values.postgresql.persistence }}
   {{- if .Values.postgresql.persistence.keepOnDelete }}
   annotations:

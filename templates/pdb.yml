@@ -9,7 +9,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ .Release.Name }}
-  labels: {{ include "kong.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
   {{- if .Values.pdb.minAvailable }}
   minAvailable: {{ .Values.pdb.minAvailable }}
@@ -17,6 +17,5 @@ spec:
   maxUnavailable: {{ .Values.pdb.maxUnavailable | default 1 }}
   {{- end }}
   selector: 
-    matchLabels:
-      {{- include "kong.selector" $ | nindent 6 }}
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
 {{- end }}

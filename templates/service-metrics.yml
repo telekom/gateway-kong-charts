@@ -9,11 +9,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-metrics
-  labels: {{ include "kong.labels" $ | nindent 4 }}
-  {{- include "common.status-monitor.labels" $ | nindent 4 }}
-  {{- include "status-monitor.labels" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
-  selector: {{ include "kong.selector" $ | nindent 4 }}
+  selector: {{ include "app.labels.selectorLabels" $ | nindent 4 }}
   ports:
   - name: metrics
     port: 9542

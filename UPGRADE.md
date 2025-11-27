@@ -8,6 +8,216 @@ SPDX-License-Identifier: CC0-1.0
 
 This document provides guidance for upgrading between versions of the Gateway Helm chart.
 
+## From 8.x.x To Version 9.x.x
+
+Version 9.0.0 introduces several breaking changes that modernize the chart structure and align with Kubernetes best practices. Please review all changes carefully before upgrading.
+
+### Chart Distribution via OCI Registry
+
+The chart is now published to GitHub Container Registry (GHCR) and can be installed directly without cloning the repository:
+
+```bash
+helm install my-gateway oci://ghcr.io/telekom/o28m-charts/stargate --version 9.0.0 -f my-values.yaml
+```
+
+This provides easier installation and version management. The traditional Git-based installation method remains supported.
+
+### Image Configuration Structure (BREAKING)
+
+The image configuration structure has been completely redesigned with cascading defaults.
+
+**Old structure:**
+```yaml
+global:
+  image:
+    repository: mtr.devops.telekom.de
+    organization: tardis-common
+    force: false  # Replace repository/organization even in custom image strings
+
+# Component-level (structured form)
+image:
+  repository: mtr.devops.telekom.de
+  organization: tardis-internal/gateway
+  name: kong
+  tag: "1.0.1"
+
+# Or flattened string form
+image: mtr.devops.telekom.de/tardis-internal/gateway/kong:1.0.1
+```
+
+Images were constructed as: `{repository}/{organization}/{name}:{tag}`
+
+**New structure:**
+```yaml
+global:
+  image:
+    registry: mtr.devops.telekom.de
+    namespace: eu_it_co_development/o28m
+
+image:
+  # registry: ""       # Optional: Override global.image.registry
+  # namespace: ""      # Optional: Override global.image.namespace
+  repository: gateway-kong
+  tag: "1.1.0"
+```
+
+Images are now constructed as: `{registry}/{namespace}/{repository}:{tag}`
+
+**Key changes:**
+- `repository` → `registry` (the base registry URL)
+- `organization` → `namespace` (the namespace/path within the registry)
+- `name` → `repository` (the image repository name)
+- `force` flag removed (simplified mechanism)
+- Flattened string format no longer supported
+
+**Required changes:**
+- Update all custom image configurations to the new structure
+- Component images now use the `gateway-*` naming convention (e.g., `gateway-kong`, `gateway-jumper`)
+- Default namespace changed to `eu_it_co_development/o28m`
+- The same pattern applies to PostgreSQL and all job images
+
+**Migration example:**
+```yaml
+# Before (structured form)
+image:
+  repository: my-registry.com
+  organization: my-org
+  name: custom-kong
+  tag: "2.0.0"
+
+# Or before (flattened string form)
+image: my-registry.com/my-org/custom-kong:2.0.0
+
+# After
+image:
+  registry: my-registry.com
+  namespace: my-org
+  repository: custom-kong
+  tag: "2.0.0"
+
+# Or use global defaults with component override
+global:
+  image:
+    registry: my-registry.com
+    namespace: my-org
+image:
+  repository: custom-kong
+  tag: "2.0.0"
+```
+
+### Platform Configuration Removal (BREAKING)
+
+The platform-specific configuration mechanism has been removed. Platform-specific values are now integrated as explicit defaults in `values.yaml`.
+
+**Removed:**
+- `global.platform` configuration option
+- `platforms/` folder (aws.yaml, caas.yaml, tdi.yaml)
+- `platformSpecificValue` template helper
+
+**What changed:**
+- Hardened security contexts (previously in platforms/caas.yaml) are now default in `values.yaml`
+- Storage class now uses cluster default instead of hardcoded `gp2`
+- Ingress class now uses cluster default with cascading configuration
+- No more platform-specific overlays
+
+**Required changes:**
+- Remove `global.platform: caas` (or similar) from your values
+- If you relied on platform-specific values, you must now set them explicitly in your values files
+- Review the new defaults in `values.yaml` and adjust if needed
+
+**Migration example:**
+```yaml
+# Before
+global:
+  platform: caas  # This no longer works
+
+# After - Set values explicitly
+postgresql:
+  persistence:
+    storageClassName: ""  # Uses cluster default
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    # ... other hardened defaults now in values.yaml
+```
+
+### Label Standardization (BREAKING)
+
+All resource labels have been refactored to follow Kubernetes recommended labels and introduce classification labels for better resource identification.
+
+**Changes:**
+- Implemented Kubernetes recommended labels (`app.kubernetes.io/*`)
+- Automatic `tardis.telekom.de/*` labels **removed** (must be set manually via `global.labels`)
+- Added `ei.telekom.de/zone` and `ei.telekom.de/environment` classification labels
+- `global.metadata.environment` deprecated in favor of `global.environment`
+- Prometheus metric labels changed from `tardis_telekom_de_*` to `ei_telekom_de_*`
+- Argo Rollouts analysis arguments changed: now uses three separate arguments (`zone`, `environment`, `instance`) instead of single `namespace` argument
+
+**Required changes:**
+```yaml
+# Before
+global:
+  metadata:
+    environment: production
+
+# After
+global:
+  environment: production
+  zone: aws-eu-central-1  # New required field
+
+# If you need tardis.telekom.de/* labels, set them manually:
+global:
+  labels:
+    "tardis.telekom.de/team": "my-team"
+    "tardis.telekom.de/product": "gateway"
+```
+
+**Impact on monitoring:**
+- To maintain existing monitoring functionality with `tardis_telekom_de_*` labels, set the `tardis.telekom.de/*` labels manually in `global.labels`
+- ServiceMonitor automatically transfers all `global.labels` to metrics
+- Alternatively, update Prometheus queries, dashboards, and alerts to use the new `ei_telekom_de_zone` and `ei_telekom_de_environment` labels
+
+**Impact on KEDA and Argo Rollouts:**
+- KEDA queries updated to use `ei_telekom_de_environment` and `ei_telekom_de_zone`
+- Argo Rollouts analysis templates use new `environment` argument instead of `namespace`
+- Existing analysis templates will need updates if you customized them
+
+### PostgreSQL Subchart Integration
+
+PostgreSQL is no longer a Helm subchart dependency and has been integrated directly into the main chart templates.
+The values structure remains identical under `postgresql:` key, no changes required.
+
+### Pipeline Metadata Removal
+
+ENI-specific pipeline deployment metadata has been removed as it is no longer used.
+
+**Removed:**
+- Pipeline metadata annotations
+- `configmap-pipeline-metadata.yaml` template
+- Related values configuration
+
+### Storage and Ingress Class Defaults
+
+**Storage Class:**
+- Changed from hardcoded `gp2` (AWS-specific) to cluster default (`storageClassName: ""`)
+- Override per component if needed
+
+**Ingress Class:**
+- Changed from hardcoded `nginx` to cluster default
+- Supports cascading: component `className` → `global.ingress.ingressClassName` → cluster default
+
+```yaml
+# Set global default for all ingresses
+global:
+  ingress:
+    ingressClassName: nginx
+
+# Or override per component
+proxy:
+  ingress:
+    className: traefik
+```
+
 ## From 7.x.x To Version 8.x.x
 
 ### HPA configuration

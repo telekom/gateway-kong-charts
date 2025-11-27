@@ -17,6 +17,26 @@ By participating in this project, you agree to abide by its [Code of Conduct](./
 This project follows the [REUSE standard for software licensing](https://reuse.software/).
 Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit <https://reuse.software/>.
 
+## Installation
+
+### Via OCI Registry
+
+The chart is published to GitHub Container Registry and can be installed directly:
+
+```bash
+helm install my-gateway oci://ghcr.io/telekom/o28m-charts/stargate --version 9.0.0 -f my-values.yaml
+```
+
+### Via Git Repository
+
+Alternatively, clone the repository and install from source:
+
+```bash
+git clone https://github.com/telekom/gateway-kong-charts.git
+cd gateway-kong-charts
+helm install my-gateway . -f my-values.yaml
+```
+
 ## Requirements
 
 ### Database
@@ -25,13 +45,27 @@ This Gateway requires a PostgreSQL database that will be preconfigured by the Ga
 
 ## Configuration
 
-### Platform
+### Image Configuration
 
-You can select a platform (e.g. caas) to use predefined settings (e.g. securityContext) specifically dedicated to the platform. \
-Note that you can overwrite platform specific values in the values.yaml. \
-To add a new platform specific values.yaml, add the required values as platforName.yaml to the platforms folder.
+Images are configured using a cascading defaults system with global and component-specific settings.
 
-**Note:** Setting platform specific values for the sub-chart by the platform specific platformName.yaml of your main-chart will not work, as the sub-chart platforms have precedence.
+**Structure:**
+```yaml
+global:
+  image:
+    registry: mtr.devops.telekom.de
+    namespace: eu_it_co_development/o28m
+
+image:
+  # registry: ""       # Optional: Override global.image.registry
+  # namespace: ""      # Optional: Override global.image.namespace
+  repository: gateway-kong
+  tag: "1.1.0"
+```
+
+Images are constructed as: `{registry}/{namespace}/{repository}:{tag}`
+
+Each component (Kong, Jumper, Issuer Service, PostgreSQL, Jobs) can override the global registry and namespace settings individually.
 
 ### Database Configuration
 
@@ -118,7 +152,7 @@ As a result `job-kong-pre-upgrade-migrations.yml` will run and `job-kong-post-up
 
 **Note:** Those jobs are only meant to be used for upgrading.
 
-For upgrade advice between specific versions, please refer to [UPGRADE.md](UPGRADE.md).
+**Important:** For detailed upgrade instructions, breaking changes, and migration guides between versions, please refer to [UPGRADE.md](UPGRADE.md).
 
 ## htpasswd
 
@@ -364,25 +398,63 @@ For detailed configuration, examples, and troubleshooting, see the [Argo Rollout
 In Kubernetes it is recommended to distribute the pods over several nodes. If a kubernetes node gets into problems, there are enough pods on other nodes to take on the load.
 For this reason we provide the `topologyKey` flag in our helm-chart.
 
-| Helm-Chart variable | Kubernetes property (Deployment,Pod)        | default value                        | documentation link |
-| ------------------- | ------------------------------------------- | ------------------------------------ | ------------------ |
-| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | kubernetes.io/hostname **AWS**       | [topologyKey]      |
-| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | topology.kubernetes.io/zone **CaaS** | [topologyKey]      |
+| Helm-Chart variable | Kubernetes property (Deployment,Pod)        | default value          | documentation link |
+| ------------------- | ------------------------------------------- | ---------------------- | ------------------ |
+| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | kubernetes.io/hostname | [topologyKey]      |
 
 [topologyKey]: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
 
-> Note: The default topologyKey for CaaS is different than for AWS and is specified in `platform/caas.yaml` (s. next paragraph)
+### Security Context
 
-### Platform-specific values and SecurityContext
+The chart includes hardened security contexts by default that are compliant with most Kubernetes platform requirements.
 
-CaaS platform has certain requirements regarding `securityContext` in deployments.
-Some fields like `privileged: false` must be set, even though they correspond to the default values.
-This applies to both `pods.securityContext` and `container[].securityContext` and the absence of some values is difficult to detect, because CaaS refuses the deployment with a 503 http-code.
+**Default Security Contexts:**
+- All containers run as non-root user
+- Read-only root filesystems where applicable
+- Dropped capabilities (ALL)
+- No privilege escalation
+- Specific user/group IDs configured per component
 
-For this reason, there is one single flags `global.platform: caas`, which imports values from file `platform/caas.yaml` and thus applies all required to the deployment.
-Individual values can be overwritten as usual.
+**Customization:**
+Security contexts can be customized per component or globally. See `values.yaml` for all available options:
 
-The same approach can be used to extend the helm-chart for other platforms.
+```yaml
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  # ... additional settings
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  # ... additional settings
+```
+
+### Storage and Ingress Classes
+
+**Storage Class:**
+By default, the chart uses the cluster's default storage class. Override per component if needed:
+
+```yaml
+postgresql:
+  persistence:
+    storageClassName: "my-storage-class"  # Or "" for cluster default
+```
+
+**Ingress Class:**
+Ingress class configuration supports cascading defaults:
+
+```yaml
+# Set global default for all ingresses
+global:
+  ingress:
+    ingressClassName: nginx
+
+# Or override per component
+proxy:
+  ingress:
+    className: traefik  # Takes precedence over global setting
+```
 
 ### readinessProbe & livenessProbe
 

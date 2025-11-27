@@ -17,93 +17,55 @@ By participating in this project, you agree to abide by its [Code of Conduct](./
 This project follows the [REUSE standard for software licensing](https://reuse.software/).
 Each file contains copyright and license information, and license texts can be found in the [./LICENSES](./LICENSES) folder. For more information visit <https://reuse.software/>.
 
+## Installation
+
+### Via OCI Registry
+
+The chart is published to GitHub Container Registry and can be installed directly:
+
+```bash
+helm install my-gateway oci://ghcr.io/telekom/o28m-charts/stargate --version 9.0.0 -f my-values.yaml
+```
+
+### Via Git Repository
+
+Alternatively, clone the repository and install from source:
+
+```bash
+git clone https://github.com/telekom/gateway-kong-charts.git
+cd gateway-kong-charts
+helm install my-gateway . -f my-values.yaml
+```
+
 ## Requirements
 
 ### Database
 
 This Gateway requires a PostgreSQL database that will be preconfigured by the Gateway's init container.
 
-## Installation
-
-### From OCI Registry (Recommended)
-
-```bash
-helm install stargate oci://ghcr.io/telekom/o28m-charts/stargate --version x.x.x -f values.yaml
-```
-
-### From Source
-
-```bash
-git clone https://github.com/telekom/gateway-kong-charts.git
-cd gateway-kong-charts
-helm install stargate . -f values.yaml
-```
-
-**Note:** The chart requires configuration via a values file. Refer to the [Configuration](#configuration) and [Parameters](#parameters)
-sections for required and optional values.
-
 ## Configuration
 
-### Platform Configuration
+### Image Configuration
 
-**Since v9.0.0:** Platform-specific values are no longer configured via `global.platform` and `platforms/` folder.
+Images are configured using a cascading defaults system with global and component-specific settings.
 
-The chart now uses hardened defaults compatible with DTIT CaaS as the baseline configuration, including:
-- Security contexts with non-root users
-- Read-only root filesystems
-- Dropped capabilities
-- Zone-level pod anti-affinity (`topology.kubernetes.io/zone`)
-
-#### Platform-Specific Overrides
-
-If your platform requires adjustments, override the default values using standard Helm mechanisms:
-
-```bash
-# Create a platform-specific values file
-cat > my-platform-values.yaml <<EOF
-global:
-  ingress:
-    ingressClassName: my-ingress-class
-EOF
-
-# Apply overrides during installation
-helm install my-release . -f my-platform-values.yaml
-```
-
-#### Migration from v8
-
-If you were using `global.platform` in v8, remove that setting and apply platform-specific overrides via separate values files.
-
-### Ingress Configuration
-
-The chart uses the cluster's default ingress class. You can set a global default or configure per-ingress:
-
-```yaml
-# Option 1: Set global default (applies to all ingress resources)
-global:
-  ingress:
-    ingressClassName: nginx
-
-# Option 2: Override per-ingress (takes precedence over global)
-proxy:
-  ingress:
-    className: alb  # Override for proxy ingress only
-
-adminApi:
-  ingress:
-    className: nginx  # Override for admin API ingress only
-```
-
-**Cascading behavior:** Component-specific `className` → `global.ingress.ingressClassName` → cluster default
-
-### Storage Configuration
-
-The chart uses the cluster's default storage class for persistent volumes. To use a specific storage class, set:
-
+**Structure:**
 ```yaml
 global:
-  storageClassName: my-storage-class
+  image:
+    registry: mtr.devops.telekom.de
+    namespace: eu_it_co_development/o28m
+
+image:
+  # registry: ""       # Optional: Override global.image.registry
+  # namespace: ""      # Optional: Override global.image.namespace
+  repository: gateway-kong
+  tag: "1.1.0"
 ```
+
+Images are constructed as: `{registry}/{namespace}/{repository}:{tag}`
+
+Each component (Kong, Jumper, Issuer Service, PostgreSQL, Jobs) can override the global registry and namespace settings individually.
 
 ### Database Configuration
 
@@ -189,6 +151,8 @@ As a result `job-kong-pre-upgrade-migrations.yml` will run and `job-kong-post-up
 **Warning:** Uncomment "`migrations: upgrade`" if you deploy again after a successfull deployment or set it to "`migrations: bootstrap`". Otherwise migrations will be executed again.
 
 **Note:** Those jobs are only meant to be used for upgrading.
+
+**Important:** For detailed upgrade instructions, breaking changes, and migration guides between versions, please refer to [UPGRADE.md](UPGRADE.md).
 
 ## htpasswd
 
@@ -434,25 +398,63 @@ For detailed configuration, examples, and troubleshooting, see the [Argo Rollout
 In Kubernetes it is recommended to distribute the pods over several nodes. If a kubernetes node gets into problems, there are enough pods on other nodes to take on the load.
 For this reason we provide the `topologyKey` flag in our helm-chart.
 
-| Helm-Chart variable | Kubernetes property (Deployment,Pod)        | default value                        | documentation link |
-| ------------------- | ------------------------------------------- | ------------------------------------ | ------------------ |
-| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | kubernetes.io/hostname **AWS**       | [topologyKey]      |
-| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | topology.kubernetes.io/zone **CaaS** | [topologyKey]      |
+| Helm-Chart variable | Kubernetes property (Deployment,Pod)        | default value          | documentation link |
+| ------------------- | ------------------------------------------- | ---------------------- | ------------------ |
+| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | kubernetes.io/hostname | [topologyKey]      |
 
 [topologyKey]: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
 
-> Note: The default topologyKey for CaaS is different than for AWS and is specified in `platform/caas.yaml` (s. next paragraph)
+### Security Context
 
-### Platform-specific values and SecurityContext
+The chart includes hardened security contexts by default that are compliant with most Kubernetes platform requirements.
 
-CaaS platform has certain requirements regarding `securityContext` in deployments.
-Some fields like `privileged: false` must be set, even though they correspond to the default values.
-This applies to both `pods.securityContext` and `container[].securityContext` and the absence of some values is difficult to detect, because CaaS refuses the deployment with a 503 http-code.
+**Default Security Contexts:**
+- All containers run as non-root user
+- Read-only root filesystems where applicable
+- Dropped capabilities (ALL)
+- No privilege escalation
+- Specific user/group IDs configured per component
 
-For this reason, there is one single flags `global.platform: caas`, which imports values from file `platform/caas.yaml` and thus applies all required to the deployment.
-Individual values can be overwritten as usual.
+**Customization:**
+Security contexts can be customized per component or globally. See `values.yaml` for all available options:
 
-The same approach can be used to extend the helm-chart for other platforms.
+```yaml
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  # ... additional settings
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  # ... additional settings
+```
+
+### Storage and Ingress Classes
+
+**Storage Class:**
+By default, the chart uses the cluster's default storage class. Override per component if needed:
+
+```yaml
+postgresql:
+  persistence:
+    storageClassName: "my-storage-class"  # Or "" for cluster default
+```
+
+**Ingress Class:**
+Ingress class configuration supports cascading defaults:
+
+```yaml
+# Set global default for all ingresses
+global:
+  ingress:
+    ingressClassName: nginx
+
+# Or override per component
+proxy:
+  ingress:
+    className: traefik  # Takes precedence over global setting
+```
 
 ### readinessProbe & livenessProbe
 
@@ -558,7 +560,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | argoRollouts.analysisTemplates.errorRate.failureLimit | int | `2` | Number of failed measurements that trigger rollback |
 | argoRollouts.analysisTemplates.errorRate.interval | string | `"30s"` | Analysis interval (how often to check) |
 | argoRollouts.analysisTemplates.errorRate.prometheusAddress | string | `""` | Prometheus server address (must be accessible) Example: "http://prometheus.monitoring.svc.cluster.local:8427" |
-| argoRollouts.analysisTemplates.errorRate.query | string | `"sum(irate(\nkong_http_requests_total{tardis_telekom_de_zone=\"{{ args.zone }}\",namespace=\"{{ args.namespace }}\",route=~\"{{ args.route-regex }}\",role=\"canary\",code!~\"5..\"}[1m]\n)) /\nsum(irate(\nkong_http_requests_total{tardis_telekom_de_zone=\"{{ args.zone }}\",namespace=\"{{ args.namespace }}\",route=~\"{{ args.route-regex }}\",role=\"canary\"}[1m]\n))\n"` | Error rate threshold (5% = 0.05) PromQL query to calculate error rate over last 5 minutes |
+| argoRollouts.analysisTemplates.errorRate.query | string | `"sum(irate(\nkong_http_requests_total{ei_telekom_de_zone=\"{{ args.zone }}\",ei_telekom_de_environment=\"{{ args.environment }}\",app_kubernetes_io_instance=\"{{ args.instance }}\",route=~\"{{ args.route-regex }}\",role=\"canary\",code!~\"5..\"}[1m]\n)) /\nsum(irate(\nkong_http_requests_total{ei_telekom_de_zone=\"{{ args.zone }}\",ei_telekom_de_environment=\"{{ args.environment }}\",app_kubernetes_io_instance=\"{{ args.instance }}\",route=~\"{{ args.route-regex }}\",role=\"canary\"}[1m]\n))\n"` | Error rate threshold (5% = 0.05) PromQL query to calculate error rate over last 5 minutes |
 | argoRollouts.analysisTemplates.errorRate.successCondition | string | `"all(result, # < 0.05)"` | Success criteria (PromQL query must return < threshold) |
 | argoRollouts.analysisTemplates.successRate.authentication | object | `{"basicKey":"basic-auth","enabled":true,"secretName":"victoria-metrics-secret"}` | Prometheus authentication using Basic Auth Credentials are read from a Kubernetes secret in the same namespace |
 | argoRollouts.analysisTemplates.successRate.authentication.basicKey | string | `"basic-auth"` | Secret key containing base64 encoded user:password combination to be used as Basic Auth header |
@@ -569,7 +571,7 @@ This is a short overlook about important parameters in the `values.yaml`.
 | argoRollouts.analysisTemplates.successRate.failureLimit | int | `3` | Number of failed measurements that trigger rollback |
 | argoRollouts.analysisTemplates.successRate.interval | string | `"30s"` | Analysis interval |
 | argoRollouts.analysisTemplates.successRate.prometheusAddress | string | `""` | Prometheus server address |
-| argoRollouts.analysisTemplates.successRate.query | string | `"sum(irate(\n  kong_http_requests_total{tardis_telekom_de_zone=\"{{ args.zone }}\",namespace=\"{{ args.namespace }}\",route=~\"{{ args.route-regex }}\",role=\"canary\",code!~\"(4|5).*\"}[1m]\n)) /\nsum(irate(\n  kong_http_requests_total{tardis_telekom_de_zone=\"{{ args.zone }}\",namespace=\"{{ args.namespace }}\",route=~\"{{ args.route-regex }}\",role=\"canary\"}[1m]\n))\n"` | Success rate threshold (95% = 0.95) PromQL query to calculate success rate over last 1 minute |
+| argoRollouts.analysisTemplates.successRate.query | string | `"sum(irate(\n  kong_http_requests_total{ei_telekom_de_zone=\"{{ args.zone }}\",ei_telekom_de_environment=\"{{ args.environment }}\",app_kubernetes_io_instance=\"{{ args.instance }}\",route=~\"{{ args.route-regex }}\",role=\"canary\",code!~\"(4|5).*\"}[1m]\n)) /\nsum(irate(\n  kong_http_requests_total{ei_telekom_de_zone=\"{{ args.zone }}\",ei_telekom_de_environment=\"{{ args.environment }}\",app_kubernetes_io_instance=\"{{ args.instance }}\",route=~\"{{ args.route-regex }}\",role=\"canary\"}[1m]\n))\n"` | Success rate threshold (95% = 0.95) PromQL query to calculate success rate over last 1 minute |
 | argoRollouts.analysisTemplates.successRate.successCondition | string | `"all(result, # >= 0.95)"` | Success criteria (PromQL query must return > threshold) |
 | argoRollouts.enabled | bool | `false` | Enable Argo Rollouts progressive delivery (replaces standard Deployment) |
 | argoRollouts.strategy.blueGreen | object | `{"autoPromotionEnabled":false}` | blueGreen strategy configuration (except activeService and previewService - these are handled by template) |
@@ -583,65 +585,84 @@ This is a short overlook about important parameters in the `values.yaml`.
 | argoRollouts.strategy.type | string | `"canary"` | Deployment strategy type: "canary" or "blueGreen" |
 | argoRollouts.workloadRef.explicitDownscale | bool | `false` | enable explicit downscale of old Deployment during first take over of pod responsibility through argo rollouts together with argocd (see README.md for details) |
 | argoRollouts.workloadRef.scaleDown | string | `"progressively"` | scaleDown strategy for Argo Rollouts deployment workloadRef |
+| circuitbreaker.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for Circuitbreaker |
+| circuitbreaker.count | int | `4` | Number of failures before triggering circuit breaker |
 | circuitbreaker.enabled | bool | `false` | enable deployment of circuitbreaker component |
-| circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | default value for imagePullPolicy |
+| circuitbreaker.image | object | `{"repository":"gateway-circuitbreaker","tag":"2.1.0"}` | Circuitbreaker image configuration (inherits global.image.registry and global.image.namespace) |
+| circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Circuitbreaker container |
+| circuitbreaker.interval | string | `"60s"` | Interval for circuitbreaker checks |
 | circuitbreaker.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | circuitbreaker container default resource configuration |
+| containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for Kong container (hardened defaults) |
+| dbUpdateFrequency | int | `10` | Frequency in seconds to poll database for updates |
+| dbUpdatePropagation | int | `0` | Delay in seconds before propagating database updates |
 | disableUpstreamCache | bool | `false` |  |
 | externalDatabase.ssl | bool | `true` |  |
 | externalDatabase.sslVerify | bool | `false` |  |
 | global.database.database | string | `"kong"` | Name of the database |
 | global.database.location | string | `"local"` | Determine if the a database will be deployed togehter with Stargate (local) or is provided (external) |
 | global.database.password | string | `"changeme"` | The users password |
+| global.database.port | int | `5432` | Port of the database |
 | global.database.schema | string | `"public"` | Name of the schema |
 | global.database.username | string | `"kong"` | Username for accessing the database |
+| global.environment | string | `"default"` | Environment name (e.g. playground, preprod, ...) |
 | global.failOnUnsetValues | bool | `true` |  |
-| global.image.force | bool | `false` | Replace repository/organisation also if image is set as custom  "image:" value |
+| global.image.namespace | string | `"eu_it_co_development/o28m"` | Default namespace for all images |
+| global.image.registry | string | `"mtr.devops.telekom.de"` | Default registry for all images |
 | global.imagePullPolicy | string | `"IfNotPresent"` | global default for imagePullPolicy |
 | global.imagePullSecrets | string | `nil` | array of pull secret names to use for image pulling |
 | global.ingress.annotations | object | `{}` | Set annotations for all ingress, can be extended by ingress specific ones |
-| global.labels | object | `{"tardis.telekom.de/group":"tardis"}` | Define global labels |
-| global.metadata | object | `{}` |  |
+| global.labels | object | `{}` | Common labels applied to all Kubernetes resources If you have .Values.plugins.prometheus.servicemonitor.enabled=true, these labels will be transferred onto the ingested metrics. |
 | global.passwordRules.enabled | bool | `false` |  |
 | global.passwordRules.length | int | `12` |  |
 | global.passwordRules.mustMatch[0] | string | `"[a-z]"` |  |
 | global.passwordRules.mustMatch[1] | string | `"[A-Z]"` |  |
 | global.passwordRules.mustMatch[2] | string | `"[0-9]"` |  |
 | global.passwordRules.mustMatch[3] | string | `"[^a-zA-Z0-9]"` |  |
-| global.platform | string | `"kubernetes"` | Available platforms: kubernetes (default), aws, caas. Setting any value with no specific platform values.yaml will result in fallback to kubernetes |
 | global.podAntiAffinity.required | bool | `false` | configure pod anti affinity to be requiredDuringSchedulingIgnoredDuringExecution or preferredDuringSchedulingIgnoredDuringExecution |
 | global.preStopSleepBase | int | `30` |  |
-| global.product | string | `"stargate"` |  |
 | global.tracing.collectorUrl | string | `"http://guardians-drax-collector.skoll:9411/api/v2/spans"` | URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory |
 | global.tracing.defaultServiceName | string | `"stargate"` | Name of the service shown in e.g. Jaeger |
 | global.tracing.sampleRatio | int | `1` | How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests. |
-| global.zone | string | `"zoneName"` | Overwrites the setting determined by the platform storageClassName: gp2 environment: "" |
-| hpaAutoscaling.enabled | bool | `false` |  |
+| global.zone | string | `"default"` | The zone of the gateway instance. This needs to match up with configuration done in other components like the control plane. |
+| hpaAutoscaling | object | `{"cpuUtilizationPercentage":80,"enabled":false,"maxReplicas":10,"minReplicas":3}` | Horizontal Pod Autoscaler configuration |
+| hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
+| hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
+| hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
+| image | object | `{"repository":"gateway-kong","tag":"1.2.1"}` | Kong Gateway image configuration (inherits global.image.registry and global.image.namespace) |
+| imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | irixBrokerRoute.enabled | bool | `false` |  |
 | irixBrokerRoute.name | string | `"user-login"` |  |
 | irixBrokerRoute.upstream.path | string | `"/auth/realms/eni-login"` |  |
 | irixBrokerRoute.upstream.port | int | `80` |  |
 | irixBrokerRoute.upstream.protocol | string | `"http"` |  |
 | irixBrokerRoute.upstream.service | string | `"irix-broker"` |  |
+| issuerService.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for Issuer Service |
 | issuerService.enabled | bool | `true` | enable deployment of issuer-service container inside gateway pod |
 | issuerService.environment | list | `[]` | generic injection possibility for additional environment variables - {name: foo, value: bar} |
 | issuerService.existingJwkSecretName | string | `nil` | configure manually externally managed secret for oauth (as alternative for keyRotation.enabled=true)  |
+| issuerService.image | object | `{"repository":"gateway-issuer-service-go","tag":"2.2.1"}` | Issuer Service image configuration (inherits global.image.registry and global.image.namespace) |
+| issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | issuerService livenessProbe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | issuerService readinessProbe configuration |
 | issuerService.resources | object | `{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | issuerService container default resource configuration |
 | issuerService.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"periodSeconds":1}` | issuerService startupProbe configuration |
-| job | object | `{}` |  |
-| jobs | object | `{}` |  |
+| job | object | `{"image":{"repository":"bash-curl","tag":"8.13.0"}}` | Job image configuration (inherits global.image.registry and global.image.namespace) |
+| jobs | object | `{"containerSecurityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}}` | Job container security context |
+| jumper.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for Jumper |
 | jumper.enabled | bool | `true` | enable deployment of jumper conatiner inside gateway pod |
 | jumper.environment | list | `[]` | generic injection possibility for additional environment variables - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | configure manually externally managed secret for oauth access token issueing (as alternative for keyRotation.enabled=true)  |
+| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.2.5"}` | Jumper image configuration (inherits global.image.registry and global.image.namespace) |
+| jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | list of zones that are considered internet facing |
-| jumper.issuerUrl | string | `"https://localhost:443"` |  |
+| jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | URL of the gateway-issuer-service, which is the issuer of the gateway tokens This should point to your gateway's auth realm endpoint |
 | jumper.jvmOpts | string | `"-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"` |  |
 | jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/actuator/health/liveness","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | jumper livenessProbe configuration |
+| jumper.port | int | `8080` | Port for Jumper container |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` |  |
 | jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":5}` | jumper readinessProbe configuration |
 | jumper.resources | object | `{"limits":{"cpu":5,"memory":"1500Mi"},"requests":{"cpu":2,"memory":"1Gi"}}` | jumper container default resource configuration |
-| jumper.stargateUrl | string | `"https://stargate-integration.test.dhei.telekom.de"` |  |
+| jumper.stargateUrl | string | `"https://<your-gateway-host>"` | The gateway URL used for gateway-to-gateway communication |
 | jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | jumper startupProbe configuration |
 | jumper.zoneHealth.databaseConnectionTimeout | int | `500` |  |
 | jumper.zoneHealth.databaseHost | string | `"localhost"` |  |
@@ -695,26 +716,31 @@ This is a short overlook about important parameters in the `values.yaml`.
 | kedaAutoscaling.triggers.prometheus.authentication.name | string | `"eni-keda-vmselect-creds"` | Name of the TriggerAuthentication or ClusterTriggerAuthentication resource This resource must be created separately and contain Victoria Metrics credentials Example ClusterTriggerAuthentication:   apiVersion: keda.sh/v1alpha1   kind: ClusterTriggerAuthentication   metadata:     name: eni-keda-vmselect-creds   spec:     secretTargetRef:     - parameter: username       name: victoria-metrics-secret       key: username     - parameter: password       name: victoria-metrics-secret       key: password  Example TriggerAuthentication (namespace-scoped):   apiVersion: keda.sh/v1alpha1   kind: TriggerAuthentication   metadata:     name: vmselect-creds     namespace: my-namespace   spec:     secretTargetRef:     - parameter: username       name: victoria-metrics-secret       key: username     - parameter: password       name: victoria-metrics-secret       key: password |
 | kedaAutoscaling.triggers.prometheus.enabled | bool | `true` | Enable Prometheus/Victoria Metrics based scaling |
 | kedaAutoscaling.triggers.prometheus.metricName | string | `"kong_request_rate"` | Metric name (used for identification in KEDA) |
-| kedaAutoscaling.triggers.prometheus.query | string | `"sum(rate(kong_http_requests_total{tardis_telekom_de_zone=\"{{ .Values.global.zone }}\"}[1m]))"` | PromQL query to execute Must return a single numeric value Can use Helm template variables (e.g., {{ .Values.global.zone }}) Example queries:   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m])) |
+| kedaAutoscaling.triggers.prometheus.query | string | `"sum(rate(kong_http_requests_total{ei_telekom_de_zone=\"{{ .Values.global.zone }}\",ei_telekom_de_environment=\"{{ .Values.global.environment }}\",app_kubernetes_io_instance=\"{{ .Release.Name }}-kong\"}[1m]))"` | PromQL query to execute Must return a single numeric value Can use Helm template variables (e.g., {{ .Values.global.zone }}) Example queries:   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m])) |
 | kedaAutoscaling.triggers.prometheus.serverAddress | string | `""` | Victoria Metrics server address (REQUIRED if enabled) Example: "http://prometheus.monitoring.svc.cluster.local:8427" Can use template variables: "{{ .Values.global.vmauth.url }}" |
 | kedaAutoscaling.triggers.prometheus.threshold | string | `"100"` | Threshold value for the metric Scales up when query result exceeds this value For request rate: total requests/second across all pods |
 | keyRotation.additionalSpecValues | object | `{}` | provide alternative configuration for cert-managers Certificate resource |
 | keyRotation.enabled | bool | `false` | enable automatic cert / key rotation for access token issueing based on cert-manager and gateway-rotator |
 | livenessProbe | object | `{"failureThreshold":4,"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"periodSeconds":20,"timeoutSeconds":5}` | kong livenessProbe configuration |
 | logFormat | string | `"json"` |  |
+| memCacheSize | string | `"128m"` | Kong memory cache size for database entities |
 | migrations | string | `"none"` | Determine the migrations behaviour for a new instance or upgrade |
+| nginxHttpLuaSharedDict | string | `"prometheus_metrics 15m"` | Nginx HTTP Lua shared dictionary for storing metrics |
+| nginxWorkerProcesses | int | `4` | Number of nginx worker processes |
 | pdb.create | bool | `false` | enable pod discruption budget creation |
 | pdb.maxUnavailable | string | `nil` | maxUnavailable pods in number or percent (defaults to 1 if unset and minAvailable also unset) |
 | pdb.minAvailable | string | `nil` | minAvailable pods in number or percent |
 | plugins.acl.pluginId | string | `"bc823d55-83b5-4184-b03f-ce63cd3b75c7"` | pluginId for configuration in kong |
+| plugins.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for plugin containers |
 | plugins.enabled | list | `["rate-limiting-merged"]` | additional enabled plugins for kong besides `bundled,jwt-keycloak` |
-| plugins.jwtKeycloak.allowedIss | list | `["https://changeme/auth/realms/default"]` | Set the Iris URL you want the Gateway to use for Admin API athentication |
+| plugins.jwtKeycloak.allowedIss | list | `["https://<your-iris-host>/auth/realms/rover"]` | The URL of the identity provider's rover realm. This is used for authenticating access to the Kong Admin API via the Rover realm |
 | plugins.jwtKeycloak.enabled | bool | `true` | Activate or deactivate the jwt-keycloak plugin |
 | plugins.jwtKeycloak.pluginId | string | `"b864d58b-7183-4889-8b32-0b92d6c4d513"` | pluginId for configuration in kong |
 | plugins.prometheus.enabled | bool | `true` | Controls whether to annotate pods with prometheus scraping information or not |
 | plugins.prometheus.path | string | `"/metrics"` | Sets the endpoint at which at which metrics can be accessed |
 | plugins.prometheus.pluginId | string | `"3d232d3c-dc2b-4705-aa8d-4e07c4e0ff4c"` | pluginId for configuration in kong |
 | plugins.prometheus.podMonitor.enabled | bool | `false` | Enables a podmonitor which can be used by the prometheus operator to collect metrics |
+| plugins.prometheus.podMonitor.selector | string | `"guardians-raccoon"` | Default selector label for pod monitor |
 | plugins.prometheus.port | int | `9542` | Sets the port at which metrics can be accessed |
 | plugins.prometheus.serviceMonitor.enabled | bool | `true` | Enables a servicemonitor which can be used by the prometheus operator to collect metrics |
 | plugins.prometheus.serviceMonitor.selector | string | `"guardians-raccoon"` | default selector label (only label) |
@@ -723,7 +749,19 @@ This is a short overlook about important parameters in the `values.yaml`.
 | plugins.requestTransformer.pluginId | string | `"e9fb4272-0aff-4208-9efa-6bfec5d9df53"` | pluginId for configuration in kong |
 | plugins.zipkin.enabled | bool | `true` | Enable tracing via ENI-Zipkin-Plugin |
 | plugins.zipkin.pluginId | string | `"e8ff1211-816f-4d93-9011-a4b194586073"` | pluginId for configuration in kong |
+| podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsUser":100,"supplementalGroups":[1000]}` | Pod security context for Kong deployment (hardened defaults) |
+| postgresql.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999}` | Container security context for PostgreSQL |
+| postgresql.deployment.annotations | object | `{}` |  |
+| postgresql.image | object | `{"repository":"postgresql","tag":"16.5"}` | PostgresQL image configuration (inherits global.image.registry and global.image.namespace) |
+| postgresql.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for PostgreSQL container |
+| postgresql.maxConnections | string | `"100"` | maximum number of client connections |
+| postgresql.maxPreparedTransactions | string | `"0"` | maximum number of transactions that can be in the "prepared" state simultaneously setting this parameter to zero (default) disables the prepared-transaction feature |
+| postgresql.persistence.keepOnDelete | bool | `false` |  |
+| postgresql.persistence.mountDir | string | `"/var/lib/postgresql/data"` | Mount directory for PostgreSQL data |
+| postgresql.persistence.resources | object | `{"requests":{"storage":"1Gi"}}` | Storage class name for PostgreSQL PVC (defaults to cluster default storage class if not set) storageClassName: "" |
+| postgresql.podSecurityContext | object | `{"fsGroup":999,"supplementalGroups":[999]}` | Pod security context for PostgreSQL |
 | postgresql.resources | object | `{"limits":{"cpu":"100m","memory":"500Mi"},"requests":{"cpu":"20m","memory":"200Mi"}}` | postgresql container default resource configuration |
+| postgresql.sharedBuffers | string | `"32MB"` | memory dedicated to PostgreSQL for caching data |
 | proxy.accessLog | string | `"/dev/stdout"` | Set the log target for access log |
 | proxy.errorLog | string | `"/dev/stderr"` | Set the log target for error log |
 | proxy.ingress.annotations | object | `{}` | Merges specific into global ingress annotations |
@@ -734,18 +772,24 @@ This is a short overlook about important parameters in the `values.yaml`.
 | proxy.ingress.tls | list | `[]` |  |
 | proxy.tls.enabled | bool | `false` |  |
 | readinessProbe | object | `{"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"timeoutSeconds":2}` | kong readinessProbe configuration |
-| replicas | int | `1` |  |
+| replicas | int | `1` | Number of Kong pod replicas (ignored when HPA, KEDA, or Argo Rollouts is enabled) |
 | resources.limits.cpu | string | `"2500m"` |  |
 | resources.limits.memory | string | `"4Gi"` |  |
 | resources.requests.cpu | int | `1` |  |
 | resources.requests.memory | string | `"2Gi"` |  |
+| setupJobs.activeDeadlineSeconds | int | `3600` | How long (in seconds) should be retried to run the job successfully |
+| setupJobs.backoffLimit | int | `15` | How often should be retried to run the job successfully |
+| setupJobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for setup jobs |
 | setupJobs.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | resource defaults configured for the setupJobs |
 | ssl | object | `{"cipherSuite":"custom","ciphers":"DHE-DSS-AES128-SHA256:DHE-DSS-AES256-SHA256:DHE-DSS-AES128-GCM-SHA256:DHE-DSS-AES256-GCM-SHA384:DHE-RSA-AES128-CCM:DHE-RSA-AES256-CCM:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-CCM:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CHACHA20-POLY1305:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256","protocols":"TLSv1.2 TLSv1.3"}` | Name of the secret containing the default server certificates defaultTlsSecret: "mysecret" |
 | sslVerify | bool | `false` | Controls whether to check forward proxy traffic against CA certificates |
 | sslVerifyDepth | string | `"1"` | SSL Verification depth |
 | startupProbe | object | `{"failureThreshold":295,"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"initialDelaySeconds":5,"periodSeconds":1,"timeoutSeconds":1}` | kong startupProbe configuration |
-| strategy | object | `{}` |  |
+| strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"},"type":"RollingUpdate"}` | Deployment strategy configuration |
 | templateChangeTriggers | list | `[]` | List of (template) yaml files fo which a checksum annotation will be created |
+| topologyKey | string | `"kubernetes.io/hostname"` | Topology key for pod anti-affinity (spread pods across zones for high availability) |
+| workerConsistency | string | `"eventual"` | Kong worker consistency mode (eventual or strict) |
+| workerStateUpdateFrequency | int | `10` | Frequency in seconds to poll for worker state updates |
 
 ## Troubleshooting
 

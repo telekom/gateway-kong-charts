@@ -6,6 +6,8 @@ SPDX-License-Identifier: CC0-1.0
 
 # Gateway Helm Chart
 
+This Helm chart deploys the Kong-based API gateway for the [Open Telekom Integration Platform](https://github.com/telekom/Open-Telekom-Integration-Platform).
+
 ## Code of Conduct
 
 This project has adopted the [Contributor Covenant](https://www.contributor-covenant.org/) in version 2.1 as our code of conduct. Please see the details in our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). All contributors must abide by the code of conduct.
@@ -39,9 +41,46 @@ helm install my-gateway . -f my-values.yaml
 
 ## Requirements
 
+### Prerequisites
+
+- **Kubernetes Cluster**
+- **Helm**: Version 3.x
+- **Ingress Controller**: NGINX Ingress Controller (or compatible alternative) for external access
+
+### Container Images
+
+**Important:** Container images are currently not published to a public registry. You must build the images from source and push them to your own registry before installation.
+
+See the [Gateway Repository Overview](https://github.com/telekom/Open-Telekom-Integration-Platform/blob/main/docs/repository_overview.md#gateway) for links to all required component repositories.
+
 ### Database
 
-This Gateway requires a PostgreSQL database that will be preconfigured by the Gateway's init container.
+This Gateway requires a PostgreSQL database that will be preconfigured by the Gateway's init container. A PostgreSQL database is deployed automatically with the Gateway by default.
+
+For production use-cases, use an external PostgreSQL database by setting `global.database.location: external` and configuring the `externalDatabase` settings in `values.yaml`.
+
+### Certificate Management
+
+**Manual Secrets (Required):**
+You must provide JWT signing key secrets for the Issuer Service and Jumper components. Configure them using `jumper.existingJwkSecretName` and `issuerService.existingJwkSecretName` in `values.yaml`. 
+
+Both components must use identical secrets with the following three-key format:
+- `prev-tls.crt`, `prev-tls.key`, `prev-tls.kid` - Previous key (for verifying older tokens)
+- `tls.crt`, `tls.key`, `tls.kid` - Current key (for signing new tokens)
+- `next-tls.crt`, `next-tls.key`, `next-tls.kid` - Next key (pre-distributed before becoming active)
+
+See the [Automatic Certificate and Key Rotation](#automatic-certificate-and-key-rotation) section for details on the rotation mechanism and secret format.
+
+### Configuration
+
+**Important:** The default `values.yaml` is not ready for deployment out of the box. You must configure the following before installation:
+- Image registry and repository settings
+- Database passwords (production environments)
+- Ingress hostnames and TLS certificates
+- Environment-specific labels and metadata
+- Resource limits and requests
+
+Refer to the [Open Telekom Integration Platform Documentation](https://github.com/telekom/Open-Telekom-Integration-Platform/blob/main/docs/README.md#open-telekom-integration-platform-documentation) for detailed installation guides, and the [Configuration](#configuration) and [Parameters](#parameters) sections below for detailed configuration options.
 
 ## Configuration
 
@@ -69,33 +108,149 @@ Each component (Kong, Jumper, Issuer Service, PostgreSQL, Jobs) can override the
 
 ### Database Configuration
 
-No detailed configuration is necessary. PostgreSQL will be deployed together with the Gateway. You should change the default passwords!
+PostgreSQL is deployed with the Gateway and requires minimal configuration. **Important:** Change the default passwords!
 
-### Routes, Services, etc. via job
+### External Access
 
-If you want to add routes, services, etc. you can set specific curl command to deploy you preferc configuration.
+The Gateway can be accessed via Ingress resources. See the [Parameters](#parameters) section for configuration details.
 
-### External access
+### Security Context
 
-The Gateway can be accessed via created Ingress/Route. See the Parameters section for details.
+The chart includes hardened security contexts by default that are compliant with most Kubernetes platform requirements.
+
+**Default security contexts:**
+- All containers run as non-root users
+- Read-only root filesystems where applicable
+- All capabilities dropped
+- Privilege escalation disabled
+- Component-specific user/group IDs
+
+**Customization:**
+Customize security contexts per component or globally. See `values.yaml` for all options:
+
+```yaml
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  # ... additional settings
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  # ... additional settings
+```
+
+### Storage and Ingress Classes
+
+**Storage Class:**
+By default, the chart uses the cluster's default storage class. Override per component if needed:
+
+```yaml
+postgresql:
+  persistence:
+    storageClassName: "my-storage-class"  # Or "" for cluster default
+```
+
+**Ingress Class:**
+Ingress class configuration supports cascading defaults:
+
+```yaml
+# Set global default for all ingresses
+global:
+  ingress:
+    ingressClassName: nginx
+
+# Or override per component
+proxy:
+  ingress:
+    className: traefik  # Takes precedence over global setting
+```
+
+### Health Probes
+
+The Gateway is fully operational only when all components (Kong, Jumper, Issuer Service) are healthy. This is critical for rolling updates.
+
+Each container has its own `readinessProbe`, `livenessProbe`, and `startupProbe` configuration.
+
+**Probe URLs:**
+
+- `http://localhost:8100/status` as readiness probe for Kong
+- `http://localhost:8100/status` as liveness probe for Kong
+- `http://localhost:8100/status` as startup probe for Kong
+- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
+- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
+- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
+- `http://localhost:8081/health` as readiness probe for each Issuer-service container
+- `http://localhost:8081/health` as liveness probe for each Issuer-service container
+- `http://localhost:8081/health` as startup probe for each Issuer-service container
+
+**Configuration:**
+
+Each component has dedicated probe settings in `values.yaml`. Undefined values use Kubernetes defaults.
+
+| Component        | Helm Values                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| `kong`           | `readinessProbe`, `livenessProbe`, `startupProbe`                                         |
+| `jumper`         | `jumper.readinessProbe`, `jumper.livenessProbe`, `jumper.startupProbe`                    |
+| `issuer-service` | `issuerService.readinessProbe`, `issuerService.livenessProbe`, `issuerService.startupProbe` |
+
+**Example** (Kong container defaults):
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /status
+    port: status
+    scheme: HTTP
+  timeoutSeconds: 5
+  periodSeconds: 20
+  failureThreshold: 4
+readinessProbe:
+  httpGet:
+    path: /status
+    port: status
+    scheme: HTTP
+  timeoutSeconds: 2
+startupProbe:
+  httpGet:
+    path: /status
+    port: status
+    scheme: HTTP
+  initialDelaySeconds: 5
+  timeoutSeconds: 1
+  periodSeconds: 1
+  failureThreshold: 295
+```
 
 ## Security
 
-### Community Edition
+### Admin API Protection
 
-Be aware that exposing the Admin-API for Community Edition can be dangerous, as the API is not protected by any RBAC. Thus it can be accessed by anyone having access to the API url. \
-Therefore the Admin-API-Ingress is disabled. For Mor details see [External access](#External-access).
+**Warning:** Exposing the Admin API for Kong Community Edition is dangerous, as the API is not protected by RBAC and can be accessed by anyone with the API URL. Therefore, the Admin API Ingress is disabled by default.
 
-By default, we protect the Admin API via a dedicated service and route together with the jwt-keycloak. You need to add the used issuer.
+The Admin API is protected via a dedicated service and route with JWT-Keycloak authentication. Configure the issuer in your values.
+
+### htpasswd Authentication
+
+Create htpasswd for the admin user using the Apache htpasswd tool.
+
+**Prerequisite:** An existing `gatewayAdminApiKey` for the deployment.
+
+1. Generate htpasswd: `htpasswd -cb htpasswd admin gatewayAdminApiKey`
+2. Copy the file content into the desired secret (ensure no spaces or line breaks)
+3. Verify (recommended): `htpasswd -vb htpasswd admin gatewayAdminApiKey`
+4. Deploy and verify setup jobs can access the Kong Admin API and the admin route is accessible manually
 
 ### SSL Verification
 
-If you enable SSL verification the Gateway will try to verify all traffic against a bundle of trusted CA certificates which needs to be specified explicitely.
-You can enable this by setting sslVerify to true in the `values.yaml`. If you do so, you must provide your own truststore by setting the `trustedCaCertificates` field with the content of your CA certificates in PEM format otherwise Kong won't start.
+When SSL verification is enabled, the Gateway verifies all traffic against a bundle of trusted CA certificates.
 
-Example _values.yaml_:
+You can enable SSL verification by setting `sslVerify: true` in `values.yaml`. You must provide your own truststore via the `trustedCaCertificates` field with CA certificates in PEM format, otherwise Kong will fail to start.
+
+**Example:**
 
 ```yaml
+sslVerify: true
 trustedCaCertificates: |
   -----BEGIN CERTIFICATE-----
   <CA certificate 01 in PEM format here>
@@ -108,23 +263,23 @@ trustedCaCertificates: |
   -----END CERTIFICATE-----
 ```
 
-Of course Helm let's you reference multiple values files when installing a deployment so you could also outsource `trustedCaCertificates` wo its own values file, for example `my-trustes-ca-certificates.yaml`.
+Helm let's you reference multiple values files during installation. You could leverage this to externalize `trustedCaCertificates` to a separate values file (e.g., `my-trusted-ca-certificates.yaml`).
 
-### Supported TLS versions
+### Supported TLS Versions
 
-Only TLS versions TLSv1.2 and TLSv.1.3 are allowed. TLSv1.1 is NOT supported.
+Supported TLS versions: TLSv1.2 and TLSv1.3. TLSv1.1 is *not* supported.
 
 ### Server Certificate
 
-If "https" is used but no SNI is configured, the API gateway provides a default server certificate issued for "<https://localhost>". You can replace the default certificate by a custom server-certificate by specyfing the secret name in the variable `defaultTlsSecret`.
+When HTTPS is used without SNI configuration, the API gateway provides a default server certificate for `https://localhost`. Replace this default with a custom certificate by specifying the secret name in `defaultTlsSecret`.
 
-Example _values.yaml_:
+**Example:**
 
 ```yaml
 defaultTlsSecret: my-https-secret
 ```
 
-Here are some examples how to create a corresponding secret from PEM files. For more details s. Kubernetes documentation.
+Here are some examples of how to create a custom TLS secret from PEM files. Refer to the [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets) for more details.
 
 ```sh
 kubectl create secret tls my-https-secret --key=key.pem --cert=cert.pem
@@ -133,63 +288,33 @@ oc create secret generic my-https-secret-2 --from-file=tls.key=key.pem  --from-f
 
 ## Bootstrap and Upgrade
 
-Setup and some upgrades require specific migration steps to be run before and after changing the Kong version via a newer image or starting it for the first time.
-There the chart provides specialised jobs for each of those steps.
+The chart provides specialized jobs for database migrations during initial setup and upgrades.
 
 ### Bootstrap
 
-Bootstrapping is required when Kong starts for the first time and needs to setup its database. This task is handled by the job `job-kong-bootstrap.yml`.
-It will be run if "`migrations: bootstrap`" is set in the `values.yaml`. This can be uncommented if no further execution is wished, but this is also prohibited by keeping the job itself.
-Running the job again will do no harm in any way, as the executed bootstrap recognises the database as already initialised.
-If you deploy a new instance of this Gateway, make sure migrations is set to `bootstrap`.
+Bootstrapping is required when Kong starts for the first time to set up its database. Set `migrations: bootstrap` in `values.yaml` for new deployments. The bootstrap job is idempotent — running it multiple times is safe.
 
 ### Upgrade
 
-Upgrading to a newer version may require running migration steps (e.g. database changes). To run those jobs set "`migrations: upgrade`" in the `values.yaml`.
-As a result `job-kong-pre-upgrade-migrations.yml` will run and `job-kong-post-upgrade-migrations.yml` will be run after successfull deployments to complete the upgrade.
+Upgrading to a newer version may require database migrations. Set `migrations: upgrade` in `values.yaml` to run pre- and post-upgrade migration jobs.
 
-**Warning:** Uncomment "`migrations: upgrade`" if you deploy again after a successfull deployment or set it to "`migrations: bootstrap`". Otherwise migrations will be executed again.
+**Warning:** Remove or comment out `migrations: upgrade` after a successful deployment to prevent re-running migrations.
 
-**Note:** Those jobs are only meant to be used for upgrading.
-
-**Important:** For detailed upgrade instructions, breaking changes, and migration guides between versions, please refer to [UPGRADE.md](UPGRADE.md).
-
-## htpasswd
-
-You can create the htpasswd for admin user with Apache htpasswd tool.
-
-**Prerequisit:** existing gatewayAdminApiKey for the deployment.
-
-1. Execute the following statement: `htpasswd -cb htpasswd admin gatewayAdminApiKey`
-2. Look up the htpasswd file you've just created and copy its content into the desired secret. \
-   Make sure no spaces or line breaks are copied.
-3. Optional but recommended: check if htpasswd is valid: `htpasswd -vb htpasswd admin gatewayAdminApiKey`
-4. Deploy and check if setup jobs can access the Kong admin-api and also if amin-api is accessible via the admin-api-route.
+**Important:** For detailed upgrade instructions, breaking changes, and migration guides, see [UPGRADE.md](UPGRADE.md).
 
 ## Advanced Features
 
-During the operation of the Gateway we discovered some issues that need some more advanced Kong or Kubernetes settings.
-The following paragraph explains which helm-chart settings are responsible, how to use them and what effects they have.
+The following sections describe advanced configuration options for production deployments.
 
 ### Autoscaling
 
+Some environments (especially production workloads) can benefit from autoscaling to automatically adjust workload resources. This chart provides two different autoscaling options: standard HPA and KEDA-based autoscaling.
+
 #### Standard HPA (Horizontal Pod Autoscaler)
 
-In some environments, especially in AWS "prod", we use the autoscaler to update workload ressources.
+See the [Kubernetes HPA documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) for details.
 
-The autoscaling is documented [in the HPA section](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).
-(Since chart version `5.4.0` we use kubernetes API `autoscaling/v2`)
-
-Following helm-chart variables controls the autoscaler properties for the Gateway:
-
-| Helm-Chart variable                       | Kubernetes property (HorizontalPodAutoscaler)     | default value | documentation link |
-| ----------------------------------------- | ------------------------------------------------- | ------------- | ------------------ |
-| `hpaAutoscaling.enabled`                  |                                                   | false         |                    |
-| `hpaAutoscaling.minReplicas`              | `spec.minReplicas`                                | 3             | [k8s_hpe_spec]     |
-| `hpaAutoscaling.maxReplicas`              | `spec.maxReplicas`                                | 10            | [k8s_hpe_spec]     |
-| `hpaAutoscaling.cpuUtilizationPercentage` | `spec.metrics.resource.target.averageUtilization` | 80            | [k8s_hpe_spec]     |
-
-[k8s_hpe_spec]: https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/horizontal-pod-autoscaler-v2/#HorizontalPodAutoscalerSpec
+For configuration options, see the `hpaAutoscaling.*` values in the [Parameters](#parameters) section below.
 
 #### KEDA-Based Autoscaling (Advanced)
 
@@ -207,73 +332,40 @@ Following helm-chart variables controls the autoscaler properties for the Gatewa
 - Victoria Metrics must be accessible (for custom metric scaling)
 - TriggerAuthentication or ClusterTriggerAuthentication resource must exist (for Victoria Metrics auth)
 
-**Important:** `kedaAutoscaling` and `autoscaling` (HPA) are mutually exclusive. Enable only one at a time.
+**Important:** `kedaAutoscaling` and `hpaAutoscaling` are mutually exclusive. Enable only one.
 
-**Minimal Configuration Example** (CPU + Memory only):
+**Minimal Configuration** (CPU and memory only):
 
 ```yaml
 kedaAutoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 10
-  
   triggers:
     cpu:
       enabled: true
       threshold: 70  # Scale up when CPU > 70%
-    
     memory:
       enabled: true
       threshold: 85  # Scale up when memory > 85%
-    
     prometheus:
       enabled: false
-    
     cron:
       enabled: false
 ```
 
-For a complete configuration example with all available options, see the `values.yaml` file.
-
-**Key Configuration Options:**
-
-| Helm-Chart variable                                                  | Description                                      | Default |
-|----------------------------------------------------------------------|--------------------------------------------------|---------|
-| `kedaAutoscaling.enabled`                                            | Enable KEDA autoscaling                          | `false` |
-| `kedaAutoscaling.minReplicas`                                        | Minimum replica count                            | `2`     |
-| `kedaAutoscaling.maxReplicas`                                        | Maximum replica count                            | `10`    |
-| `kedaAutoscaling.pollingInterval`                                    | Metric check frequency (seconds)                 | `30`    |
-| `kedaAutoscaling.cooldownPeriod`                                     | Scale-down cooldown (seconds)                    | `300`   |
-| **CPU Triggers (Per-Container)**                                     |                                                  |         |
-| `kedaAutoscaling.triggers.cpu.enabled`                               | Enable CPU-based scaling for any container       | `true`  |
-| `kedaAutoscaling.triggers.cpu.containers.kong.enabled`               | Enable CPU monitoring for kong container         | `true`  |
-| `kedaAutoscaling.triggers.cpu.containers.kong.threshold`             | CPU threshold for kong container (%)             | `70`    |
-| `kedaAutoscaling.triggers.cpu.containers.jumper.enabled`             | Enable CPU monitoring for jumper container       | `true`  |
-| `kedaAutoscaling.triggers.cpu.containers.jumper.threshold`           | CPU threshold for jumper container (%)           | `70`    |
-| `kedaAutoscaling.triggers.cpu.containers.issuerService.enabled`      | Enable CPU monitoring for issuer-service         | `true`  |
-| `kedaAutoscaling.triggers.cpu.containers.issuerService.threshold`    | CPU threshold for issuer-service (%)             | `70`    |
-| **Memory Triggers (Per-Container)**                                  |                                                  |         |
-| `kedaAutoscaling.triggers.memory.enabled`                            | Enable memory-based scaling for any container    | `true`  |
-| `kedaAutoscaling.triggers.memory.containers.kong.enabled`            | Enable memory monitoring for kong container      | `true`  |
-| `kedaAutoscaling.triggers.memory.containers.kong.threshold`          | Memory threshold for kong container (%)          | `85`    |
-| `kedaAutoscaling.triggers.memory.containers.jumper.enabled`          | Enable memory monitoring for jumper container    | `true`  |
-| `kedaAutoscaling.triggers.memory.containers.jumper.threshold`        | Memory threshold for jumper container (%)        | `85`    |
-| `kedaAutoscaling.triggers.memory.containers.issuerService.enabled`   | Enable memory monitoring for issuer-service      | `true`  |
-| `kedaAutoscaling.triggers.memory.containers.issuerService.threshold` | Memory threshold for issuer-service (%)          | `85`    |
-| **Other Triggers**                                                   |                                                  |         |
-| `kedaAutoscaling.triggers.prometheus.enabled`                        | Enable custom metric scaling (Victoria Metrics)  | `true`  |
-| `kedaAutoscaling.triggers.cron.enabled`                              | Enable schedule-based scaling                    | `false` |
+For configuration options, see the `kedaAutoscaling.*` values in the [Parameters](#parameters) section below.
 
 **References:**
 - [KEDA Documentation](https://keda.sh/docs/)
 - [KEDA Scalers](https://keda.sh/docs/scalers/)
 - [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
-### Argo Rollouts (Progressive Delivery - BETA)
+### Argo Rollouts (Progressive Delivery)
 
-**Available since chart version `8.1.0`**
+**Available since chart version `8.1.0` — BETA**
 
-Please note that the helm value api is in early state and values as well as templates are suspect to change, which might break your configuration.
+**Note:** The Helm values API is in early stages. Values and templates may change in future versions.
 
 [Argo Rollouts](https://argoproj.github.io/rollouts/) provides advanced deployment capabilities with progressive delivery strategies like canary and blue-green deployments. When enabled, Argo Rollouts manages the rollout process while maintaining the existing Deployment resource through `workloadRef`.
 
@@ -291,13 +383,13 @@ Please note that the helm value api is in early state and values as well as temp
 
 **Important:** `argoRollouts` and `hpaAutoscaling` (HPA) are mutually exclusive. KEDA autoscaling can be used together with Argo Rollouts.
 
-**Initial take over from an existing deployment**
+**Initial Takeover from Existing Deployment**
 
-When Argo Rollouts takes over responsibility for the gateway pods, it controls scaling up the new ReplicaSet and scaling down the old one. This creates a situation where the old Deployment goes out of sync with Argo CD, which attempts to scale up the old Deployment again. 
-Normally, the Helm chart does not render the replica field. However, during the initial takeover—especially when using autoscaling—you must explicitly set replicas to 0 once by configuring `argoRollouts.workloadRef.explicitDownscale=true`.
-After the first migration to Argo Rollouts, remove this property (it defaults to false) to resume normal operation.
+When enabled, Argo Rollouts manages the rollout process while maintaining the existing Deployment resource through `workloadRef`. It controls scaling up new ReplicaSets and scaling down old ones. This creates a situation where the old Deployment goes out of sync with Argo CD, which attempts to scale up the old Deployment again.
 
-**Minimal Configuration Example** (Canary without analysis):
+Normally, the Helm chart does not render the replica field. However, during initial takeover (especially when using autoscaling), you must explicitly set replicas to 0 by configuring `argoRollouts.workloadRef.explicitDownscale=true`. After the first migration to Argo Rollouts, remove this property (it defaults to false) to resume normal operation.
+
+**Minimal Configuration** (canary without analysis):
 
 ```yaml
 argoRollouts:
@@ -315,7 +407,7 @@ argoRollouts:
             duration: 5m
 ```
 
-**Advanced Configuration Example** (Canary with automated analysis):
+**Advanced Configuration** (canary with automated analysis):
 
 ```yaml
 argoRollouts:
@@ -357,7 +449,7 @@ argoRollouts:
         basicKey: "basic-auth"
 ```
 
-**Blue-Green Deployment Example**:
+**Blue-Green Deployment:**
 
 ```yaml
 argoRollouts:
@@ -373,18 +465,7 @@ argoRollouts:
           - templateName: success-rate-analysis
 ```
 
-**Key Configuration Options:**
-
-| Helm-Chart variable                                    | Description                                           | Default  |
-|--------------------------------------------------------|-------------------------------------------------------|----------|
-| `argoRollouts.enabled`                                 | Enable Argo Rollouts progressive delivery             | `false`  |
-| `argoRollouts.strategy.type`                           | Strategy type: "canary" or "blueGreen"                | `canary` |
-| `argoRollouts.strategy.canary.steps`                   | Canary rollout steps (weight, pause, analysis)        | See docs |
-| `argoRollouts.strategy.canary.analysis.startingStep`   | Step at which to start background analysis            | (unset)  |
-| `argoRollouts.strategy.blueGreen`                      | Blue-green strategy configuration (autoPromotionEnabled, scaleDownDelaySeconds, etc.) | See docs |
-| `argoRollouts.analysisTemplates.enabled`               | Enable automated analysis templates                   | `true`   |
-| `argoRollouts.analysisTemplates.errorRate.enabled`     | Enable error rate analysis                            | `true`   |
-| `argoRollouts.analysisTemplates.successRate.enabled`   | Enable success rate analysis                          | `true`   |
+For configuration options, see the `argoRollouts.*` values in the [Parameters](#parameters) section below.
 
 For detailed configuration, examples, and troubleshooting, see the [Argo Rollouts Feature Documentation](docs/ARGO_ROLLOUTS_FEATURE.md).
 
@@ -393,131 +474,75 @@ For detailed configuration, examples, and troubleshooting, see the [Argo Rollout
 - [Argo Rollouts Canary Strategy](https://argoproj.github.io/rollouts/features/canary/)
 - [Argo Rollouts Analysis](https://argoproj.github.io/rollouts/features/analysis/)
 
-### PodAntiaffinity & TopologyKey
+### Pod Anti-Affinity and Topology Key
 
-In Kubernetes it is recommended to distribute the pods over several nodes. If a kubernetes node gets into problems, there are enough pods on other nodes to take on the load.
-For this reason we provide the `topologyKey` flag in our helm-chart.
+Distribute pods across multiple nodes for high availability. If one node fails, pods on other nodes continue serving traffic.
 
-| Helm-Chart variable | Kubernetes property (Deployment,Pod)        | default value          | documentation link |
-| ------------------- | ------------------------------------------- | ---------------------- | ------------------ |
-| `topologyKey`       | `spec.affinity.podAntiAffinity.topologyKey` | kubernetes.io/hostname | [topologyKey]      |
+Configure pod distribution using the `topologyKey` setting. See the [Parameters](#parameters) section for configuration options and the [Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity) for details on pod anti-affinity.
 
-[topologyKey]: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+### Automatic Certificate and Key Rotation
 
-### Security Context
+**Available since chart version `6.0.0`**
 
-The chart includes hardened security contexts by default that are compliant with most Kubernetes platform requirements.
+The Gateway supports automatic rotation of JWT signing keys and certificates used by the Issuer Service and Jumper components. This feature provides zero-downtime key rotation with graceful transitions.
 
-**Default Security Contexts:**
-- All containers run as non-root user
-- Read-only root filesystems where applicable
-- Dropped capabilities (ALL)
-- No privilege escalation
-- Specific user/group IDs configured per component
+**How It Works:**
 
-**Customization:**
-Security contexts can be customized per component or globally. See `values.yaml` for all available options:
+The rotation system uses a three-key approach:
+- **prev-tls.*** - Previous key (for verifying older tokens)
+- **tls.*** - Current key (for signing new tokens)
+- **next-tls.*** - Next key (pre-distributed before becoming active)
 
-```yaml
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  # ... additional settings
+When certificates are renewed:
+1. Current key moves to previous (`tls.*` → `prev-tls.*`)
+2. Next key becomes current (`next-tls.*` → `tls.*`)
+3. New certificate becomes next (source → `next-tls.*`)
 
-containerSecurityContext:
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  # ... additional settings
-```
+This ensures:
+- Resource servers can verify tokens signed with the previous key
+- The next key is pre-distributed before activation
+- Smooth rotation despite eventual consistency in volume mount propagation
 
-### Storage and Ingress Classes
+**Prerequisites:**
+- [cert-manager](https://cert-manager.io/) installed and configured
+- [gateway-rotator](https://github.com/telekom/gateway-rotator) operator deployed
 
-**Storage Class:**
-By default, the chart uses the cluster's default storage class. Override per component if needed:
+**Configuration:**
+
+Enable automatic rotation by setting `keyRotation.enabled=true` in `values.yaml`:
 
 ```yaml
-postgresql:
-  persistence:
-    storageClassName: "my-storage-class"  # Or "" for cluster default
+keyRotation:
+  enabled: true
 ```
 
-**Ingress Class:**
-Ingress class configuration supports cascading defaults:
+This deploys the necessary Certificate resource that cert-manager will manage. The gateway-rotator operator watches for certificate renewals and maintains the three-key rotation pattern automatically.
+
+For a more detailed description of the rotation mechanism, see the [gateway-rotator documentation](https://github.com/telekom/gateway-rotator).
+
+**Manual Secret Management:**
+
+Alternatively, provide your own secrets:
 
 ```yaml
-# Set global default for all ingresses
-global:
-  ingress:
-    ingressClassName: nginx
+jumper:
+  existingJwkSecretName: my-custom-jwk-secret
 
-# Or override per component
-proxy:
-  ingress:
-    className: traefik  # Takes precedence over global setting
+issuerService:
+  existingJwkSecretName: my-custom-jwk-secret
 ```
 
-### readinessProbe & livenessProbe
+**Important:** Both components must use identical secrets. The secret must conform to the three-key format with `prev-tls.*`, `tls.*`, and `next-tls.*` fields.
 
-This Gateway is fully operational only when all components Kong, Jumper and Issuer-Service are operational. This is especially important when deploying as "Rolling Update" in customer environments.
-For this reason, each container deployed in a gateway pod has its own settings for `readinessProbe`, `livenessProbe` and `startupProbe` as well as configurable values for all health probes options.
+**References:**
+- [cert-manager Documentation](https://cert-manager.io/docs/)
+- [gateway-rotator Key Rotation Process](https://github.com/telekom/gateway-rotator#key-rotation-process)
 
-The Probe-URLs are configured as follows:
+### Kong Latency Tuning
 
-- `http://localhost:8100/status` as readiness probe for Kong
-- `http://localhost:8100/status` as liveness probe for Kong
-- `http://localhost:8100/status` as startup probe for Kong
-- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
-- `http://localhost:8081/health` as readiness probe for each Issuer-service container
-- `http://localhost:8081/health` as liveness probe for each Issuer-service container
-- `http://localhost:8081/health` as startup probe for each Issuer-service container
+Large updates via the Admin API can cause latency in the Gateway runtime. This is related to [Kong issue #7543](https://github.com/Kong/kong/issues/7543).
 
-Each component within a stargate pod can be configured with its own settings for `readinessProbe`, `livenessProbe` and `startupProbe` as well as configurable values for all health probes options.
-
-For this, each component has its own section in the `values.yaml` file with minimum defaults according to http path as well as own defaults where recommended. All values not defined there lead to usage of kubernetes defaults for those.
-
-| Component        | Helm values for health probe configs                                                      |
-| ---------------- | ----------------------------------------------------------------------------------------- |
-| `kong`           | `readinessProbe`,`livenessProbe`,`startupProbe`                                           |
-| `jumper`         | `jumper.readinessProbe`,`jumper.livenessProbe`,`jumper.startupProbe`                      |
-| `issuer-service` | `issuerService.readinessProbe`,`issuerService.livenessProbe`,`issuerService.startupProbe` |
-
-For example the default for the kong container is the following which allows to change and overwrite all available properties without the need of redefining all defaults from kubernetes here in the chart:
-
-```yaml
-livenessProbe:
-  httpGet:
-    path: /status
-    port: status
-    scheme: HTTP
-  timeoutSeconds: 5
-  periodSeconds: 20
-  failureThreshold: 4
-readinessProbe:
-  httpGet:
-    path: /status
-    port: status
-    scheme: HTTP
-  timeoutSeconds: 2
-startupProbe:
-  httpGet:
-    path: /status
-    port: status
-    scheme: HTTP
-  initialDelaySeconds: 5
-  timeoutSeconds: 1
-  periodSeconds: 1
-  failureThreshold: 295
-```
-
-### Latency in Kong (chart 5.2.2)
-
-With the default setting, Kong has the following problem: while Rover is doing larger updates via the Admin-API (keyword "Reconciller"),unacceptable latencies arise in the Gateway runtime.
-
-The problem is similar to the following already reported but still open [issue #7543](https://github.com/Kong/kong/issues/7543) in Github
-
-The solution to the problem seems to be in asynchronous refresh or routes and tuning with the following Kong variables:
+You can tune Kong's asynchronous route refresh behavior with these variables:
 
 | Helm-Chart variable        | Kong property                      | default value | documentation link              |
 | -------------------------- | ---------------------------------- | ------------- | ------------------------------- |
@@ -534,15 +559,17 @@ The solution to the problem seems to be in asynchronous refresh or routes and tu
 
 ## Parameters
 
-This is a short overlook about important parameters in the `values.yaml`.
+The following table provides a comprehensive list of all configurable parameters in `values.yaml`:
 
 {{ template "chart.valuesSection" . }}
 
 ## Troubleshooting
 
-If the Gateway deployment fails to come up, please have a look at the logs of the container.
+If the Gateway deployment fails to start, check the container logs for error messages.
 
-**Log message:**
+### SSL Verification Error
+
+**Symptom:**
 
 ```
 Error: /usr/local/share/lua/5.1/opt/kong/cmd/start.lua:37: nginx configuration is invalid (exit code 1):
@@ -550,17 +577,7 @@ nginx: [emerg] SSL_CTX_load_verify_locations("/usr/local/opt/kong/tif/trusted-ca
 nginx: configuration file /opt/kong/nginx.conf test failed
 ```
 
-**Solution:**  
-This error happens if `sslVerify` is set to true but no valid certificates could be found.  
-Please make sue that `trustedCaCertificates` is set probably or set sslVerify to false if you don't wish to use ssl verification.
-
-## Compatibility
-
-| Environment | Compatible |
-| ----------- | ---------- |
-| OTC         | Yes        |
-| AppAgile    | Unverified |
-| AWS EKS     | Yes        |
-| CaaS        | Yes        |
-
-This Helm Chart is also compatible with Sapling, DHEI's universal solution for deploying Helm Charts to multiple Telekom cloud platforms.
+**Solution:**
+This error occurs when `sslVerify` is set to `true` but no valid certificates are provided. Either:
+- Set `trustedCaCertificates` with valid CA certificates in PEM format
+- Set `sslVerify: false` if SSL verification is not required

@@ -8,9 +8,9 @@ SPDX-License-Identifier: CC0-1.0
 
 This document provides guidance for upgrading between versions of the Gateway Helm chart.
 
-## From 8.x.x To Version 9.x.x
+## From 8.x.x to 9.x.x
 
-Version 9.0.0 introduces several breaking changes that modernize the chart structure and align with Kubernetes best practices. Please review all changes carefully before upgrading.
+Version 9.0.0 introduces several breaking changes that modernize the chart structure and align with Kubernetes best practices. Review all changes carefully before upgrading.
 
 ### Chart Distribution via OCI Registry
 
@@ -178,14 +178,13 @@ global:
 - Alternatively, update Prometheus queries, dashboards, and alerts to use the new `ei_telekom_de_zone` and `ei_telekom_de_environment` labels
 
 **Impact on KEDA and Argo Rollouts:**
-- KEDA queries updated to use `ei_telekom_de_environment` and `ei_telekom_de_zone`
+- KEDA queries now use `ei_telekom_de_environment` and `ei_telekom_de_zone`
 - Argo Rollouts analysis templates use new `environment` argument instead of `namespace`
-- Existing analysis templates will need updates if you customized them
+- Custom analysis templates will require updates
 
 ### PostgreSQL Subchart Integration
 
-PostgreSQL is no longer a Helm subchart dependency and has been integrated directly into the main chart templates.
-The values structure remains identical under `postgresql:` key, no changes required.
+PostgreSQL is no longer a Helm subchart dependency and has been integrated directly into the main chart templates. The values structure remains identical under the `postgresql:` key — no changes required.
 
 ### Pipeline Metadata Removal
 
@@ -200,7 +199,7 @@ ENI-specific pipeline deployment metadata has been removed as it is no longer us
 
 **Storage Class:**
 - Changed from hardcoded `gp2` (AWS-specific) to cluster default (`storageClassName: ""`)
-- Override per component if needed
+- Override per component as needed
 
 **Ingress Class:**
 - Changed from hardcoded `nginx` to cluster default
@@ -218,26 +217,25 @@ proxy:
     className: traefik
 ```
 
-## From 7.x.x To Version 8.x.x
+## From 7.x.x to 8.x.x
 
-### HPA configuration
+### HPA Configuration
 
-The HPA configuration has been renamed from `autoscaling` to `hpaAutoscaling` in `values.yaml`.
-You can now select between using hpaAutoscaling and kedaAutoscaling. More information about this is provided in [Autoscaling](#autoscaling).
+The HPA configuration has been renamed from `autoscaling` to `hpaAutoscaling` in `values.yaml`. You can now choose between `hpaAutoscaling` and `kedaAutoscaling`. See the [Autoscaling](README.md#autoscaling) section for details.
 
 ### Migration to gateway-kong-image 1.1.0
 
-This release upgrades the default image to version 1.1.0, which is based on Kong 3.9.1. This upgrade requires an important step during the Helm upgrade process.
+This release upgrades the default image to version 1.1.0 (based on Kong 3.9.1) and requires an important migration step during the Helm upgrade process.
 
 #### Required Migration Step
 
-For a successful upgrade, you must set the `migrations: upgrade` Helm value to trigger the necessary Kong migration jobs. After a successful upgrade, this value can be safely removed. The migration process is idempotent, so multiple Helm upgrades with this property will not cause issues.
+Set the `migrations: upgrade` Helm value to trigger necessary Kong migration jobs. After a successful upgrade, remove this value. The migration process is idempotent — multiple upgrades with this property will not cause issues.
 
-⚠️ Warning: This upgrade will run Kong migration scripts that modify the database. Please create a consistent backup before upgrading. The Kong Admin API must be disabled during both the backup creation and the upgrade process. Once the upgrade is complete and the gateway is running correctly, the Admin API can be re-enabled. The control plane will then synchronize the Kong configuration to the desired state.
+⚠️ **Warning:** This upgrade runs Kong migration scripts that modify the database. Create a backup before upgrading. Disable the Kong Admin API during backup and upgrade. Once complete and the gateway is running, re-enable the Admin API — the control plane will then synchronize the Kong configuration.
 
 #### Sample Upgrade Process
 
-A simple upgrade process would look like the following (assuming you're in the root directory of the Helm chart with an existing release):
+Example upgrade process (assuming you're in the Helm chart root directory with an existing release):
 
 ```bash
 helm upgrade <releasename> . -f <customvaluefilereference> --set migrations=upgrade
@@ -245,20 +243,20 @@ helm upgrade <releasename> . -f <customvaluefilereference> --set migrations=upgr
 
 #### Rollback Considerations
 
-While initial testing suggests that a database upgraded to gateway-kong-image 1.1.0 (Kong 3.9.1) can still be used with Helm chart version 7.x.x, this compatibility cannot be guaranteed for all Kong features. In case of a rollback:
+While initial testing suggests a database upgraded to gateway-kong-image 1.1.0 (Kong 3.9.1) works with Helm chart version 7.x.x, compatibility cannot be guaranteed for all Kong features. In case of rollback:
 
-Be prepared to restore the previous database state
-Be aware that rolling back to an older database state will likely cause synchronization issues between gateway-kong and the control plane
-If rollback is necessary, you will need to trigger a full reconfiguration to synchronize with changes in the control plane
+- Be prepared to restore the previous database state
+- Rolling back to an older database state will likely cause synchronization issues between gateway-kong and the control plane
+- Trigger a full reconfiguration to synchronize with control plane changes
 
 
-## From 6.x.x To Version 7.x.x
+## From 6.x.x to 7.x.x
 
-### Health probe configurations
+### Health Probe Configuration
 
-If you have specific adjust helm values to reconfigure the health probes of the chart, take a look to the new clean way of configuring those. We do not have any specific variables for the probes anymore and we rely on kubernetes defaults more.
+If you have custom Helm values for health probes, review the new configuration method. Specific probe variables have been removed in favor of Kubernetes defaults.
 
-In our deployments we just render the yaml values as defined in the values.yaml. The default for this specific probe from values.yaml is the following:
+Deployments now render YAML values as defined in `values.yaml`. Example default probe configuration:
 
 ```yaml
 livenessProbe:
@@ -273,7 +271,7 @@ livenessProbe:
 
 ### Certificate Changes
 
-The following configuration is now obsolete. The corresponding Secret is not rendered anymore.
+The following configuration is now obsolete. The corresponding Secret is no longer rendered.
 
 ```yaml
 issuerService:
@@ -282,19 +280,19 @@ issuerService:
   privateJson: changeme
 ```
 
-There are now two options of prodiving a secret to enable a smooth rotation of private/public keys and certificates.
+Two options are now available for private/public key and certificate rotation:
 
-1. Use `keyRotation.enabled=true` to provide manifests for an automatic rotation. This needs a running cert-manager as well as a running [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process)
-2. Provide own secrets and reference them with setting `jumper.existingJwkSecretName` and `issuerService.existingJwkSecretName`. The secrets have to be identical and be conform to the format described in the [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process)
+1. Use `keyRotation.enabled=true` to deploy manifests for automatic rotation. This requires running cert-manager and our [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process) operator.
+2. Provide your own secrets via `jumper.existingJwkSecretName` and `issuerService.existingJwkSecretName`. Secrets must be identical and conform to the format described in [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process).
 
-For more information about the certificate rotation please refer to the [cert-manager](https://cert-manager.io/docs/) documentation as well as the documentation of the [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process).
+Refer to [cert-manager](https://cert-manager.io/docs/) and [gateway-rotator](https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process) documentation for more information.
 
 
-## From 5.x.x to Version 6.x.x
+## From 5.x.x to 6.x.x
 
-We streamlined the ingress configurations to be more capable of handling multiple hostnames. Additionally we aligned the configuration options according best practices in helm charts in general.
+Ingress configuration has been streamlined to support multiple hostnames and align with Helm chart best practices.
 
-Before your ingress configuration might have looked like this:
+**Before:**
 
 ```yaml
 proxy:
@@ -309,7 +307,7 @@ adminApi:
     tlsSecret: my-provided-secret
 ```
 
-Now it looks like this:
+**After:**
 
 ```yaml
 proxy:
@@ -336,62 +334,61 @@ adminApi:
           - admin-api.example.com
 ```
 
-This allows a more flexible configuration of the ingress and most importantly allows to add multiple hosts with different tls secrets linked to them. Please pay attention that the properties and the corresponding functionality of `proxy.tls.enabled` as well as `adminApi.tls.enabled` are not touched by this change.
+This enables flexible ingress configuration with multiple hosts and different TLS secrets per host. Note: `proxy.tls.enabled` and `adminApi.tls.enabled` properties remain unchanged.
 
 
-## From 4.x.x to Version 5.x.x
+## From 4.x.x to 5.x.x
 
-Starting from version 5 and above the htpasswd needs to be generated and set manually. \
-This is necessary as double encoded base64 secrets are not supported by Vault. \
-See chapter [htpasswd](#htpasswd).
+Starting from version 5, htpasswd must be generated and set manually. This is required because Vault does not support double-encoded base64 secrets. See the [htpasswd](README.md#htpasswd) section.
 
 
-## From 2.x.x and lower to 4.x.x
+## From 2.x.x and Lower to 4.x.x
 
-The migration from 2.x.x to 4.x.x is not possible. Please upgrade first from 2.x.x to 3.x.x as described above and afterwards without any migrations configuration from 3.x.x to 4.x.x
+Direct migration from 2.x.x to 4.x.x is not supported. First upgrade from 2.x.x to 3.x.x as described above, then upgrade from 3.x.x to 4.x.x without any migration configuration.
 
 
-## From 2.x.x and lower to 3.x.x
+## From 2.x.x and Lower to 3.x.x
 
-We changed the integration of the ENI-plugins. Therefore names of the plugins changed and and eni-prefixed plugins have been removed from the image. Therefore the configuration of Kong itself, precisely the database, needs to be updated.
-You can do this by activating the jobs migration. This will delete the "old" ENI-plugins to allow the configuration of the new ones.
+ENI plugin integration has changed. Plugin names were updated and ENI-prefixed plugins were removed from the image. The Kong database configuration must be updated accordingly.
+
+Activate the jobs migration to delete old ENI plugins and enable the new ones:
 
 ```yaml
 migrations: jobs
 ```
 
 
-## From 1.7.x and lower to 1.8.x and up
+## From 1.7.x and Lower to 1.8.x and Up
 
-The bundled Zipkin-plugin has been replaced by the ENI-Zipkin pluging. Behaviour and configuration differ slightly to the used one.
-To avoid complications, we strongly recommend removing the existing Zipkin-Plugin before upgrading. This can be done via a DELETE call on the Admin-API (Token required).
+The bundled Zipkin plugin has been replaced by ENI-Zipkin plugin. Behavior and configuration differ slightly.
 
-Lookup all plugins and find the Zipkin-Plugin-ID:
+Strongly recommended: Remove the existing Zipkin plugin before upgrading via a DELETE call on the Admin API (token required).
+
+**Look up all plugins and find the Zipkin plugin ID:**
 
 ```sh
 via GET on https://admin-api-url.me/plugins
 ```
 
-Deleting the existing plugin:
+**Delete the existing plugin:**
 
 ```sh
 via DELETE on https://admin-api-url.me/plugins/<zipkinPluginId>
 ```
 
 
-## From 1.5.x and lower to 1.6.x
+## From 1.5.x and Lower to 1.6.x
 
-With introduction of Kong CE, a dedicated Admin-API handling has been introduced to proted the Admin-API. This required changes to the ingress of the Admin-API.
-Those changes are only reflected in the `ingress-admin.yml` and not in the `route-admin.yml`. Using Kong CE will work, but deploying the Admin-API-Route will provide unsecured access to the Admin-API.
+Kong CE introduces dedicated Admin API handling to protect the Admin API, requiring changes to the Admin API ingress.
 
-
-## To 1.24.0 and up
-
-This version introduces Kong 2.8.1 and requires migrations to be run.\
-It also requires to adapt to the changed `securityContext` settings of the `plugins` in the `values.yaml`.
+Changes are reflected in `ingress-admin.yml` only, not in `route-admin.yml`. Kong CE works correctly, but deploying the Admin-API Route provides unsecured access to the Admin API.
 
 
-## To 1.23.0 and up
+## To 1.24.0 and Up
 
-Version 1.23.0 introduces a new issuer service version. If in use, this requires to set values for the new secret `secret-issuer-service.yml`. \
-Replace `jsonWebKey: changeme` and `publicKey: changeme`.
+This version introduces Kong 2.8.1 and requires running migrations. It also requires adapting to changed `securityContext` settings for `plugins` in `values.yaml`.
+
+
+## To 1.23.0 and Up
+
+Version 1.23.0 introduces a new issuer service version. If using the issuer service, set values for the new secret `secret-issuer-service.yml`. Replace `jsonWebKey: changeme` and `publicKey: changeme`.

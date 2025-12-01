@@ -25,6 +25,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      actions: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5

@@ -1,0 +1,127 @@
+{{/*
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.argoRollouts.enabled }}
+{{- include "argoRollouts.validate" . -}}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+spec:
+  # ============================================================================
+  # Replica Management
+  # ============================================================================
+  {{- if not .Values.kedaAutoscaling.enabled }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  
+  # ============================================================================
+  # Workload Reference
+  # ============================================================================
+  # Reference to existing Deployment resource
+  # Argo Rollouts will manage this Deployment during progressive delivery
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}
+    scaleDown: {{ .Values.argoRollouts.workloadRef.scaleDown | default "progressively" }}
+  
+  progressDeadlineSeconds: {{ .Values.argoRollouts.progressDeadlineSeconds | default 1200 }}
+
+  # ============================================================================
+  # Selector
+  # ============================================================================
+  selector:
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
+  
+  # ============================================================================
+  # Rollout Strategy
+  # ============================================================================
+  strategy:
+{{- if eq .Values.argoRollouts.strategy.type "canary" }}
+    canary:
+      # ============================================================================
+      # Canary Configuration
+      # ============================================================================
+      {{- with .Values.argoRollouts.strategy.canary.additionalProperties }}
+      {{- toYaml . | nindent 6}}
+      {{- end }}
+
+      # ============================================================================
+      # Traffic Routing
+      # ============================================================================
+      # -- Name of the canary service (receives canary traffic)
+      canaryService: "{{ .Release.Name }}-proxy-canary"
+      # -- Name of the stable service (receives stable traffic)
+      stableService: "{{ .Release.Name }}-proxy"
+
+      canaryMetadata:
+        labels:
+          role: canary
+      stableMetadata:
+        labels:
+          role: stable
+
+      trafficRouting:
+        nginx:
+          stableIngress: "{{ .Release.Name }}-proxy"
+          additionalIngressAnnotations:
+            canary-by-header: x-canary
+
+      # ============================================================================
+      # Canary Steps
+      # ============================================================================
+      {{- with .Values.argoRollouts.strategy.canary.steps }}
+      steps:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      # ============================================================================
+      # Background Analysis (Optional)
+      # ============================================================================
+      {{- if .Values.argoRollouts.strategy.canary.analysis }}
+      {{- if .Values.argoRollouts.strategy.canary.analysis.templates }}
+      analysis:
+        {{- with .Values.argoRollouts.strategy.canary.analysis.startingStep }}
+        startingStep: {{ . }}
+        {{- end }}
+        templates:
+        {{- range .Values.argoRollouts.strategy.canary.analysis.templates }}
+        - templateName: {{ $.Release.Name }}-{{ .templateName }}
+        {{- end }}
+        args:
+          - name: environment
+            value: {{ .Values.global.environment }}
+          - name: zone
+            value: {{ .Values.global.zone | quote }}
+          - name: instance
+            value: {{ .Release.Name }}-kong
+        {{- if .Values.argoRollouts.strategy.canary.analysis.args }}
+        {{- with .Values.argoRollouts.strategy.canary.analysis.args }}
+          {{- toYaml . | nindent 10  }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+{{- else if eq .Values.argoRollouts.strategy.type "blueGreen" }}
+    blueGreen:
+      # Blue-Green strategy configuration
+      # This can be extended based on requirements
+      activeService: {{ .Release.Name }}-proxy
+      previewService: {{ .Release.Name }}-proxy-canary
+
+      {{- with .Values.argoRollouts.strategy.blueGreen }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+
+{{- end }}
+  
+  # ============================================================================
+  # Revision History
+  # ============================================================================
+  revisionHistoryLimit: 10
+{{- end }}

@@ -1,0 +1,42 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if eq (include "kong.configuration" $) "true" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-kong-configuration
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "-1"
+spec:
+  backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
+  template:
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      containers:
+      - name: kong-admin-route
+        image: {{ include "images.job" $ }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
+        command: [ "/bin/sh" ]
+        args: [ "-c", "/tmp/configuration.sh" ]
+        env:
+        - name: X_TARDIS_GATEWAY_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}
+              key: gatewayAdminApiKey
+        volumeMounts:
+          {{- include "kong.configuration.volumeMounts" $ | indent 8 }}
+      restartPolicy: OnFailure
+      volumes:
+      {{- include "kong.configuration.volumes" $ | indent 6 }}
+{{- end -}}

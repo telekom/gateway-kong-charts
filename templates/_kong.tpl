@@ -1,136 +1,8 @@
-{{- define "kong.labels" -}}
-app: {{ .Release.Name }}
-helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-app.kubernetes.io/name: kong
-{{ include "kong.selector" . }}
-app.kubernetes.io/component: api-gateway
-app.kubernetes.io/part-of: tardis-runtime
-{{ .Values.global.labels | toYaml }}
-{{- end -}}
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
 
-{{- define "kong.selector" -}}
-app.kubernetes.io/instance: {{ .Release.Name }}-kong
-{{- end -}}
-
-{{- define "kong.image" -}}
-{{- $imageName := "kong" -}}
-{{- $imageTag := "1.2.1" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/gateway" -}}
-{{- if .Values.image -}}
-  {{- if not (kindIs "string" .Values.image) -}}
-    {{ $imageRepository = .Values.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.image.name | default $imageName -}}
-    {{ $imageTag = .Values.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/io" .Values.global.image.organization -}}
-    {{- else -}}
-      {{- .Values.image -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "job.image" -}}
-{{- $imageName := "tif-base-image" -}}
-{{- $imageTag := "1.0.0" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-common" -}}
-{{- if and .Values.job .Values.job.image -}}
-  {{- if not (kindIs "string" .Values.job.image) -}}
-    {{ $imageRepository = .Values.job.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.job.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.job.image.name | default $imageName -}}
-    {{ $imageTag = .Values.job.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.job.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-common" .Values.global.image.organization -}}
-    {{- else -}}
-      {{- .Values.job.image -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.jumper.image" -}}
-{{- $imageName := "jumper" -}}
-{{- $imageTag := "4.2.5 " -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/gateway" -}}
-{{- if .Values.jumper.image -}}
-  {{- if not (kindIs "string" .Values.jumper.image) -}}
-    {{ $imageRepository = .Values.jumper.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.jumper.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.jumper.image.name | default $imageName -}}
-    {{ $imageTag = .Values.jumper.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.jumper.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-      {{- .Values.jumper.image -}}
-    {{- end -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.issuerService.image" -}}
-{{- $imageName := "issuer-service" -}}
-{{- $imageTag := "2.2.1" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/gateway" -}}
-{{- if .Values.issuerService.image -}}
-  {{- if not (kindIs "string" .Values.issuerService.image) -}}
-    {{ $imageRepository = .Values.issuerService.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.issuerService.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.issuerService.image.name | default $imageName -}}
-    {{ $imageTag = .Values.issuerService.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.issuerService.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-    {{- end -}}
-    {{- .Values.issuerService.image -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.circuitbreaker.image" -}}
-{{- $imageName := "gateway-circuitbreaker" -}}
-{{- $imageTag := "2.1.0" -}}
-{{- $imageRepository := "mtr.devops.telekom.de" -}}
-{{- $imageOrganization := "tardis-internal/hyperion" -}}
-{{- if .Values.circuitbreaker.image -}}
-  {{- if not (kindIs "string" .Values.circuitbreaker.image) -}}
-    {{ $imageRepository = .Values.circuitbreaker.image.repository | default $imageRepository -}}
-    {{ $imageOrganization = .Values.circuitbreaker.image.organization | default $imageOrganization -}}
-    {{ $imageName = .Values.circuitbreaker.image.name | default $imageName -}}
-    {{ $imageTag = .Values.circuitbreaker.image.tag | default $imageTag -}}
-    {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-  {{- else -}}
-    {{- if .Values.global.image.force -}}
-      {{- .Values.circuitbreaker.image | replace "mtr.devops.telekom.de" .Values.global.image.repository | replace "tardis-internal/hyperion" .Values.global.image.organization -}}
-    {{- else -}}
-    {{- end -}}
-    {{- .Values.circuitbreaker.image -}}
-  {{- end -}}
-{{- else -}}
- {{- printf "%s/%s/%s:%s" $imageRepository $imageOrganization $imageName $imageTag -}}
-{{- end -}}
-{{- end -}}
+SPDX-License-Identifier: Apache-2.0
+*/}}
 
 {{- define "kong.issuerService.env" }}
 - name: CERT_MOUNT_PATH
@@ -146,9 +18,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 - name: KONG_URL
   value: {{ include "kong.adminApi.localhost" $ }}
 - name: INTERVAL
-  value: {{ .Values.circuitbreaker.interval | default "60s" | quote }}
+  value: {{ .Values.circuitbreaker.interval | quote }}
 - name: COUNT
-  value: {{ .Values.circuitbreaker.count | default "4" | quote}}
+  value: {{ .Values.circuitbreaker.count | quote}}
 {{- end -}}
 
 {{- define "kong.bundledTrustedCaCertificates" }}
@@ -156,24 +28,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}-kong
 {{ .Values.trustedCaCertificates }}
 {{ end -}}
 
-{{- define "kong.annotations" -}}
-ops.eni.telekom.de/pipeline-meta-ref: {{ .Release.Name }}-pipeline-metadata
-{{- if eq (toString .Values.global.metadata.pipeline.forceRedeploy) "true" }}
-ops.eni.telekom.de/pipeline-force-redeploy: '{{ now | date "2006-01-02T15:04:05Z07:00" }}'
-{{- end -}}
+{{/*
+Generic helper to hash only the data section of any secret template.
+This prevents unnecessary pod restarts when only metadata (like chart version labels) changes.
+Usage: include "kong.secretDataHash" (dict "context" $ "template" "/secret.yml")
+*/}}
+{{- define "kong.secretDataHash" -}}
+{{- $rendered := include (print .context.Template.BasePath .template) .context -}}
+{{- $secret := fromYaml $rendered -}}
+{{- toJson $secret.data | sha256sum -}}
 {{- end -}}
 
 {{- define "kong.checksums" -}}
-checksum/secret-kong: {{ include (print $.Template.BasePath "/secret-kong.yml") . | sha256sum }}
-{{ include "argo.checksum" (list $ . ".Values.adminApi.htpasswd") }}
-{{ include "argo.checksum" (list $ . ".Values.adminApi.gatewayAdminApiKey") }}
-{{ include "argo.checksum" (list $ . ".Values.global.database.password") }}
-{{- if eq .Values.sslVerify true }}
-checksum/trusted-ca-certificates: {{ (include "kong.bundledTrustedCaCertificates" $ | default "# Set trustedCaCertificates in values.yaml") | sha256sum }}
-{{ include "argo.checksum" (list $ . ".Values.trustedCaCertificates") }}
-{{ if  .Values.plugins.zipkin.luaSslTrustedCertificate }}
-{{ include "argo.checksum" (list $ . ".Values.plugins.zipkin.luaSslTrustedCertificate") }}
-{{- end -}}
+checksum/secret-kong: {{ include "kong.secretDataHash" (dict "context" $ "template" "/secret-kong.yml") }}
+{{- if or (eq .Values.sslVerify true) .Values.plugins.zipkin.luaSslTrustedCertificate .Values.externalDatabase.sslVerify }}
+checksum/trusted-ca-certificates: {{ include "kong.secretDataHash" (dict "context" $ "template" "/secret-trusted-ca-certificates.yaml") }}
 {{- end -}}
 {{- range .Values.templateChangeTriggers }}
 checksum/{{ . }}: {{ include (print $.Template.BasePath "/" . ) $ | sha256sum }}
@@ -391,14 +260,14 @@ false
 
 {{- define "kong.nginx.directives" }}
 - name: KONG_NGINX_WORKER_PROCESSES
-  value: '{{ .Values.nginxWorkerProcesses | default "4" }}'
+  value: '{{ .Values.nginxWorkerProcesses }}'
 - name: KONG_NGINX_HTTP_INCLUDE
   value: '/opt/kong/nginx/servers.conf'
 - name: KONG_NGINX_HTTP_LUA_SHARED_DICT
-  value: '{{ .Values.nginxHttpLuaSharedDict | default "prometheus_metrics 15m" }}'
+  value: '{{ .Values.nginxHttpLuaSharedDict }}'
 {{- if .Values.nginxLargeClientBuffers }}
 - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
-  value: '{{ .Values.nginxLargeClientBuffers | default "4 8k" }}'
+  value: '{{ .Values.nginxLargeClientBuffers }}'
 {{- end -}}
 {{- if .Values.defaultTlsSecret }}
 - name: KONG_SSL_CERT
@@ -439,7 +308,7 @@ false
 - name: PGHOST
   value: {{ include "database.host" $ }}
 - name: PGPORT
-  value: {{ .Values.global.database.port | default "5432" | quote }}
+  value: {{ .Values.global.database.port | quote }}
 - name: PGDATABASE
   value: {{ .Values.global.database.database }}
 - name: PGUSER
@@ -486,15 +355,15 @@ false
 
 {{- define "kong.env" }}
 - name: KONG_MEM_CACHE_SIZE
-  value: '{{ .Values.memCacheSize | default "128m" }}'
+  value: '{{ .Values.memCacheSize }}'
 - name: KONG_WORKER_CONSISTENCY
-  value: '{{ .Values.workerConsistency | default "eventual" }}'
+  value: '{{ .Values.workerConsistency }}'
 - name: KONG_WORKER_STATE_UPDATE_FREQUENCY
-  value: '{{ .Values.workerStateUpdateFrequency | default "10" }}'
+  value: '{{ .Values.workerStateUpdateFrequency }}'
 - name: KONG_DB_UPDATE_FREQUENCY
-  value: '{{ .Values.dbUpdateFrequency | default "10" }}'
+  value: '{{ .Values.dbUpdateFrequency }}'
 - name: KONG_DB_UPDATE_PROPAGATION
-  value: '{{ .Values.dbUpdatePropagation | default "0" }}'
+  value: '{{ .Values.dbUpdatePropagation }}'
 - name: KONG_ANONYMOUS_REPORTS
   value: 'false'
 - name: KONG_NGINX_HTTP_CLIENT_BODY_BUFFER_SIZE
@@ -516,7 +385,7 @@ false
       name: {{ .Release.Name }}
       key: databasePassword
 - name: KONG_PG_PORT
-  value: '{{ .Values.global.database.port | default 5432 }}'
+  value: '{{ .Values.global.database.port }}'
 - name: KONG_PG_HOST
   value: '{{ include "database.host" $ }}'
 - name: KONG_PG_USER

@@ -1,0 +1,137 @@
+# SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+{{- if .Values.kedaAutoscaling.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Release.Name }}-scaledobject
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels.standard" $ | nindent 4 }}
+    app.kubernetes.io/component: autoscaling
+spec:
+  # Target deployment to scale
+  scaleTargetRef:
+    name: {{ .Release.Name }}
+    {{- if .Values.argoRollouts.enabled }}
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    {{- end }}
+  
+  # Replica boundaries
+  minReplicaCount: {{ .Values.kedaAutoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.kedaAutoscaling.maxReplicas }}
+  
+  # Polling and cooldown configuration
+  pollingInterval: {{ .Values.kedaAutoscaling.pollingInterval }}
+  cooldownPeriod: {{ .Values.kedaAutoscaling.cooldownPeriod }}
+  
+  # Fallback configuration (when all triggers fail)
+  {{- if .Values.kedaAutoscaling.fallback.enabled }}
+  fallback:
+    failureThreshold: 3
+    replicas: {{ .Values.kedaAutoscaling.fallback.replicas }}
+  {{- end }}
+  
+  # Advanced HPA behavior configuration
+  {{- if .Values.kedaAutoscaling.advanced }}
+  advanced:
+    restoreToOriginalReplicaCount: {{ .Values.kedaAutoscaling.advanced.restoreToOriginalReplicaCount }}
+    {{- if .Values.kedaAutoscaling.advanced.horizontalPodAutoscalerConfig }}
+    horizontalPodAutoscalerConfig:
+      {{- toYaml .Values.kedaAutoscaling.advanced.horizontalPodAutoscalerConfig | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  
+  # Scaling triggers
+  triggers:
+  
+  # CPU Resource Scalers (Per-Container)
+  {{- if .Values.kedaAutoscaling.triggers.cpu.enabled }}
+  {{- if .Values.kedaAutoscaling.triggers.cpu.containers.kong.enabled }}
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.kong.threshold | quote }}
+      containerName: "kong"
+  {{- end }}
+  {{- if and .Values.jumper.enabled .Values.kedaAutoscaling.triggers.cpu.containers.jumper.enabled }}
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.jumper.threshold | quote }}
+      containerName: "jumper"
+  {{- end }}
+  {{- if and .Values.issuerService.enabled .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.enabled }}
+  - type: cpu
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.cpu.containers.issuerService.threshold | quote }}
+      containerName: "issuer-service"
+  {{- end }}
+  {{- end }}
+  
+  # Memory Resource Scalers (Per-Container)
+  {{- if .Values.kedaAutoscaling.triggers.memory.enabled }}
+  {{- if .Values.kedaAutoscaling.triggers.memory.containers.kong.enabled }}
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.kong.threshold | quote }}
+      containerName: "kong"
+  {{- end }}
+  {{- if and .Values.jumper.enabled .Values.kedaAutoscaling.triggers.memory.containers.jumper.enabled }}
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.jumper.threshold | quote }}
+      containerName: "jumper"
+  {{- end }}
+  {{- if and .Values.issuerService.enabled .Values.kedaAutoscaling.triggers.memory.containers.issuerService.enabled }}
+  - type: memory
+    metricType: Utilization
+    metadata:
+      value: {{ .Values.kedaAutoscaling.triggers.memory.containers.issuerService.threshold | quote }}
+      containerName: "issuer-service"
+  {{- end }}
+  {{- end }}
+  
+  # Prometheus/Victoria Metrics Scaler
+  {{- if .Values.kedaAutoscaling.triggers.prometheus.enabled }}
+  - type: prometheus
+    metadata:
+      serverAddress: {{ required "kedaAutoscaling.triggers.prometheus.serverAddress is required when prometheus trigger is enabled" .Values.kedaAutoscaling.triggers.prometheus.serverAddress }}
+      metricName: {{ .Values.kedaAutoscaling.triggers.prometheus.metricName }}
+      # Query is rendered with Helm template variables
+      query: {{ tpl .Values.kedaAutoscaling.triggers.prometheus.query . | quote }}
+      threshold: {{ .Values.kedaAutoscaling.triggers.prometheus.threshold | quote }}
+      {{- if .Values.kedaAutoscaling.triggers.prometheus.activationThreshold }}
+      activationThreshold: {{ .Values.kedaAutoscaling.triggers.prometheus.activationThreshold | quote }}
+      {{- end }}
+      {{- if .Values.kedaAutoscaling.triggers.prometheus.authModes }}
+      authModes: {{ .Values.kedaAutoscaling.triggers.prometheus.authModes }}
+      {{- end }}
+    {{- if .Values.kedaAutoscaling.triggers.prometheus.authentication.name }}
+    authenticationRef:
+      name: {{ .Values.kedaAutoscaling.triggers.prometheus.authentication.name }}
+      kind: {{ .Values.kedaAutoscaling.triggers.prometheus.authentication.kind }}
+    {{- end }}
+  {{- end }}
+  
+  # Cron-based Scalers (multiple schedules supported)
+  {{- if .Values.kedaAutoscaling.triggers.cron.enabled }}
+  {{- range .Values.kedaAutoscaling.triggers.cron.schedules }}
+  - type: cron
+    metadata:
+      timezone: {{ $.Values.kedaAutoscaling.triggers.cron.timezone }}
+      start: {{ .start | quote }}
+      end: {{ .end | quote }}
+      desiredReplicas: {{ .desiredReplicas | quote }}
+    {{- if .name }}
+    name: {{ .name }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}

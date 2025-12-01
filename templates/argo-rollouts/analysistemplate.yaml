@@ -1,0 +1,136 @@
+{{/*
+SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and .Values.argoRollouts.enabled .Values.argoRollouts.analysisTemplates.enabled }}
+{{- include "argoRollouts.validate" . -}}
+---
+# ============================================================================
+# Error Rate Analysis Template
+# ============================================================================
+# Monitors HTTP 5xx error rate during canary rollout
+# Triggers automatic rollback if error rate exceeds threshold
+{{- if .Values.argoRollouts.analysisTemplates.errorRate.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Release.Name }}-error-rate-analysis
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+spec:
+  args:
+    - name: environment
+    - name: zone
+    - name: instance
+    - name: route-regex
+      value: ".*"
+    {{- if and .Values.argoRollouts.analysisTemplates.errorRate.authentication .Values.argoRollouts.analysisTemplates.errorRate.authentication.enabled }}
+    # Reference credentials from Kubernetes secret for Prometheus authentication
+
+    - name: prometheusBasic
+      valueFrom:
+        secretKeyRef:
+          name: {{ .Values.argoRollouts.analysisTemplates.errorRate.authentication.secretName }}
+          key: {{ .Values.argoRollouts.analysisTemplates.errorRate.authentication.basicKey }}
+    {{- end }}
+
+  # ============================================================================
+  # Metrics Configuration
+  # ============================================================================
+  metrics:
+  - name: error-rate
+    # -- How often to evaluate the metric
+    interval: {{ .Values.argoRollouts.analysisTemplates.errorRate.interval }}
+    
+    # -- Total number of measurements to take
+    count: {{ .Values.argoRollouts.analysisTemplates.errorRate.count }}
+    
+    # -- Number of failures that trigger rollback
+    failureLimit: {{ .Values.argoRollouts.analysisTemplates.errorRate.failureLimit }}
+    
+    # -- Success condition (result must be less than threshold)
+    successCondition: {{ .Values.argoRollouts.analysisTemplates.errorRate.successCondition | quote }}
+    
+    # -- Metric provider configuration (Prometheus)
+    provider:
+      prometheus:
+        # -- Prometheus server address
+        address: {{ .Values.argoRollouts.analysisTemplates.errorRate.prometheusAddress | quote }}
+        
+        # -- PromQL query to calculate error rate
+        query: |
+          {{- .Values.argoRollouts.analysisTemplates.errorRate.query | nindent 10 }}
+        
+        {{- if and .Values.argoRollouts.analysisTemplates.errorRate.authentication .Values.argoRollouts.analysisTemplates.errorRate.authentication.enabled }}
+        headers:
+          - key: Authorization
+            value: "Basic {{`{{  args.prometheusBasic }}`}}"
+        {{- end }}
+{{- end }}
+---
+# ============================================================================
+# Success Rate Analysis Template
+# ============================================================================
+# Monitors overall HTTP success rate (non-5xx responses) during canary rollout
+# Triggers automatic rollback if success rate falls below threshold
+{{- if .Values.argoRollouts.analysisTemplates.successRate.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Release.Name }}-success-rate-analysis
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+spec:
+  # ============================================================================
+  # Arguments
+  # ============================================================================
+  # Can be passed from Rollout resource for dynamic configuration
+  args:
+  - name: environment
+  - name: zone
+  - name: instance
+  - name: route-regex
+    value: ".*"
+  {{- if and .Values.argoRollouts.analysisTemplates.successRate.authentication .Values.argoRollouts.analysisTemplates.successRate.authentication.enabled }}
+  # Reference credentials from Kubernetes secret for Prometheus authentication
+  - name: prometheusBasic
+    valueFrom:
+      secretKeyRef:
+        name: {{ .Values.argoRollouts.analysisTemplates.successRate.authentication.secretName }}
+        key: {{ .Values.argoRollouts.analysisTemplates.successRate.authentication.basicKey }}
+  {{- end }}
+  
+  # ============================================================================
+  # Metrics Configuration
+  # ============================================================================
+  metrics:
+  - name: success-rate
+    # -- How often to evaluate the metric
+    interval: {{ .Values.argoRollouts.analysisTemplates.successRate.interval }}
+    
+    # -- Total number of measurements to take
+    count: {{ .Values.argoRollouts.analysisTemplates.successRate.count }}
+    
+    # -- Number of failures that trigger rollback
+    failureLimit: {{ .Values.argoRollouts.analysisTemplates.successRate.failureLimit }}
+    
+    # -- Success condition (result must be greater than threshold)
+    successCondition: {{ .Values.argoRollouts.analysisTemplates.successRate.successCondition | quote }}
+    
+    # -- Metric provider configuration (Prometheus)
+    provider:
+      prometheus:
+        # -- Prometheus server address
+        address: {{ .Values.argoRollouts.analysisTemplates.successRate.prometheusAddress | quote }}
+        
+        # -- PromQL query to calculate success rate
+        query: |
+          {{- .Values.argoRollouts.analysisTemplates.successRate.query | nindent 10 }}
+
+        {{- if and .Values.argoRollouts.analysisTemplates.successRate.authentication .Values.argoRollouts.analysisTemplates.successRate.authentication.enabled }}
+        headers:
+          - key: Authorization
+            value: "Basic {{`{{ args.prometheusBasic }}`}}"
+        {{- end }}
+{{- end }}
+{{- end }}

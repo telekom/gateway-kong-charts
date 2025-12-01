@@ -1,0 +1,94 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and (.Values.plugins.prometheus.enabled) (.Values.plugins.prometheus.serviceMonitor.enabled) -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+    release: {{ .Values.plugins.prometheus.serviceMonitor.selector }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      path: {{ .Values.plugins.prometheus.path }}
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: "kong_eni_(.+)"
+          action: drop
+      {{- if .Values.argoRollouts.enabled }}
+        - action: replace
+          regex: (.+)
+          replacement: ${1}
+          sourceLabels:
+            - __meta_kubernetes_pod_label_role
+          targetLabel: role
+      relabelings:
+        - action: replace
+          regex: (.+)
+          replacement: ${1}
+          sourceLabels:
+            - __meta_kubernetes_pod_label_role
+          targetLabel: role
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}
+      scheme: {{ .Values.plugins.prometheus.serviceMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.interval }}
+      interval: {{ .Values.plugins.prometheus.serviceMonitor.interval | quote}}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.plugins.prometheus.serviceMonitor.scrapeTimeout | quote }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      {{- end }}
+    - port: jumper-metrics
+      path: '/actuator/prometheus'
+      {{- if .Values.argoRollouts.enabled }}
+      metricRelabelings:
+        - action: replace
+          regex: (.+)
+          replacement: ${1}
+          sourceLabels:
+            - __meta_kubernetes_pod_label_role
+          targetLabel: role
+      relabelings:
+        - action: replace
+          regex: (.+)
+          replacement: ${1}
+          sourceLabels:
+            - __meta_kubernetes_pod_label_role
+          targetLabel: role
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scheme }}
+      scheme: {{ .Values.plugins.prometheus.serviceMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.interval }}
+      interval: {{ .Values.plugins.prometheus.serviceMonitor.interval | quote}}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.plugins.prometheus.serviceMonitor.scrapeTimeout | quote }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.plugins.prometheus.serviceMonitor.honorLabels }}
+      {{- end }}
+  targetLabels:
+  {{- range $k, $_ := .Values.global.labels }}
+  - {{ $k }}
+  {{- end }}
+  - ei.telekom.de/zone
+  - ei.telekom.de/environment
+  - app
+  - type
+  - routeId
+{{- end -}}

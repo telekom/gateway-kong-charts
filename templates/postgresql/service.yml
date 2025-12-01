@@ -1,0 +1,21 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if eq .Values.global.database.location "local" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "postgresql.serviceName" . }}
+  labels: {{ include "postgresql.labels.standard" $ | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector: {{ include "postgresql.labels.selectorLabels" $ | nindent 4 }}
+  ports:
+  - name: postgresql
+    port: {{ .Values.global.database.port | default 5432 }}
+    protocol: TCP
+    targetPort: {{ .Values.global.database.port | default 5432 }}
+{{- end }}

@@ -1,0 +1,69 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and (.Values.adminApi.enabled) (eq .Values.plugins.prometheus.enabled true) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-prometheus-setup
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.setupJobs.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds }}
+  template:
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      containers:
+      - name: prometheus-setup
+        image: {{ include "images.job" $ }}
+        securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
+        env:
+        - name: X_TARDIS_GATEWAY_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}
+              key: gatewayAdminApiKey
+        command:        
+          - /bin/bash
+          - -c
+          - |-
+            echo "Enabling Kong ENI flavoured Prometheus plugin via PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins"
+
+            ADMIN_API_HTTP_RETURN_CODE=`curl -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
+            if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then
+                echo "Kong Admin-API unreachable return: $ADMIN_API_HTTP_RETURN_CODE"
+                exit 1
+            fi
+
+            CONFIG_CALL_HTTP_RETURN_CODE=`curl \
+            -o /dev/null \
+            -w "%{http_code}" \
+            -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
+            -X PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.prometheus.pluginId }} \
+            --header 'Content-Type: application/json' \
+            --data \
+            '{
+              "name" : "prometheus",
+              "tags" : ["tardis","prometheus","eni-prometheus"],
+              "config" : {
+                "status_code_metrics" : true,
+                "latency_metrics" : true,
+                "upstream_health_metrics" : true,
+                "bandwidth_metrics" : true,
+                "per_consumer" : true
+              }
+            }'`
+
+            if [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "200" ] && [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "201" ]; then
+              echo "Configuring plugin failed"
+              exit 1
+            fi
+      restartPolicy: OnFailure
+{{- end -}}

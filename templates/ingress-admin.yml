@@ -1,3 +1,9 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
 {{- if and .Values.adminApi.enabled .Values.adminApi.ingress.enabled }}
 {{- $svcPort := .Values.adminApi.tls.enabled | ternary "proxy-ssl" "proxy" -}}
 apiVersion: networking.k8s.io/v1
@@ -5,12 +11,12 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}-admin
   labels:
-    {{- include "kong.labels" $ | nindent 4 }}
+    {{- include "app.labels.standard" $ | nindent 4 }}
 {{- include "kong.merged.adminApi.annotations" $ | nindent 2 }}
 spec:
-  {{- if .Values.adminApi.ingress.className }}
-  ingressClassName: {{ .Values.adminApi.ingress.className }}
-  {{- end }}
+{{- if or .Values.adminApi.ingress.className .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.adminApi.ingress.className | default .Values.global.ingress.ingressClassName }}
+{{- end }}
   {{- if .Values.adminApi.ingress.tls }}
   tls:
     {{- range .Values.adminApi.ingress.tls }}

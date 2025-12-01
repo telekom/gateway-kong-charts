@@ -1,0 +1,218 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and (not .Values.keyRotation.enabled) (or (not .Values.jumper.existingJwkSecretName) (not .Values.issuerService.existingJwkSecretName)) }}
+{{- fail (printf "Cannot deploy stargate due to missing jwk secret. Use keyRotation.enabled or jumper.existingJwkSecretName with issuerService.existingJwkSecretName to provide jwk secrets") }}
+{{- end }}
+{{- include "keda.validate" . -}}
+{{- include "argoRollouts.validate" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+  {{- include "kong.checksums" $ | nindent 4 }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+spec:
+{{- if not (or .Values.hpaAutoscaling.enabled .Values.kedaAutoscaling.enabled .Values.argoRollouts.enabled) }}
+  replicas: {{ .Values.replicas }}
+{{- else }}
+{{- if (and .Values.argoRollouts.enabled .Values.argoRollouts.workloadRef.explicitDownscale) }}
+  replicas: 0
+{{- end }}
+{{- end }}
+{{- if .Values.strategy.rollingUpdate }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+{{- if eq .Values.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+{{- end }}
+{{- end }}
+  selector: 
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      annotations: 
+      {{- include "kong.checksums" $ | nindent 8 }}
+{{- if eq .Values.plugins.prometheus.enabled true }}
+        prometheus.io/path: '{{ .Values.plugins.prometheus.path }}'
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '{{ .Values.plugins.prometheus.port }}'
+{{- end }}
+      labels: 
+        {{- include "app.labels.standard" $ | nindent 8 }}
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      affinity:
+        podAntiAffinity:
+{{- if eq .Values.global.podAntiAffinity.required true }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 16 }}
+            topologyKey: {{ .Values.topologyKey }}
+{{- else }}
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 20 }}
+                topologyKey: {{ .Values.topologyKey }}
+{{- end }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      containers:
+{{- if eq .Values.jumper.enabled true }}
+      - name: jumper
+        image: {{ include "images.jumper" $ }}
+        imagePullPolicy: {{ .Values.jumper.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.jumper.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
+        ports:
+        - containerPort: {{ .Values.jumper.port }}
+          name: jumper
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.jumper.volumeMounts" $ | indent 8 }}
+        env:
+        - name: JUMPER_PORT
+          value: {{ .Values.jumper.port | quote }}
+        {{- with .Values.jumper.environment }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
+        {{- include "kong.jumper.env" $ | indent 8 }}
+
+        {{- with .Values.jumper.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.jumper.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.jumper.startupProbe }}
+        startupProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+{{- end }}
+{{- if eq .Values.issuerService.enabled true }}
+      - name: issuer-service
+        image: {{ include "images.issuerService" $ }}
+        imagePullPolicy: {{ .Values.issuerService.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.issuerService.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.issuerService.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
+        ports:
+        - containerPort: {{ .Values.issuerService.port | default 8081 }} 
+          name: issuer-service
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.issuerService.volumeMounts" $ | indent 8 }}
+        env:
+        {{- include "kong.issuerService.env" $ | indent 8 }}
+        {{- with .Values.issuerService.environment }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
+        {{- with .Values.issuerService.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.issuerService.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.issuerService.startupProbe }}
+        startupProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+{{- end }}
+{{- if eq .Values.circuitbreaker.enabled true }}
+      - name: circuitbreaker
+        image: {{ include "images.circuitbreaker" $ }}
+        imagePullPolicy: {{ .Values.circuitbreaker.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.circuitbreaker.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.circuitbreaker.resources | toYaml | nindent 10 }}
+        ports:
+        - name: circuitbreaker
+          containerPort: {{ .Values.circuitbreaker.port | default 8084 }} 
+          protocol: TCP
+        volumeMounts:
+          {{- include "kong.circuitbreaker.volumeMounts" $ | indent 8 }}
+        env:
+        {{- include "kong.circuitbreaker.env" $ | indent 8 }}
+{{- end }}
+      - name: kong
+        image: {{ include "images.kong" $ }}
+        imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
+        env:
+        {{- include "kong.nginx.directives" $ | indent 8 }}
+        {{- include "kong.customPlugins.env" $ | indent 8 }}
+        {{- include "kong.env" $ | indent 8 }}
+        command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong start" ]
+        resources: {{ .Values.resources | toYaml | nindent 10 }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep {{ .Values.global.preStopSleepBase }}; kong quit --timeout 60"]
+        ports:
+{{- if .Values.proxy.tls.enabled }}
+        - name: proxy-ssl
+          containerPort: 8443
+          protocol: TCP
+{{- else }}
+        - name: proxy
+          containerPort: 8000
+          protocol: TCP
+{{- end -}}
+{{- if .Values.plugins.prometheus.enabled }}
+        - name: metrics
+          containerPort: {{ .Values.plugins.prometheus.port | default 9542 }}
+          protocol: TCP
+{{- end -}}
+{{- if .Values.adminApi.enabled -}}
+{{- if .Values.adminApi.tls.enabled }}
+        - name: admin-ssl
+          containerPort: 8444
+          protocol: TCP
+{{- else }}
+        - name: admin
+          containerPort: 8001
+          protocol: TCP
+{{- end -}}
+{{- end }}
+        - name: status
+          containerPort: 8100
+          protocol: TCP
+        {{- with .Values.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.startupProbe }}
+        startupProbe:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        terminationMessagePath: /dev/termination-log
+        volumeMounts:
+        {{- include "kong.volumeMounts" $ | indent 8 }}
+      volumes:
+      {{- include "kong.volumes" $ | indent 6 }}
+      {{- include "kong.jumper.volumes" $ | indent 6 }}
+      {{- include "kong.issuerService.volumes" $ | indent 6 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ add .Values.global.preStopSleepBase 60 }}

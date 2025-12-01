@@ -18,6 +18,7 @@ on:
 
 jobs:
   release:
+    name: Run semantic-release
     if: ${{ github.ref == 'refs/heads/main' && github.event.inputs.do_release == 'yes' }}
     runs-on: ubuntu-latest
     permissions:
@@ -26,15 +27,40 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: 'true'
+      - name: Create temporary release.config.js
+        run: |
+          cat > release.config.js << 'EOF'
+          module.exports = {
+            plugins: [
+              '@semantic-release/commit-analyzer',
+              '@semantic-release/release-notes-generator',
+              [
+                '@semantic-release/exec',
+                {
+                  prepareCmd: "awk -i inplace '{ gsub(/^version:.*/, \"version: ${nextRelease.version}\") }; { print }' Chart.yaml"
+                }
+              ],
+              [
+                '@semantic-release/git',
+                {
+                  assets: ['Chart.yaml'],
+                  message: 'chore(release): ${nextRelease.version}\n\n${nextRelease.notes}'
+                }
+              ],
+              '@semantic-release/github'
+            ]
+          };
+          EOF
       - name: Semantic Release
         id: semantic-release
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v5
         with:
-          extra_plugins: |
-            @semantic-release/changelog
-            @semantic-release/exec
-            @semantic-release/git
-          branch: main
+          branches: |
+            ['main']
+          tag_format: '${version}'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

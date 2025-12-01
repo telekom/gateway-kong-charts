@@ -1,0 +1,46 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if include "kong.isMigrationsUpgrade" $ -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-kong-migrations-up
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      initContainers:
+      - name: "check-database"
+        image: '{{ include "images.postgresql" $ }}'
+        imagePullPolicy: {{ .Values.postgresql.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.postgresql.containerSecurityContext | toYaml | nindent 10 }}
+        command: ['/bin/bash']
+        args: ['-c', 'until pg_isready -U {{ .Values.global.database.username }}; do echo waiting for database; sleep 2; done;']
+        env:
+        {{- include "kong.migrations.checkdatabase.env" $ | indent 8 }}
+      containers:
+      - name: kong-upgrade-migrations
+        image: {{ include "images.kong" $ }}
+        imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
+        env:
+        {{- include "kong.migrations.env" $ | indent 8 }}
+        command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong migrations up || true; KONG_NGINX_DAEMON='off' kong migrations finish" ]
+        volumeMounts:
+          {{- include "kong.migrations.volumeMounts" $ | indent 8 }}
+      restartPolicy: OnFailure
+      volumes:
+      {{- include "kong.migrations.volumes" $ | indent 6 }}
+{{- end -}}

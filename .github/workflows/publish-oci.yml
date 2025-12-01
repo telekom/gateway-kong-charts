@@ -1,0 +1,36 @@
+# Copyright 2025 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Publish to OCI Registry
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-oci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Login to GHCR
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Package Chart
+        run: |
+          helm package .
+
+      - name: Push Chart to GHCR
+        run: |
+          CHART_VERSION=$(grep '^version:' Chart.yaml | awk '{print $2}')
+          helm push gateway-${CHART_VERSION}.tgz oci://ghcr.io/${{ github.repository_owner }}/o28m-charts

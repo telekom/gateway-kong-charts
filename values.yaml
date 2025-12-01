@@ -3,56 +3,50 @@
 # SPDX-License-Identifier: Apache-2.0
 
 global:
-  metadata:
-    pipeline: {}
+  # -- Zone identifier for the gateway instance (must match control plane configuration)
+  zone: "default"
+  # -- Environment name (e.g. playground, preprod, ...)
+  environment: "default"
 
-  # -- Available platforms: kubernetes (default), aws, caas. Setting any value with no specific platform values.yaml will result in fallback to kubernetes
-  platform: kubernetes
-  #pathToSecret: "path/to/secret" 
+  # -- Path to secret (optional)
+  #pathToSecret: "path/to/secret"
 
-  # -- Overwrites the setting determined by the platform
-  #storageClassName: gp2
-  #environment: ""
-  zone: "zoneName"
-  # -- Define global labels
-  labels:
-    # fluentd label
-    tardis.telekom.de/group: tardis
-  product: "stargate"
+  # -- Storage class name for PVCs (uses cluster default if not set)
+  #storageClassName: ""
+
+  # -- Common labels applied to all Kubernetes resources (transferred to Prometheus metrics if ServiceMonitor is enabled)
+  labels: {}
+
   ingress:
+    # -- Default ingress class name for all ingress resources (uses cluster default if not set, can be overridden per component)
     #ingressClassName: ""
-    # -- Set annotations for all ingress, can be extended by ingress specific ones
+    # -- Common annotations for all ingress resources (can be extended per component)
     annotations: {}
       #external-dns.alpha.kubernetes.io/target: ""
       #kubernetes.io/ingress.class: ""
 
-  # change the values below to overwrite the repository globally
-  # set "force: true" to perform string replacement in "image: repository/organization/name:tag" too
-  # for example:
-  # image:
-  #   repository: mtr.devops.telekom.de
-  #   organization: tardis-common
-  #   force: false
+  # Default image configuration (can be overridden per component)
+  # Images are constructed as: {registry}/{namespace}/{repository}:{tag}
+  # Example: mtr.devops.telekom.de/eu_it_co_development/o28m/gateway-kong:1.1.0
   image:
-    # -- Set default repository for all images
-    #repository: mtr.devops.telekom.de
-    # -- Set default organisation for all images
-    #organization: tardis-common
-    # -- Replace repository/organisation also if image is set as custom  "image:" value
-    force: false
+    # -- Default image registry
+    registry: mtr.devops.telekom.de
+    # -- Default image namespace
+    namespace: eu_it_co_development/o28m
 
-  # If imagePullSecrets is not empty, a pull secret will be deployed for each entry otherwise 
-  # no pull secret will be deployed
-  # If you use Sapling for deployment this will be set automatically
-  # -- array of pull secret names to use for image pulling
-  imagePullSecrets: 
+  # -- Array of pull secret names for image pulling
+  imagePullSecrets: []
 
-  # -- global default for imagePullPolicy
+  # -- Default image pull policy
   imagePullPolicy: IfNotPresent
 
+  # Password generation rules
   passwordRules:
+    # -- Enable password rule enforcement
     enabled: false
+    # -- Minimum password length
     length: 12
+    # -- Password must match these regex patterns
     mustMatch:
     - '[a-z]'
     - '[A-Z]'
@@ -60,91 +54,84 @@ global:
     - '[^a-zA-Z0-9]'
 
   database:
-    # -- Determine if the a database will be deployed togehter with Stargate (local) or is provided (external)
+    # -- Database location: 'local' (deploy with chart) or 'external' (provided externally)
     location: local
-    # -- Port of the database
-    #port: 5432
-    # -- Name of the database
+    # -- Database port
+    port: 5432
+    # -- Database name
     database: kong
-    # -- Name of the schema
+    # -- Database schema
     schema: public
-    # -- Username for accessing the database
+    # -- Database username
     username: kong
-    # -- The users password
+    # -- Database password
     password: changeme
 
-  # Set a global collectorUrl for traces.
-  # Can be overwritten by individual settings
+  # Global tracing configuration (can be overridden per component)
   tracing:
-    # -- URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory
+    # -- Zipkin collector URL (e.g., Jaeger collector), must include http(s) scheme
     collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
-    # -- Name of the service shown in e.g. Jaeger
+    # -- Service name displayed in tracing UI
     defaultServiceName: "stargate"
-    # -- How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests.
+    # -- Sample ratio for requests without trace IDs (0=off, 1=all requests)
     sampleRatio: 1
 
   podAntiAffinity:
-    # -- configure pod anti affinity to be requiredDuringSchedulingIgnoredDuringExecution or preferredDuringSchedulingIgnoredDuringExecution
+    # -- Use required (hard) or preferred (soft) pod anti-affinity
     required: false
 
-  # -- 
+  # -- Fail template rendering on unset required values
   failOnUnsetValues: true
 
+  # -- Base sleep duration in seconds for pre-stop lifecycle hook
   preStopSleepBase: 30
 
-# You can list files (in /templates) here that should cause a re-deployment of your application
-# when their contents change
-# This makes sense if you change configMaps or secrets and you
-# want your deployment to use the latest configuration
-#
+# List template files that should trigger pod restart when changed
+# Useful for ConfigMaps or Secrets that need immediate propagation
 #templateChangeTriggers:
 #- my-custom-configmap.yaml
-# -- List of (template) yaml files fo which a checksum annotation will be created
+# -- List of template files for which a checksum annotation will be created
 templateChangeTriggers: []
 
-# You can force using a specific image here:
-#image: 
-  #repository: mtr.devops.telekom.de
-  #organization: tardis-internal/gateway
-  #name: kong
-  #tag: 1.0.1
-# Or use the flattened string form:
-#image: mtr.devops.telekom.de/tardis-internal/gateway/kong:1.0.1
-#imagePullPolicy: IfNotPresent
+# -- Kong Gateway image configuration (inherits from global.image)
+image:
+  # registry: ""  # Override global.image.registry
+  # namespace: ""  # Override global.image.namespace
+  repository: gateway-kong
+  # -- Kong Gateway image tag
+  tag: "1.2.1"
 
-# Determine the migrations behaviour (bootstrap, upgrade, jobs)
-# bootstrap: setting up a new deployments database
-# upgrade: utilizing Kongs upgrade task for e.g. database migrations
-# jobs: migrating from eni-plugins to ENI flavoured original plugins
-# Comment out or set to none if none of the options are needed
-# -- Determine the migrations behaviour for a new instance or upgrade
+# -- Image pull policy for Kong container
+imagePullPolicy: IfNotPresent
+
+# Migration behavior: 'bootstrap' (new deployment), 'upgrade' (Kong version upgrade), 'jobs' (ENI plugin migration), or 'none'
+# -- Migration mode for database initialization or upgrades
 migrations: none
 
 
-# Enable Admin API and whether it is http or https
-# Warning: 
+# Kong Admin API configuration
 adminApi:
-  # -- Create service for accessing Kong Admin API
+  # -- Create Service for Kong Admin API
   enabled: true
+  # -- Admin API key for authentication
   gatewayAdminApiKey: changeme
+  # -- Htpasswd for Admin API basic authentication
   htpasswd: admin:changeme
   tls:
-    # -- Access Admin API via https instead of http  
+    # -- Enable HTTPS for Admin API
     enabled: false
-  # -- Set the log target for access log
+  # -- Access log target
   accessLog: /dev/stdout
-  # -- Set the log target for error log
+  # -- Error log target
   errorLog: /dev/stderr
-# Activate Admin API ingress and set a dedicated hostname
-# For EE (license) this is default true, for CE (no license) this is default false
   ingress:
-    # -- Create ingress for Admin API. Default depends on Edition (CE: false, EE: true)
+    # -- Enable ingress for Admin API
     enabled: true
-    # -- Set ingress className for the Admin API ingress
-    # className: ""
-    # -- Merges specific into global ingress annotations
+    # -- Ingress class name for Admin API ingress (overrides global.ingress.ingressClassName)
+    #className: ""
+    # -- Ingress annotations (merged with global.ingress.annotations)
     annotations: {}
-    # -- Set usual ingress array of hosts
+    # -- Ingress hosts configuration
     hosts:
       - host: chart-example.local
         paths:
@@ -157,103 +144,148 @@ adminApi:
       #    - hostNameMatchingCertInSecret
 
 
-# Activate proxy ingress and set a dedicated hostname
+# Kong Proxy configuration
 proxy:
   tls:
+    # -- Enable TLS for proxy
     enabled: false
-  # -- Set the log target for access log
+  # -- Access log target
   accessLog: /dev/stdout
-  # -- Set the log target for error log
+  # -- Error log target
   errorLog: /dev/stderr
   ingress:
-    # -- Create ingress for proxy
+    # -- Enable ingress for proxy
     enabled: true
-    # -- Set ingressClassName for the proxy ingress
-    # className: ""
-    # -- Merges specific into global ingress annotations
+    # -- Ingress class name for proxy route (overrides global.ingress.ingressClassName)
+    #className: ""
+    # -- Ingress annotations (merged with global.ingress.annotations)
     annotations: {}
+    # -- Ingress hosts configuration
     hosts:
       - host: chart-example.local
         paths:
           - path: /
             pathType: Prefix
+    # -- TLS configuration (secretName optional for cloud load balancers)
     tls: []
-      # secretName is optional as for example in aws for a loadbalancer ingress this is not needed
       #- secretName: secretName
       #  hosts:
       #    - hostNameMatchingCertInSecret
 
-# -- Set a script to run after deployment for configuration of the Gateway
+# -- Post-deployment configuration script (curl commands for Admin API)
 #configuration: |
-  #Place your curl commands here to configure via Admin-API on deploy time
+  #Place your curl commands for configuring the Admin API here
 
-# values used by nginx directives
-# -- Controls whether to check forward proxy traffic against CA certificates
+# SSL/TLS configuration
+# -- Enable SSL certificate verification for upstream traffic
 sslVerify: false
-# -- SSL Verification depth
+# -- SSL certificate verification depth
 sslVerifyDepth: '1'
 
-# You can define the truststore for SSL verification by setting your CAs in PEM format here 
-#
-# -- CA certificates in PEM format (string)
+# -- CA certificates bundle in PEM format for SSL verification
 #trustedCaCertificates: |
 #  -----BEGIN CERTIFICATE-----
-#  <CA certificate 01 in PEM format here>
+#  <CA certificate 01>
 #  -----END CERTIFICATE-----
 #  -----BEGIN CERTIFICATE-----
-#  <CA certificate 02 in PEM format here>
-#  -----END CERTIFICATE-----
-#  -----BEGIN CERTIFICATE-----
-#  <CA certificate 03 in PEM format here>
+#  <CA certificate 02>
 #  -----END CERTIFICATE-----
 
-# You can define the default HTTPS server certificate by specifing the secret with private-key/certificate here
-# Note: additional route-specific server certificates can by configured and assigned to SNIs at runtime. This is only a default certificate
-# -- Name of the secret containing the default server certificates
+# -- Default HTTPS server certificate secret name (route-specific certificates can be configured at runtime)
 #defaultTlsSecret: "mysecret"
 
+# TLS protocol and cipher configuration
 ssl:
+  # -- Allowed TLS protocols
   protocols: "TLSv1.2 TLSv1.3"
-# Defines the TLS ciphers served by Nginx.
-# Accepted values are modern, intermediate, old, or custom.
-# See https://wiki.mozilla.org/Security/Server_Side_TLS for detailed descriptions of each cipher suite.
+  # -- TLS cipher suite: modern, intermediate, old, or custom (see https://wiki.mozilla.org/Security/Server_Side_TLS)
   cipherSuite: "custom"
-
-#Defines a custom list of TLS ciphers to be served by Nginx. This list must conform to the pattern defined by openssl ciphers.
-#This value is ignored if ssl_cipher_suite is not custom.
+  # -- Custom TLS ciphers (OpenSSL format, ignored unless cipherSuite is 'custom')
   ciphers: "DHE-DSS-AES128-SHA256:DHE-DSS-AES256-SHA256:DHE-DSS-AES128-GCM-SHA256:DHE-DSS-AES256-GCM-SHA384:DHE-RSA-AES128-CCM:DHE-RSA-AES256-CCM:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-CCM:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CHACHA20-POLY1305:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256"
 
+# -- Disable upstream response caching
 disableUpstreamCache: false
 
-#podSecurityContext: {}
-#containerSecurityContext: {}
+# -- Pod security context for Kong deployment (hardened defaults)
+podSecurityContext:
+  runAsUser: 100
+  runAsGroup: 1000
+  fsGroup: 1000
+  supplementalGroups: [1000]
 
-#topologyKey: kubernetes.io/hostname
+# -- Container security context for Kong container (hardened defaults)
+containerSecurityContext:
+  runAsUser: 100
+  runAsGroup: 1000
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  privileged: false
+  capabilities:
+    drop:
+    - ALL
 
-jobs: {}
-  #containerSecurityContext: {}
+# -- Topology key for pod anti-affinity (spread pods across zones for high availability)
+topologyKey: kubernetes.io/hostname
 
-#memCacheSize: 128m
-#nginxWorkerProcesses: auto
-#nginxHttpLuaSharedDict: prometheus_metrics 15m
-#nginxLargeClientBuffers: 4 8k
-#workerConsistency: eventual
-#workerStateUpdateFrequency: 10
-#dbUpdateFrequency: 10
-#dbUpdatePropagation: 0
+# Job security configuration
+jobs:
+  # -- Container security context for setup jobs
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
+
+# -- Kong memory cache size for database entities
+memCacheSize: 128m
+# -- Number of nginx worker processes
+nginxWorkerProcesses: 4
+# -- Nginx HTTP Lua shared dictionary for storing metrics
+nginxHttpLuaSharedDict: "prometheus_metrics 15m"
+# -- Nginx large client header buffers configuration
+#nginxLargeClientBuffers: "8 16k"
+# -- Kong worker consistency mode (eventual or strict)
+workerConsistency: eventual
+# -- Frequency in seconds to poll for worker state updates
+workerStateUpdateFrequency: 10
+# -- Frequency in seconds to poll database for updates
+dbUpdateFrequency: 10
+# -- Delay in seconds before propagating database updates
+dbUpdatePropagation: 0
+# -- HTTP client body buffer size (optional override)
 #httpClientBodyBufferSize: 4m
+# -- Trusted IPs for real IP detection (optional override)
 #trustedIps: 100.70.0.0/16
+# -- Header to use for real IP detection (optional override)
 #realIpHeader: x-original-forwarded-for
+# -- Whether to recursively search for client IP (optional override)
 #realIpRecursive: OFF
 
+# -- Number of Kong pod replicas (ignored when HPA, KEDA, or Argo Rollouts is enabled)
 replicas: 1
 
+# -- Deployment strategy configuration
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25%
+    maxSurge: 25%
+
+# -- Horizontal Pod Autoscaler configuration
 hpaAutoscaling:
   enabled: false
-  # minReplicas is using replicas as default, if replicas is not set, default is 3 
-  #minReplicas: $replicas
-  #maxReplicas: 10
-  #cpuUtilizationPercentage: 80
+  # -- Minimum number of replicas
+  minReplicas: 3
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  cpuUtilizationPercentage: 80
 
 # ============================================================================
 # KEDA-Based Autoscaling Configuration
@@ -322,11 +354,11 @@ kedaAutoscaling:
     
     # -- HPA behavior configuration (scale-up/scale-down policies)
     horizontalPodAutoscalerConfig:
+      # -- Scaling behavior policies
       behavior:
-        # Scale-down behavior (conservative to prevent flapping)
+        # -- Scale-down behavior (conservative to prevent flapping)
         scaleDown:
-          # -- Stabilization window for scale-down (seconds)
-          # KEDA waits this long before scaling down to ensure load is sustained
+          # -- Stabilization window for scale-down in seconds (KEDA waits before scaling down)
           stabilizationWindowSeconds: 300
           
           # -- Scale-down policies (multiple policies can be defined)
@@ -338,10 +370,9 @@ kedaAutoscaling:
           # -- Policy selection (Min = most conservative, Max = most aggressive)
           selectPolicy: Min
         
-        # Scale-up behavior (aggressive for availability)
+        # -- Scale-up behavior (aggressive for availability)
         scaleUp:
-          # -- Stabilization window for scale-up (seconds)
-          # 0 = immediate scale-up for availability
+          # -- Stabilization window for scale-up in seconds (0 = immediate scale-up)
           stabilizationWindowSeconds: 0
           
           # -- Scale-up policies
@@ -376,28 +407,25 @@ kedaAutoscaling:
       # -- Enable CPU-based scaling for any container
       enabled: true
       
-      # -- Per-container CPU thresholds
-      # Each container in the pod can have its own threshold
-      # If ANY container exceeds its threshold, scaling is triggered
+      # -- Per-container CPU thresholds (any container exceeding threshold triggers scaling)
       containers:
-        # Kong container (main API gateway)
+        # -- Kong container CPU scaling configuration
         kong:
-          # -- Enable CPU monitoring for kong container
+          # -- Enable CPU monitoring for Kong container
           enabled: true
-          # -- CPU utilization threshold percentage (0-100)
-          # Recommended: 60-80% for headroom
+          # -- CPU utilization threshold percentage (0-100, recommended: 60-80% for headroom)
           threshold: 70
         
-        # Jumper container (JWT validation service)
+        # -- Jumper container CPU scaling configuration
         jumper:
-          # -- Enable CPU monitoring for jumper container
+          # -- Enable CPU monitoring for Jumper container
           enabled: true
           # -- CPU utilization threshold percentage (0-100)
           threshold: 70
         
-        # Issuer Service container (certificate issuer)
+        # -- Issuer Service container CPU scaling configuration
         issuerService:
-          # -- Enable CPU monitoring for issuer-service container
+          # -- Enable CPU monitoring for Issuer Service container
           enabled: true
           # -- CPU utilization threshold percentage (0-100)
           threshold: 70
@@ -413,28 +441,25 @@ kedaAutoscaling:
       # -- Enable memory-based scaling for any container
       enabled: true
       
-      # -- Per-container memory thresholds
-      # Each container in the pod can have its own threshold
-      # If ANY container exceeds its threshold, scaling is triggered
+      # -- Per-container memory thresholds (any container exceeding threshold triggers scaling)
       containers:
-        # Kong container (main API gateway)
+        # -- Kong container memory scaling configuration
         kong:
-          # -- Enable memory monitoring for kong container
+          # -- Enable memory monitoring for Kong container
           enabled: true
-          # -- Memory utilization threshold percentage (0-100)
-          # Recommended: 80-90% (higher than CPU due to less elasticity)
+          # -- Memory utilization threshold percentage (0-100, recommended: 80-90%)
           threshold: 95
         
-        # Jumper container (JWT validation service)
+        # -- Jumper container memory scaling configuration
         jumper:
-          # -- Enable memory monitoring for jumper container
+          # -- Enable memory monitoring for Jumper container
           enabled: true
           # -- Memory utilization threshold percentage (0-100)
           threshold: 85
         
-        # Issuer Service container (certificate issuer)
+        # -- Issuer Service container memory scaling configuration
         issuerService:
-          # -- Enable memory monitoring for issuer-service container
+          # -- Enable memory monitoring for Issuer Service container
           enabled: true
           # -- Memory utilization threshold percentage (0-100)
           threshold: 85
@@ -463,7 +488,7 @@ kedaAutoscaling:
       # Example queries:
       #   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))
       #   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m]))
-      query: 'sum(rate(kong_http_requests_total{tardis_telekom_de_zone="{{ .Values.global.zone }}"}[1m]))'
+      query: 'sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ .Values.global.zone }}",ei_telekom_de_environment="{{ .Values.global.environment }}",app_kubernetes_io_instance="{{ .Release.Name }}-kong"}[1m]))'
       
       # -- Threshold value for the metric
       # Scales up when query result exceeds this value
@@ -479,10 +504,8 @@ kedaAutoscaling:
       # Options: "basic", "bearer", "tls"
       authModes: "basic"
       
-      # -- Authentication configuration
+      # -- KEDA authentication configuration for Victoria Metrics access
       # Reference to existing TriggerAuthentication or ClusterTriggerAuthentication resource
-      # - ClusterTriggerAuthentication: cluster-scoped resource that can be shared across namespaces
-      # - TriggerAuthentication: namespace-scoped resource (useful for namespace-restricted environments)
       authentication:
         # -- Authentication kind: "ClusterTriggerAuthentication" or "TriggerAuthentication"
         # Use "TriggerAuthentication" for namespace-scoped environments
@@ -538,8 +561,8 @@ kedaAutoscaling:
       # See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
       timezone: "Europe/Berlin"
       
-      # -- List of cron schedules
-      # Each schedule defines a time window and desired replica count
+      # -- Cron schedule definitions (time windows with desired replica counts)
+      # Each schedule defines start/end times and replica count
       # Multiple schedules can overlap (highest desiredReplicas wins)
       schedules: []
       # Example schedules:
@@ -567,10 +590,7 @@ kedaAutoscaling:
       # │ │ │ │ │
       # * * * * *
 
-strategy: {}
-  #rollingUpdate:
-    #maxUnavailable: 25%
-
+# -- Kong container resource limits and requests
 resources:
   limits:
     cpu: 2500m
@@ -579,12 +599,10 @@ resources:
     cpu: 1
     memory: 2Gi
 
-# log_format select the pre-configured log formats for nginx
-# It can have one of the values: default, json or plain.
-# Formats: debug, default, json
+# -- Nginx log format: debug, default, json, or plain
 logFormat: json
 
-# -- kong livenessProbe configuration
+# -- Kong liveness probe configuration
 livenessProbe:
   httpGet:
     path: /status
@@ -593,14 +611,14 @@ livenessProbe:
   timeoutSeconds: 5
   periodSeconds: 20
   failureThreshold: 4
-# -- kong readinessProbe configuration
+# -- Kong readiness probe configuration
 readinessProbe:
   httpGet:
     path: /status
     port: status
     scheme: HTTP
   timeoutSeconds: 2
-# -- kong startupProbe configuration
+# -- Kong startup probe configuration
 startupProbe:
   httpGet:
     path: /status
@@ -611,13 +629,13 @@ startupProbe:
   periodSeconds: 1
   failureThreshold: 295
 
+# Setup jobs configuration
 setupJobs:
-  # -- How often should be retried to run the job successfully
-  #backoffLimit: 15
-  # -- How long should be retried to run the job successfully
-  #activeDeadlineSeconds: 3600
-  #Resources need to be discussed
-  # -- resource defaults configured for the setupJobs
+  # -- Maximum number of retries for failed jobs
+  backoffLimit: 15
+  # -- Maximum job duration in seconds
+  activeDeadlineSeconds: 3600
+  # -- Resource limits and requests for setup jobs
   resources:
     limits:
       cpu: 0.5
@@ -625,136 +643,180 @@ setupJobs:
     requests:
       cpu: 50m
       memory: 200Mi
-  #containerSecurityContext: {}
+  # -- Container security context for setup jobs
+  containerSecurityContext:
+    runAsUser: 100
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
+# Kong plugin configuration
 plugins:
-  # -- additional enabled plugins for kong besides `bundled,jwt-keycloak`
+  # -- Container security context for plugin containers
+  containerSecurityContext:
+    runAsUser: 100
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
+  # -- Additional Kong plugins to enable (beyond bundled and jwt-keycloak)
   enabled:
     - rate-limiting-merged
 
   acl:
-    # -- pluginId for configuration in kong
+    # -- Plugin ID for Kong configuration
     pluginId: bc823d55-83b5-4184-b03f-ce63cd3b75c7
       
   jwtKeycloak:
-    # -- Activate or deactivate the jwt-keycloak plugin
+    # -- Enable JWT Keycloak plugin
     enabled: true
-    # -- pluginId for configuration in kong
+    # -- Plugin ID for Kong configuration
     pluginId: b864d58b-7183-4889-8b32-0b92d6c4d513
-    # -- Set the Iris URL you want the Gateway to use for Admin API athentication
+    # -- Allowed identity provider issuer URLs (used for authenticating Admin API requests from the Rover realm)
     allowedIss: 
-      - https://changeme/auth/realms/default
+      - https://<your-iris-host>/auth/realms/rover
 
   prometheus:
-    # -- Controls whether to annotate pods with prometheus scraping information or not
+    # -- Enable Prometheus metrics plugin
     enabled: true
-    # -- pluginId for configuration in kong
+    # -- Plugin ID for Kong configuration
     pluginId: 3d232d3c-dc2b-4705-aa8d-4e07c4e0ff4c
-    # -- Sets the port at which metrics can be accessed
+    # -- Metrics endpoint port
     port: 9542
-    # -- Sets the endpoint at which at which metrics can be accessed
+    # -- Metrics endpoint path
     path: /metrics
     serviceMonitor:
-      # -- Enables a servicemonitor which can be used by the prometheus operator to collect metrics
+      # -- Enable ServiceMonitor for Prometheus Operator
       enabled: true
-      # -- default selector label (only label)
+      # -- ServiceMonitor selector label
       selector: "guardians-raccoon"
-      # -- HTTP scheme to use for scraping
+      # -- HTTP scheme for scraping
       #scheme: http
-      # -- Interval at which metrics should be scraped
+      # -- Scrape interval
       #interval: "15s"
-      # -- Timeout after which the scrape of prometheus is ended
+      # -- Scrape timeout
       #scrapeTimeout: "3s"
-      # -- HonorLabels chooses the metric’s labels on collisions with target labels
+      # -- Honor labels on metric collision with target labels
       # honorLabels: true
     podMonitor:
-      # -- Enables a podmonitor which can be used by the prometheus operator to collect metrics
+      # -- Enable PodMonitor for Prometheus Operator
       enabled: false
-      #selector: "guardians-raccoon"
-      # -- HTTP scheme to use for scraping
+      # -- PodMonitor selector label
+      selector: "guardians-raccoon"
+      # -- HTTP scheme for scraping
       # scheme: http
-      # -- Interval at which metrics should be scraped
+      # -- Scrape interval
       #interval: "15s"
-      # -- Timeout after which the scrape of prometheus is ended
+      # -- Scrape timeout
       #scrapeTimeout: "3s"
-      # -- HonorLabels chooses the metric’s labels on collisions with target labels
+      # -- Honor labels on metric collision with target labels
       #honorLabels: true
 
   requestSizeLimiting:
+    # -- Enable request size limiting plugin
     enabled: true
-    # -- pluginId for configuration in kong
+    # -- Plugin ID for Kong configuration
     pluginId: 1e199eee-f592-4afa-8371-6b61dcbd1904
-    #Size in megabytes
+    # -- Maximum allowed payload size in megabytes
     #allowedPayloadSize: 4
 
   requestTransformer:
-    # -- pluginId for configuration in kong
+    # -- Plugin ID for Kong configuration
     pluginId: e9fb4272-0aff-4208-9efa-6bfec5d9df53
 
   zipkin:
-    # -- Enable tracing via ENI-Zipkin-Plugin
+    # -- Enable distributed tracing via ENI Zipkin plugin
     enabled: true
-    # -- pluginId for configuration in kong
+    # -- Plugin ID for Kong configuration
     pluginId: e8ff1211-816f-4d93-9011-a4b194586073
-    # -- URL of the Zipkin-Collector (e.g. Jaeger-Collector), http(s) mandatory (defaults to global.tracing.collectorUrl)
+    # -- Zipkin collector URL (defaults to global.tracing.collectorUrl, must include http(s) scheme)
     #collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
-    # -- How often to sample requests that do not contain trace ids. Set to 0 to turn sampling off, or to 1 to sample all requests.
+    # -- Sample ratio for requests without trace IDs (0=off, 1=all requests)
     #sampleRatio: 1
+    # -- Environment name for traces
     #environment: null
+    # -- Zone name for traces
     #zone: null
+    # -- Force sampling for all requests
     #forceSample: true
+    # -- Trace header type (b3 or w3c)
     #headerType: "b3"
-    # -- Should the credential of the currently authenticated consumer be included in metadata sent to the Zipkin server?
+    # -- Include consumer credentials in trace metadata
     #includeCredential: "true"
-    # -- Name of the service shown in e.g. Jaeger
+    # -- Service name displayed in tracing UI
     #defaultServiceName: "stargate"
-    # -- CA certificate for the Zipkin-Collector-URL
+    # -- CA certificate for Zipkin collector SSL verification
     #luaSslTrustedCertificate: |
     #  -----BEGIN CERTIFICATE-----
-    #  <CA certificate in PEM format here>
+    #  <CA certificate in PEM format>
     #  -----END CERTIFICATE-----
-    # Set job retries and maximum runtime (default values preset)
 
-# irixBrokerRoute is a route on spacegate proxing to irix-broker
+# IRIX Broker route configuration (proxy route to IRIX broker service)
 irixBrokerRoute:
+  # -- Enable IRIX broker route
   enabled: false
+  # -- Route name
   name: user-login
-  # optional if not according to the usual host rules
+  # -- Route hostname (optional, uses default host rules if not set)
   #host: integration.spacegate.telekom.de
   upstream:
+    # -- Upstream protocol
     protocol: http
+    # -- Upstream service name
     service: irix-broker
+    # -- Upstream service path
     path: /auth/realms/eni-login
+    # -- Upstream service port
     port: 80
-    # optional if upstream should be accessed by ingress
+    # -- Upstream hostname (optional, for ingress access)
     #host: integration.spacegate.telekom.de
-    # optional if upstream should be accessed as service but in another namespace
+    # -- Upstream service namespace (optional, for cross-namespace access)
     #namespace: integration
 
-# Jumper is a component needed for Gateway-to-Gateway
-# communication
+# Jumper component for Gateway-to-Gateway communication and Last Mile Security
 jumper:
-  # -- enable deployment of jumper conatiner inside gateway pod
+  # -- Enable Jumper container deployment
   enabled: true
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: jumper-sse
-    #tag: 3.6.1
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/gateway/jumper:4.x.x
-  #imagePullPolicy: IfNotPresent
-  issuerUrl: https://localhost:443
+  
+  # -- Jumper image configuration (inherits from global.image)
+  image:
+    # registry: ""  # Override global.image.registry
+    # namespace: ""  # Override global.image.namespace
+    repository: gateway-jumper
+    tag: "4.2.5"
+  
+  # -- Image pull policy for Jumper container
+  imagePullPolicy: IfNotPresent
+  
+  # -- Jumper container port
+  port: 8080
+  
+  # -- Issuer service URL for gateway token issuance (your gateway's auth realm endpoint)
+  issuerUrl: https://<your-gateway-host>/auth/realms/default
+  # -- Tracing collector URL (optional)
   #tracingUrl: http://guardians-drax-collector.skoll:9411
+  # -- Service name for tracing (optional)
   #defaultServiceName: "stargate"
-  stargateUrl: https://stargate-integration.test.dhei.telekom.de
+  # -- Gateway URL for Gateway-to-Gateway communication
+  stargateUrl: https://<your-gateway-host>
+  # -- Event publisher URL
   publishEventUrl: http://producer.integration:8080/v1/events
+  # -- JVM options for Jumper
   jvmOpts: "-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"
   #maxHttpHeaderSize: 16KB
   #fpaProxyHost
   #fpaProxyPort
   #fpaNonProxyHostsRegex
-  # -- jumper livenessProbe configuration
+  # -- Jumper liveness probe configuration
   livenessProbe:
     httpGet:
       path: /actuator/health/liveness
@@ -762,14 +824,14 @@ jumper:
       scheme: HTTP
     timeoutSeconds: 5
     failureThreshold: 6
-  # -- jumper readinessProbe configuration
+  # -- Jumper readiness probe configuration
   readinessProbe:
     httpGet:
       path: /actuator/health/readiness
       port: jumper
       scheme: HTTP
     initialDelaySeconds: 5
-  # -- jumper startupProbe configuration
+  # -- Jumper startup probe configuration
   startupProbe:
     httpGet:
       path: /actuator/health/readiness
@@ -779,36 +841,55 @@ jumper:
     periodSeconds: 1
     failureThreshold: 285
 
-  # -- generic injection possibility for additional environment variables
+  # -- Additional environment variables for Jumper container
   #- {name: foo, value: bar}
   environment: []
 
-  #containerSecurityContext: {}
+  # -- Container security context for Jumper
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
+  # Zone health monitoring configuration (requires Redis)
   zoneHealth:
+    # -- Default health status when Redis is unavailable
     defaultHealth: true
+    # -- Redis database hostname
     databaseHost: localhost
+    # -- Redis connection timeout in milliseconds
     databaseConnectionTimeout: 500
+    # -- Redis operation timeout in milliseconds
     databaseTimeout: 500
+    # -- Redis database port
     databasePort: 6379
+    # -- Redis database index
     databaseIndex: 2
+    # -- Redis Pub/Sub channel for zone status
     keyChannel: stargate-zone-status
+    # -- Maximum request rate per second
     requestRate: 10000
+    # -- Secret name containing Redis credentials
     databaseSecretName: redis
+    # -- Secret key for Redis password
     databaseSecretKey: redis-password
+    # -- Enable zone health monitoring
     enabled: false
 
-  # This is the list of zones that are considered internet facing within the whole existing ecosystem.
-  # e.g. [space, canis, aries]
-  # An empty list means that the default internet facing zones as part of the Jumper application config will be used.
-  # -- list of zones that are considered internet facing
+  # -- List of zones that are considered internet-facing (empty list uses Jumper's default configuration)
+  # Example: [space, canis, aries]
   internetFacingZones: []
 
-  # When providing an existing secret, it has to compatible with a gateway-rotator managed one
-  # Format is specified here https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process
-  # -- configure manually externally managed secret for oauth access token issueing (as alternative for keyRotation.enabled=true) 
+  # -- Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true)
+  # Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process
   existingJwkSecretName:
 
-  # -- jumper container default resource configuration
+  # -- Jumper container resource limits and requests
   resources:
     limits:
       cpu: 5
@@ -817,24 +898,26 @@ jumper:
       cpu: 2
       memory: 1Gi
 
+# Issuer Service component for OAuth token generation
 issuerService:
-  # -- enable deployment of issuer-service container inside gateway pod
+  # -- Enable Issuer Service container deployment
   enabled: true
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: issuer-service
-    #tag: 1.9.0
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/issuer-service:1.9.0
-  #imagePullPolicy: IfNotPresent
+  
+  # -- Issuer Service image configuration (inherits from global.image)
+  image:
+    # registry: ""  # Override global.image.registry
+    # namespace: ""  # Override global.image.namespace
+    repository: gateway-issuer-service-go
+    tag: "2.2.1"
+  
+  # -- Image pull policy for Issuer Service container
+  imagePullPolicy: IfNotPresent
 
-  # When providing an existing secret, it has to compatible with a gateway-rotator managed one
-  # Format is specified here https://github.com/telekom/gateway-rotator?tab=readme-ov-file#key-rotation-process
-  # -- configure manually externally managed secret for oauth (as alternative for keyRotation.enabled=true) 
+  # -- Existing JWK secret name for OAuth token signing (alternative to keyRotation.enabled=true)
+  # Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process
   existingJwkSecretName:
 
-  # -- issuerService livenessProbe configuration
+  # -- Issuer Service liveness probe configuration
   livenessProbe:
     httpGet:
       path: /health
@@ -842,13 +925,13 @@ issuerService:
       scheme: HTTP
     timeoutSeconds: 5
     failureThreshold: 6
-  # -- issuerService readinessProbe configuration
+  # -- Issuer Service readiness probe configuration
   readinessProbe:
     httpGet:
       path: /health
       port: issuer-service
       scheme: HTTP
-  # -- issuerService startupProbe configuration
+  # -- Issuer Service startup probe configuration
   startupProbe:
     httpGet:
       path: /health
@@ -857,13 +940,23 @@ issuerService:
     periodSeconds: 1
     failureThreshold: 60
 
-  #containerSecurityContext: {}
+  # -- Container security context for Issuer Service
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
-  # -- generic injection possibility for additional environment variables
+  # -- Additional environment variables for Issuer Service container
   #- {name: foo, value: bar}
   environment: []
 
-  # -- issuerService container default resource configuration
+  # -- Issuer Service container resource limits and requests
   resources:
     limits:
       cpu: 500m
@@ -872,26 +965,39 @@ issuerService:
       cpu: 50m
       memory: 200Mi
 
+# Circuit breaker component configuration
 circuitbreaker:
-  # -- enable deployment of circuitbreaker component
+  # -- Enable circuit breaker component deployment
   enabled: false
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-internal/hyperion
-    #name: circuitbreaker
-    #tag: 2.1.0
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-internal/hyperion/gateway-circuitbreaker:2.1.0
-
-  # -- default value for imagePullPolicy
+  
+  # -- Circuit breaker image configuration (inherits from global.image)
+  image:
+    # registry: ""  # Override global.image.registry
+    # namespace: ""  # Override global.image.namespace
+    repository: gateway-circuitbreaker
+    tag: "2.1.0"
+  
+  # -- Image pull policy for circuit breaker container
   imagePullPolicy: IfNotPresent
 
-  #interval: 60s
-  #count: 4
+  # -- Check interval for circuit breaker
+  interval: 60s
+  # -- Failure count threshold for circuit breaker activation
+  count: 4
 
-  #containerSecurityContext: {}
+  # -- Container security context for circuit breaker
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
 
-  # -- circuitbreaker container default resource configuration
+  # -- Circuit breaker container resource limits and requests
   resources:
     limits:
       cpu: 0.5
@@ -900,17 +1006,48 @@ circuitbreaker:
       cpu: 50m
       memory: 200Mi
 
+# PostgreSQL database configuration
 postgresql:
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-common
-    #name: postgres
-    #tag: 12.3-debian
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-common/postgres:12.3-debian
-  #imagePullPolicy: IfNotPresent
-
-  # -- postgresql container default resource configuration
+  # -- PostgreSQL image configuration (inherits from global.image)
+  image:
+    # registry: ""  # Override global.image.registry
+    # namespace: ""  # Override global.image.namespace
+    repository: postgresql
+    tag: "16.5"
+  
+  # -- Image pull policy for PostgreSQL container
+  imagePullPolicy: IfNotPresent
+  
+  # -- Pod security context for PostgreSQL
+  podSecurityContext:
+    fsGroup: 999
+    supplementalGroups: [999]
+  
+  # -- Container security context for PostgreSQL
+  containerSecurityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+      - ALL
+  
+  # -- Database admin password
+  #adminPassword: "changeme"
+  
+  # -- Maximum number of client connections
+  maxConnections: "100"
+  
+  # -- Shared memory buffer size for data caching
+  sharedBuffers: "32MB"
+  
+  # -- Maximum prepared transactions (0 disables prepared transactions)
+  maxPreparedTransactions: "0"
+  
+  # -- PostgreSQL container resource limits and requests
   resources:
     limits:
       cpu: 100m
@@ -918,34 +1055,51 @@ postgresql:
     requests:
       cpu: 20m
       memory: 200Mi
+  
+  persistence:
+    # -- Keep PVC on chart deletion
+    keepOnDelete: false
+    # -- Storage class name (uses cluster default if not set)
+    #storageClassName: ""
+    # -- Storage resource requests
+    resources:
+      requests:
+        storage: 1Gi
+    # -- Data directory mount path
+    mountDir: '/var/lib/postgresql/data'
+  
+  # -- Additional deployment annotations
+  deployment:
+    annotations: {}
 
-externalDatabase: 
-  # Set host if you use an external database or service name is not sufficient
+# External database configuration
+externalDatabase:
+  # -- External database hostname
   #host: 'some-external-postgresql-database.example.com'
+  # -- Enable SSL for external database connections
   ssl: true
+  # -- Verify SSL certificates for external database
   sslVerify: false
+  # -- Trusted CA certificate for SSL verification
   #luaSslTrustedCertificate: |
   #  -----BEGIN CERTIFICATE-----
-  #  <CA certificate in PEM format here>
+  #  <CA certificate in PEM format>
   #  -----END CERTIFICATE-----
 
-job: {}
-# force specific image for jobs:
-#job:
-  #image: 
-    #repository: mtr.devops.telekom.de
-    #organization: tardis-common
-    #name: tif-base-image
-    #tag: 1.0.0
-  # Or use the flattened string form:
-  #image: mtr.devops.telekom.de/tardis-common/tif-base-image:1.0.0
+# -- Job image configuration for setup jobs (inherits from global.image)
+job:
+  image:
+    # registry: ""  # Override global.image.registry
+    # namespace: ""  # Override global.image.namespace
+    repository: bash-curl
+    tag: "8.13.0"
 
-# enabling keyRotration requires a working cert-manager as well as the gateway-rotator
-# alternatively use jumper.existingJwkSecretName and issuerService.existingJwkSecretName to provide compatible secret
+# Automatic certificate/key rotation (requires cert-manager and gateway-rotator)
+# Alternative: use jumper.existingJwkSecretName and issuerService.existingJwkSecretName
 keyRotation:
-  # -- enable automatic cert / key rotation for access token issueing based on cert-manager and gateway-rotator
+  # -- Enable automatic certificate/key rotation for OAuth token signing
   enabled: false
-  # -- provide alternative configuration for cert-managers Certificate resource
+  # -- Additional Certificate resource configuration for cert-manager
   additionalSpecValues: {}
     #privateKey:
     #  rotationPolicy: Never
@@ -955,12 +1109,13 @@ keyRotation:
     #dnsNames:
     #  - stargate.telekom.de
 
+# Pod Disruption Budget configuration
 pdb:
-  # -- enable pod discruption budget creation
+  # -- Enable PodDisruptionBudget creation
   create: false
-  # -- minAvailable pods in number or percent
+  # -- Minimum available pods (number or percentage)
   minAvailable:
-  # --  maxUnavailable pods in number or percent (defaults to 1 if unset and minAvailable also unset)
+  # -- Maximum unavailable pods (number or percentage, defaults to 1 if both unset)
   maxUnavailable:
 
 # ============================================================================
@@ -982,9 +1137,9 @@ argoRollouts:
   enabled: false
   
   workloadRef:
-    # -- scaleDown strategy for Argo Rollouts deployment workloadRef
+    # -- Scale-down strategy for workloadRef (progressively or immediately)
     scaleDown: progressively
-    # -- enable explicit downscale of old Deployment during first take over of pod responsibility through argo rollouts together with argocd (see README.md for details)
+    # -- Enable explicit downscale of old Deployment during initial Argo Rollouts takeover with ArgoCD (see README.md)
     explicitDownscale: false
 
   # ============================================================================
@@ -994,25 +1149,25 @@ argoRollouts:
     # -- Deployment strategy type: "canary" or "blueGreen"
     type: canary
     
-    # Canary strategy configuration
+    # -- Canary strategy configuration
     canary:
+      # -- Additional canary deployment properties
       additionalProperties:
-        # -- Maximum number of pods that can be unavailable during rollout (number or percentage)
+        # -- Maximum unavailable pods during rollout (number or percentage)
         maxUnavailable: "50%"
 
-        # -- Maximum number of extra pods that can be created during rollout (number or percentage)
+        # -- Maximum surge pods during rollout (number or percentage)
         maxSurge: "25%"
 
-        # -- Enable dynamic stable scale (mutual exclusive to scaleDownDelaySeconds )
+        # -- Enable dynamic stable scaling (mutually exclusive with scaleDownDelaySeconds)
         dynamicStableScale: true
 
       # ============================================================================
       # Canary Steps Configuration
       # ============================================================================
-      # Define the progression of traffic shift during canary deployment
-      # Each step can set weight, pause duration, or trigger analysis
+      # Define traffic shift progression during canary deployment
 
-      # -- Canary step definition with a weight of 10% and a pause of 5 minutes
+      # -- Canary deployment steps (set weight percentages and pause durations)
       steps:
         - setWeight: 10
         - pause:
@@ -1033,19 +1188,21 @@ argoRollouts:
       # ============================================================================
       # Analysis Configuration
       # ============================================================================
-      # Optional background analysis that runs continuously during canary
+      # Optional background analysis during canary deployment
       
+      # -- Background analysis configuration
       analysis:
-        # -- AnalysisTemplate references for background analysis
+        # -- AnalysisTemplate names for background analysis
         templates:
           - templateName: success-rate-analysis
-        # -- Arguments to pass to the analysis template
+        # -- Arguments passed to analysis templates
         args: []
-        # -- Canary step at which to start the analysis (1-based index)
+        # -- Canary step number to start analysis (1-based index)
         startingStep:
 
-    # -- blueGreen strategy configuration (except activeService and previewService - these are handled by template)
+    # -- Blue-Green strategy configuration (activeService and previewService handled by template)
     blueGreen:
+      # -- Enable automatic promotion to new version
       autoPromotionEnabled: false
 
   # ============================================================================
@@ -1077,25 +1234,23 @@ argoRollouts:
       # PromQL query to calculate error rate over last 5 minutes
       query: |
         sum(irate(
-        kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary",code!~"5.."}[1m]
+        kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary",code!~"5.."}[1m]
         )) /
         sum(irate(
-        kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
+        kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
         ))
 
       # -- Prometheus server address (must be accessible)
       # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
       prometheusAddress: ""
       
-      # -- Prometheus authentication using Basic Auth
-      # Credentials are read from a Kubernetes secret in the same namespace
+      # -- Prometheus Basic Auth authentication configuration
       authentication:
         # -- Enable authentication for Prometheus queries
         enabled: true
         
-        # -- Secret name containing Prometheus credentials
-        # This secret must exist in the same namespace as the Rollout
-        # Example secret creation:
+        # -- Secret name containing Prometheus credentials (must exist in same namespace as Rollout)
+        # Example secret:
         #   apiVersion: v1
         #   kind: Secret
         #   metadata:
@@ -1106,7 +1261,7 @@ argoRollouts:
         #     password: "my-password"
         secretName: "victoria-metrics-secret"
         
-        # -- Secret key containing base64 encoded user:password combination to be used as Basic Auth header
+        # -- Secret key for base64 encoded user:password Basic Auth header
         basicKey: "basic-auth"
 
     # ============================================================================
@@ -1129,17 +1284,16 @@ argoRollouts:
       # PromQL query to calculate success rate over last 1 minute
       query: |
         sum(irate(
-          kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary",code!~"(4|5).*"}[1m]
+          kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary",code!~"(4|5).*"}[1m]
         )) /
         sum(irate(
-          kong_http_requests_total{tardis_telekom_de_zone="{{ args.zone }}",namespace="{{ args.namespace }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
+          kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary"}[1m]
         ))
 
       # -- Prometheus server address
       prometheusAddress: ""
       
-      # -- Prometheus authentication using Basic Auth
-      # Credentials are read from a Kubernetes secret in the same namespace
+      # -- Prometheus Basic Auth authentication configuration
       authentication:
         # -- Enable authentication for Prometheus queries
         enabled: true
@@ -1147,5 +1301,5 @@ argoRollouts:
         # -- Secret name containing Prometheus credentials
         secretName: "victoria-metrics-secret"
         
-        # -- Secret key containing base64 encoded user:password combination to be used as Basic Auth header
+        # -- Secret key for base64 encoded user:password Basic Auth header
         basicKey: "basic-auth"

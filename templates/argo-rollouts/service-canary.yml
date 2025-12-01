@@ -4,23 +4,23 @@ SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if .Values.adminApi.enabled }}
+{{- if .Values.argoRollouts.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-admin
+  name: {{ .Release.Name }}-proxy-canary
   labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
   selector: {{ include "app.labels.selectorLabels" $ | nindent 4 }}
   ports:
-{{- if .Values.adminApi.tls.enabled }}
-  - name: admin-ssl
-    port: 8444
-    targetPort: 8444
+{{- if .Values.proxy.tls.enabled }}
+  - name: proxy-ssl
+    port: 8443
+    targetPort: 8443
 {{- else }}
-  - name: admin
-    port: 8001
-    targetPort: 8001
+  - name: proxy
+    port: 8000
+    targetPort: 8000
 {{- end }}
     protocol: TCP
-{{- end -}}
+{{- end }}

@@ -1,0 +1,36 @@
+{{/*
+SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and (.Values.plugins.prometheus.enabled) (.Values.plugins.prometheus.podMonitor.enabled) -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+    release: {{ .Values.plugins.prometheus.podMonitor.selector }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  podMetricsEndpoints:
+    - port: metrics
+      path: {{ .Values.plugins.prometheus.path }}
+      {{- if .Values.plugins.prometheus.podMonitor.scheme }}
+      scheme: {{ .Values.plugins.prometheus.podMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.podMonitor.interval }}
+      interval: {{ .Values.plugins.prometheus.podMonitor.interval | quote}}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.podMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.plugins.prometheus.podMonitor.scrapeTimeout | quote }}
+      {{- end }}
+      {{- if .Values.plugins.prometheus.podMonitor.honorLabels }}
+      honorLabels: {{ .Values.plugins.prometheus.podMonitor.honorLabels }}
+      {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
+{{- end -}}

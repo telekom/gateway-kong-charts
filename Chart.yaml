@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 apiVersion: v2
-name: gateway
+name: stargate
 version: 9.0.1
 description: Kong API gateway provided by o28m
 maintainers:

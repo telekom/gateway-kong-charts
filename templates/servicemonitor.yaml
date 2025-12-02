@@ -22,6 +22,9 @@ spec:
     - port: metrics
       path: {{ .Values.plugins.prometheus.path }}
       metricRelabelings:
+      {{- with .Values.plugins.prometheus.serviceMonitor.metricRelabelings }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
         - sourceLabels: [__name__]
           regex: "kong_eni_(.+)"
           action: drop

@@ -557,6 +557,26 @@ You can tune Kong's asynchronous route refresh behavior with these variables:
 [db_update_propagation]: https://docs.konghq.com/gateway/2.8.x/reference/configuration/#db_update_propagation
 [worker_state_update_frequency]: https://docs.konghq.com/gateway/2.8.x/reference/configuration/#worker_state_update_frequency
 
+### Relabeling application metrics
+
+In case you need to manipulate existing application metrcis or add new ones,
+you can use the `metricRelableings` for both ServiceMonitor and PodMonitor resources.
+An example that adds a new label would look like this:
+
+```yaml
+prometheus:
+  enabled: true
+  [...]
+
+  podMonitor:
+    enabled: true
+    metricRelabelings:
+      - action: replace
+        targetLabel: example-label-key
+        replacement: example-label-value
+    [...]
+```
+
 ## Parameters
 
 The following table provides a comprehensive list of all configurable parameters in `values.yaml`:

@@ -557,6 +557,26 @@ You can tune Kong's asynchronous route refresh behavior with these variables:
 [db_update_propagation]: https://docs.konghq.com/gateway/2.8.x/reference/configuration/#db_update_propagation
 [worker_state_update_frequency]: https://docs.konghq.com/gateway/2.8.x/reference/configuration/#worker_state_update_frequency
 
+### Relabeling application metrics
+
+In case you need to manipulate existing application metrcis or add new ones,
+you can use the `metricRelableings` for both ServiceMonitor and PodMonitor resources.
+An example that adds a new label would look like this:
+
+```yaml
+prometheus:
+  enabled: true
+  [...]
+
+  podMonitor:
+    enabled: true
+    metricRelabelings:
+      - action: replace
+        targetLabel: example-label-key
+        replacement: example-label-value
+    [...]
+```
+
 ## Parameters
 
 The following table provides a comprehensive list of all configurable parameters in `values.yaml`:
@@ -777,9 +797,11 @@ The following table provides a comprehensive list of all configurable parameters
 | plugins.prometheus.path | string | `"/metrics"` | Metrics endpoint path |
 | plugins.prometheus.pluginId | string | `"3d232d3c-dc2b-4705-aa8d-4e07c4e0ff4c"` | Plugin ID for Kong configuration |
 | plugins.prometheus.podMonitor.enabled | bool | `false` | Enable PodMonitor for Prometheus Operator |
+| plugins.prometheus.podMonitor.metricRelabelings | list | `[]` | Can be used to manipulate metric labels at scrape time |
 | plugins.prometheus.podMonitor.selector | string | `"guardians-raccoon"` | PodMonitor selector label |
 | plugins.prometheus.port | int | `9542` | Metrics endpoint port |
 | plugins.prometheus.serviceMonitor.enabled | bool | `true` | Enable ServiceMonitor for Prometheus Operator |
+| plugins.prometheus.serviceMonitor.metricRelabelings | list | `[]` | Can be used to manipulate metric labels at scrape time |
 | plugins.prometheus.serviceMonitor.selector | string | `"guardians-raccoon"` | ServiceMonitor selector label |
 | plugins.requestSizeLimiting.enabled | bool | `true` | Enable request size limiting plugin |
 | plugins.requestSizeLimiting.pluginId | string | `"1e199eee-f592-4afa-8371-6b61dcbd1904"` | Plugin ID for Kong configuration |

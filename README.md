@@ -654,8 +654,8 @@ The following table provides a comprehensive list of all configurable parameters
 | hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
-| image | object | `{"repository":"gateway-kong","tag":"1.2.1"}` | Kong Gateway image configuration (inherits from global.image) |
-| image.tag | string | `"1.2.1"` | Kong Gateway image tag |
+| image | object | `{"repository":"gateway-kong","tag":"1.3.0"}` | Kong Gateway image configuration (inherits from global.image) |
+| image.tag | string | `"1.3.0"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | irixBrokerRoute.enabled | bool | `false` | Enable IRIX broker route |
 | irixBrokerRoute.name | string | `"user-login"` | Route name |

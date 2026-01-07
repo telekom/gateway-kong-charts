@@ -640,7 +640,7 @@ The following table provides a comprehensive list of all configurable parameters
 | circuitbreaker.image | object | `{"repository":"gateway-circuitbreaker","tag":"2.1.0"}` | Circuit breaker image configuration (inherits from global.image) |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for circuit breaker container |
 | circuitbreaker.interval | string | `"60s"` | Check interval for circuit breaker |
-| circuitbreaker.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Circuit breaker container resource limits and requests |
+| circuitbreaker.resources | object | `{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Circuit breaker container resource limits and requests |
 | containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for Kong container (hardened defaults) |
 | dbUpdateFrequency | int | `10` | Frequency in seconds to poll database for updates |
 | dbUpdatePropagation | int | `0` | Delay in seconds before propagating database updates |
@@ -692,7 +692,7 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | Issuer Service liveness probe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | Issuer Service readiness probe configuration |
-| issuerService.resources | object | `{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Issuer Service container resource limits and requests |
+| issuerService.resources | object | `{"limits":{"cpu":"500m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"10Mi"}}` | Issuer Service container resource limits and requests |
 | issuerService.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"periodSeconds":1}` | Issuer Service startup probe configuration |
 | job | object | `{"image":{"repository":"bash-curl","tag":"8.13.0"}}` | Job image configuration for setup jobs (inherits from global.image) |
 | jobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for setup jobs |
@@ -709,7 +709,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.port | int | `8080` | Jumper container port |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` | Event publisher URL |
 | jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":5}` | Jumper readiness probe configuration |
-| jumper.resources | object | `{"limits":{"cpu":5,"memory":"1500Mi"},"requests":{"cpu":2,"memory":"1Gi"}}` | Jumper container resource limits and requests |
+| jumper.resources | object | `{"limits":{"cpu":"5000m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
 | jumper.stargateUrl | string | `"https://<your-gateway-host>"` | Gateway URL for Gateway-to-Gateway communication |
 | jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
 | jumper.zoneHealth.databaseConnectionTimeout | int | `500` | Redis connection timeout in milliseconds |
@@ -830,11 +830,11 @@ The following table provides a comprehensive list of all configurable parameters
 | proxy.tls.enabled | bool | `false` | Enable TLS for proxy |
 | readinessProbe | object | `{"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"timeoutSeconds":2}` | Kong readiness probe configuration |
 | replicas | int | `1` | Number of Kong pod replicas (ignored when HPA, KEDA, or Argo Rollouts is enabled) |
-| resources | object | `{"limits":{"cpu":"2500m","memory":"4Gi"},"requests":{"cpu":1,"memory":"2Gi"}}` | Kong container resource limits and requests |
+| resources | object | `{"limits":{"cpu":"2500m","memory":"4Gi"},"requests":{"cpu":"1500m","memory":"3Gi"}}` | Kong container resource limits and requests |
 | setupJobs.activeDeadlineSeconds | int | `3600` | Maximum job duration in seconds |
 | setupJobs.backoffLimit | int | `15` | Maximum number of retries for failed jobs |
 | setupJobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for setup jobs |
-| setupJobs.resources | object | `{"limits":{"cpu":0.5,"memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Resource limits and requests for setup jobs |
+| setupJobs.resources | object | `{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Resource limits and requests for setup jobs |
 | ssl | object | `{"cipherSuite":"custom","ciphers":"DHE-DSS-AES128-SHA256:DHE-DSS-AES256-SHA256:DHE-DSS-AES128-GCM-SHA256:DHE-DSS-AES256-GCM-SHA384:DHE-RSA-AES128-CCM:DHE-RSA-AES256-CCM:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-CCM:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CHACHA20-POLY1305:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256","protocols":"TLSv1.2 TLSv1.3"}` | Default HTTPS server certificate secret name (route-specific certificates can be configured at runtime) defaultTlsSecret: "mysecret" TLS protocol and cipher configuration |
 | ssl.cipherSuite | string | `"custom"` | TLS cipher suite: modern, intermediate, old, or custom (see https://wiki.mozilla.org/Security/Server_Side_TLS) |
 | ssl.ciphers | string | `"DHE-DSS-AES128-SHA256:DHE-DSS-AES256-SHA256:DHE-DSS-AES128-GCM-SHA256:DHE-DSS-AES256-GCM-SHA384:DHE-RSA-AES128-CCM:DHE-RSA-AES256-CCM:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-CCM:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CHACHA20-POLY1305:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256"` | Custom TLS ciphers (OpenSSL format, ignored unless cipherSuite is 'custom') |

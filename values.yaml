@@ -592,12 +592,12 @@ kedaAutoscaling:
 
 # -- Kong container resource limits and requests
 resources:
+  requests:
+    cpu: 1500m
+    memory: 3Gi
   limits:
     cpu: 2500m
     memory: 4Gi
-  requests:
-    cpu: 1
-    memory: 2Gi
 
 # -- Nginx log format: debug, default, json, or plain
 logFormat: json
@@ -637,12 +637,12 @@ setupJobs:
   activeDeadlineSeconds: 3600
   # -- Resource limits and requests for setup jobs
   resources:
-    limits:
-      cpu: 0.5
-      memory: 500Mi
     requests:
       cpu: 50m
       memory: 200Mi
+    limits:
+      cpu: 500m
+      memory: 500Mi
   # -- Container security context for setup jobs
   containerSecurityContext:
     runAsUser: 100
@@ -895,11 +895,11 @@ jumper:
 
   # -- Jumper container resource limits and requests
   resources:
-    limits:
-      cpu: 5
-      memory: 1500Mi
     requests:
-      cpu: 2
+      cpu: 1500m
+      memory: 1Gi
+    limits:
+      cpu: 5000m
       memory: 1Gi
 
 # Issuer Service component for OAuth token generation
@@ -962,12 +962,12 @@ issuerService:
 
   # -- Issuer Service container resource limits and requests
   resources:
-    limits:
-      cpu: 500m
-      memory: 500Mi
     requests:
       cpu: 50m
-      memory: 200Mi
+      memory: 10Mi
+    limits:
+      cpu: 500m
+      memory: 50Mi
 
 # Circuit breaker component configuration
 circuitbreaker:
@@ -1003,12 +1003,12 @@ circuitbreaker:
 
   # -- Circuit breaker container resource limits and requests
   resources:
-    limits:
-      cpu: 0.5
-      memory: 500Mi
     requests:
       cpu: 50m
       memory: 200Mi
+    limits:
+      cpu: 500m
+      memory: 500Mi
 
 # PostgreSQL database configuration
 postgresql:
@@ -1053,12 +1053,12 @@ postgresql:
   
   # -- PostgreSQL container resource limits and requests
   resources:
-    limits:
-      cpu: 100m
-      memory: 500Mi
     requests:
       cpu: 20m
       memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 500Mi
   
   persistence:
     # -- Keep PVC on chart deletion

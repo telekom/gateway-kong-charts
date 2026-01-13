@@ -89,9 +89,9 @@ spec:
   {{- range $k, $_ := .Values.global.labels }}
   - {{ $k }}
   {{- end }}
-  - ei.telekom.de/zone
+  - app.kubernetes.io/instance
   - ei.telekom.de/environment
-  - app
-  - type
+  - ei.telekom.de/zone
   - routeId
+  - type
 {{- end -}}

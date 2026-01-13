@@ -73,8 +73,8 @@ spec:
         resources: {{ .Values.jumper.resources | toYaml | nindent 10 }}
         lifecycle:
           preStop:
-            exec:
-              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
+            sleep:
+              seconds: {{ add .Values.global.preStopSleepBase 1 }}
         ports:
         - containerPort: {{ .Values.jumper.port }}
           name: jumper
@@ -110,8 +110,8 @@ spec:
         resources: {{ .Values.issuerService.resources | toYaml | nindent 10 }}
         lifecycle:
           preStop:
-            exec:
-              command: ["sleep", "{{ add .Values.global.preStopSleepBase 1 }}"]
+            sleep:
+              seconds: {{ add .Values.global.preStopSleepBase 1 }}
         ports:
         - containerPort: {{ .Values.issuerService.port | default 8081 }} 
           name: issuer-service

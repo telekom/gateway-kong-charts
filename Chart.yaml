@@ -4,7 +4,7 @@
 
 apiVersion: v2
 name: stargate
-version: 9.1.4
+version: 9.1.5
 description: Kong API gateway provided by o28m
 maintainers:
 - name: Deutsche Telekom AG

@@ -1307,3 +1307,32 @@ argoRollouts:
         
         # -- Secret key for base64 encoded user:password Basic Auth header
         basicKey: "basic-auth"
+
+# ============================================================================
+# Network Policy Configuration
+# ============================================================================
+# NetworkPolicy controls traffic flow to and from the gateway pods.
+# When enabled, only explicitly allowed traffic is permitted.
+# ============================================================================
+
+networkPolicy:
+  # -- Enable NetworkPolicy for the gateway pods
+  enabled: false
+  
+  # -- Custom ingress rules (if not set, default rules based on enabled components are used)
+  # ingress:
+  #   - from:
+  #       - namespaceSelector:
+  #           matchLabels:
+  #             kubernetes.io/metadata.name: ingress-nginx
+  #     ports:
+  #       - port: 8000
+  #         protocol: TCP
+  
+  # -- Custom egress rules (if not set, all egress is allowed)
+  # egress:
+  #   - to:
+  #       - namespaceSelector: {}
+  #     ports:
+  #       - port: 443
+  #         protocol: TCP

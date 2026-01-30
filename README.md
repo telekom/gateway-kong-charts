@@ -782,6 +782,7 @@ The following table provides a comprehensive list of all configurable parameters
 | logFormat | string | `"json"` | Nginx log format: debug, default, json, or plain |
 | memCacheSize | string | `"128m"` | Kong memory cache size for database entities |
 | migrations | string | `"none"` | Migration mode for database initialization or upgrades |
+| networkPolicy.enabled | bool | `false` | Enable NetworkPolicy for the gateway pods |
 | nginxHttpLuaSharedDict | string | `"prometheus_metrics 15m"` | Nginx HTTP Lua shared dictionary for storing metrics |
 | nginxWorkerProcesses | int | `4` | Number of nginx worker processes |
 | pdb.create | bool | `false` | Enable PodDisruptionBudget creation |

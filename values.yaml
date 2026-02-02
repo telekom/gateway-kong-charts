@@ -260,6 +260,8 @@ dbUpdateFrequency: 10
 dbUpdatePropagation: 0
 # -- HTTP client body buffer size (optional override)
 #httpClientBodyBufferSize: 4m
+# -- glibc MALLOC_ARENA_MAX setting to reduce memory fragmentation (optional override, default: 8 * CPU cores)
+#mallocArenaMax: 2
 # -- Trusted IPs for real IP detection (optional override)
 #trustedIps: 100.70.0.0/16
 # -- Header to use for real IP detection (optional override)

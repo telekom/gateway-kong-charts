@@ -219,8 +219,9 @@ spec:
       {{- include "kong.volumes" $ | nindent 6 }}
       {{- include "kong.jumper.volumes" $ | nindent 6 }}
       {{- include "kong.issuerService.volumes" $ | nindent 6 }}
-{{ if include "cosign.enabled" $ }}
+{{- if include "cosign.enabled" $ }}
       {{- include "cosign.keyVolume" $ | nindent 6 }}
+      {{- include "cosign.pullSecretVolumes" $ | nindent 6 }}
 {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always

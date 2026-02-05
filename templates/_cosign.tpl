@@ -85,6 +85,27 @@ Returns the volume configuration for the cosign public key.
 {{- end -}}
 
 {{/*
+Returns the volume configurations for imagePullSecrets (for cosign login).
+*/}}
+{{- define "cosign.pullSecretVolumes" -}}
+- name: cosign-docker-config
+  emptyDir: {}
+{{- if .Values.global.imagePullSecrets }}
+{{- range $index, $secret := .Values.global.imagePullSecrets }}
+{{- $secretName := "" -}}
+{{- if not (kindIs "string" $secret) -}}
+{{- $secretName = printf "%s-%s" $.Release.Name $secret.name -}}
+{{- else -}}
+{{- $secretName = $secret -}}
+{{- end }}
+- name: pull-secret-{{ $index }}
+  secret:
+    secretName: {{ $secretName }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Returns the InitContainer for cosign image verification.
 */}}
 {{- define "cosign.initContainer" -}}
@@ -96,10 +117,21 @@ Returns the InitContainer for cosign image verification.
   env:
   - name: VERIFICATION_MODE
     value: {{ .Values.imageVerification.mode | quote }}
+  - name: DOCKER_CONFIG
+    value: /tmp/docker
   volumeMounts:
   - name: cosign-key
     mountPath: /cosign
     readOnly: true
+  - name: cosign-docker-config
+    mountPath: /tmp/docker
+{{- if .Values.global.imagePullSecrets }}
+{{- range $index, $secret := .Values.global.imagePullSecrets }}
+  - name: pull-secret-{{ $index }}
+    mountPath: /pull-secrets/{{ $index }}
+    readOnly: true
+{{- end }}
+{{- end }}
   command:
   - /bin/sh
   - -c
@@ -110,6 +142,49 @@ Returns the InitContainer for cosign image verification.
 
     echo "=== Cosign Image Verification (mode: $VERIFICATION_MODE) ==="
 
+    # Extract unique registries from images
+    REGISTRIES=""
+    for IMAGE in $(echo "$IMAGES" | tr -d '[]"' | tr ',' ' '); do
+      REGISTRY=$(echo "$IMAGE" | cut -d'/' -f1)
+      if ! echo "$REGISTRIES" | grep -q "$REGISTRY"; then
+        REGISTRIES="$REGISTRIES $REGISTRY"
+      fi
+    done
+
+    # Login to each registry using all available pull secrets
+    echo "=== Logging into registries ==="
+    for SECRET_DIR in /pull-secrets/*; do
+      if [ -d "$SECRET_DIR" ]; then
+        if [ -f "$SECRET_DIR/.dockerconfigjson" ]; then
+          CONFIG_FILE="$SECRET_DIR/.dockerconfigjson"
+        elif [ -f "$SECRET_DIR/config.json" ]; then
+          CONFIG_FILE="$SECRET_DIR/config.json"
+        else
+          echo "No docker config found in $SECRET_DIR, skipping"
+          continue
+        fi
+
+        for REGISTRY in $REGISTRIES; do
+          # Extract auth for this registry from the docker config
+          AUTH=$(cat "$CONFIG_FILE" | grep -o "\"$REGISTRY\"[^}]*" | grep -o '"auth":"[^"]*"' | cut -d'"' -f4 || true)
+          if [ -n "$AUTH" ]; then
+            DECODED=$(echo "$AUTH" | base64 -d 2>/dev/null || true)
+            if [ -n "$DECODED" ]; then
+              USERNAME=$(echo "$DECODED" | cut -d':' -f1)
+              PASSWORD=$(echo "$DECODED" | cut -d':' -f2-)
+              echo "Logging into $REGISTRY..."
+              if cosign login "$REGISTRY" -u "$USERNAME" -p "$PASSWORD" 2>&1; then
+                echo "✓ Logged into $REGISTRY"
+              else
+                echo "⚠ Failed to login to $REGISTRY (will try other secrets)"
+              fi
+            fi
+          fi
+        done
+      fi
+    done
+
+    echo "=== Verifying images ==="
     for IMAGE in $(echo "$IMAGES" | tr -d '[]"' | tr ',' ' '); do
       echo "Verifying: $IMAGE"
       if cosign verify --insecure-ignore-tlog=true --key /cosign/{{ include "cosign.publicKeyFilename" . }} "$IMAGE" 2>&1; then

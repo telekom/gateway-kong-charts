@@ -136,61 +136,71 @@ Returns the InitContainer for cosign image verification.
   - /bin/sh
   - -c
   - |
-    set -e
     FAILED=0
     IMAGES='{{ include "cosign.imagesToVerify" . }}'
 
     echo "=== Cosign Image Verification (mode: $VERIFICATION_MODE) ==="
 
-    # Extract unique registries from images
-    REGISTRIES=""
+    # Function to extract auth from docker config for a registry
+    extract_auth() {
+      CONFIG_FILE="$1"
+      REGISTRY="$2"
+      cat "$CONFIG_FILE" | grep -o "\"$REGISTRY\"[^}]*" | grep -o '"auth":"[^"]*"' | cut -d'"' -f4 || true
+    }
+
+    echo "=== Verifying images ==="
     for IMAGE in $(echo "$IMAGES" | tr -d '[]"' | tr ',' ' '); do
+      echo "Verifying: $IMAGE"
       REGISTRY=$(echo "$IMAGE" | cut -d'/' -f1)
-      if ! echo "$REGISTRIES" | grep -q "$REGISTRY"; then
-        REGISTRIES="$REGISTRIES $REGISTRY"
-      fi
-    done
+      IMAGE_VERIFIED=0
 
-    # Login to each registry using all available pull secrets
-    echo "=== Logging into registries ==="
-    for SECRET_DIR in /pull-secrets/*; do
-      if [ -d "$SECRET_DIR" ]; then
-        if [ -f "$SECRET_DIR/.dockerconfigjson" ]; then
-          CONFIG_FILE="$SECRET_DIR/.dockerconfigjson"
-        elif [ -f "$SECRET_DIR/config.json" ]; then
-          CONFIG_FILE="$SECRET_DIR/config.json"
-        else
-          echo "No docker config found in $SECRET_DIR, skipping"
-          continue
-        fi
+      # Try each pull secret until verification succeeds
+      for SECRET_DIR in /pull-secrets/*; do
+        if [ -d "$SECRET_DIR" ]; then
+          if [ -f "$SECRET_DIR/.dockerconfigjson" ]; then
+            CONFIG_FILE="$SECRET_DIR/.dockerconfigjson"
+          elif [ -f "$SECRET_DIR/config.json" ]; then
+            CONFIG_FILE="$SECRET_DIR/config.json"
+          else
+            continue
+          fi
 
-        for REGISTRY in $REGISTRIES; do
-          # Extract auth for this registry from the docker config
-          AUTH=$(cat "$CONFIG_FILE" | grep -o "\"$REGISTRY\"[^}]*" | grep -o '"auth":"[^"]*"' | cut -d'"' -f4 || true)
+          AUTH=$(extract_auth "$CONFIG_FILE" "$REGISTRY")
           if [ -n "$AUTH" ]; then
             DECODED=$(echo "$AUTH" | base64 -d 2>/dev/null || true)
             if [ -n "$DECODED" ]; then
               USERNAME=$(echo "$DECODED" | cut -d':' -f1)
               PASSWORD=$(echo "$DECODED" | cut -d':' -f2-)
-              echo "Logging into $REGISTRY..."
-              if cosign login "$REGISTRY" -u "$USERNAME" -p "$PASSWORD" 2>&1; then
-                echo "✓ Logged into $REGISTRY"
+
+              # Clear previous credentials and login
+              rm -f "$DOCKER_CONFIG/config.json"
+              cosign login "$REGISTRY" -u "$USERNAME" -p "$PASSWORD" >/dev/null 2>&1 || true
+
+              # Try verification
+              OUTPUT=$(cosign verify --insecure-ignore-tlog=true --key /cosign/{{ include "cosign.publicKeyFilename" . }} "$IMAGE" 2>&1)
+              EXIT_CODE=$?
+
+              if [ $EXIT_CODE -eq 0 ]; then
+                echo "✓ $IMAGE: signature valid"
+                IMAGE_VERIFIED=1
+                break
+              elif echo "$OUTPUT" | grep -q "UNAUTHORIZED"; then
+                echo "  (auth failed with secret in $SECRET_DIR, trying next...)"
+                continue
               else
-                echo "⚠ Failed to login to $REGISTRY (will try other secrets)"
+                echo "✗ $IMAGE: signature verification FAILED"
+                echo "$OUTPUT"
+                FAILED=1
+                IMAGE_VERIFIED=1
+                break
               fi
             fi
           fi
-        done
-      fi
-    done
+        fi
+      done
 
-    echo "=== Verifying images ==="
-    for IMAGE in $(echo "$IMAGES" | tr -d '[]"' | tr ',' ' '); do
-      echo "Verifying: $IMAGE"
-      if cosign verify --insecure-ignore-tlog=true --key /cosign/{{ include "cosign.publicKeyFilename" . }} "$IMAGE" 2>&1; then
-        echo "✓ $IMAGE: signature valid"
-      else
-        echo "✗ $IMAGE: signature verification FAILED"
+      if [ "$IMAGE_VERIFIED" -eq 0 ]; then
+        echo "✗ $IMAGE: UNAUTHORIZED with all available secrets"
         FAILED=1
       fi
     done

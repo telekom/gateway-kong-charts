@@ -677,6 +677,19 @@ The following table provides a comprehensive list of all configurable parameters
 | image | object | `{"repository":"gateway-kong","tag":"1.3.0"}` | Kong Gateway image configuration (inherits from global.image) |
 | image.tag | string | `"1.3.0"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
+| imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
+| imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
+| imageVerification.image | object | `{"repository":"cosign","tag":"v3.0.4"}` | Cosign image configuration (inherits from global.image) |
+| imageVerification.mode | string | `"enforce"` | Verification mode: "enforce" (block pod on invalid signature) or "audit" (log and continue) |
+| imageVerification.publicKey | object | `{"configMapRef":{"key":"cosign.pub","name":""},"secretRef":{"key":"cosign.pub","name":"cosign-public-key"},"source":"secret"}` | Public key configuration for signature verification Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef |
+| imageVerification.publicKey.configMapRef | object | `{"key":"cosign.pub","name":""}` | ConfigMap reference (used when source: configMap) |
+| imageVerification.publicKey.configMapRef.key | string | `"cosign.pub"` | Key within the ConfigMap |
+| imageVerification.publicKey.configMapRef.name | string | `""` | Name of the ConfigMap containing the public key |
+| imageVerification.publicKey.secretRef | object | `{"key":"cosign.pub","name":"cosign-public-key"}` | Secret reference (used when source: secret) |
+| imageVerification.publicKey.secretRef.key | string | `"cosign.pub"` | Key within the Secret |
+| imageVerification.publicKey.secretRef.name | string | `"cosign-public-key"` | Name of the Secret containing the public key |
+| imageVerification.publicKey.source | string | `"secret"` | Source type: "value" (inline), "configMap", or "secret" |
+| imageVerification.resources | object | `{"limits":{"cpu":"200m","memory":"128Mi"},"requests":{"cpu":"50m","memory":"64Mi"}}` | Resource limits and requests for verification InitContainer |
 | irixBrokerRoute.enabled | bool | `false` | Enable IRIX broker route |
 | irixBrokerRoute.name | string | `"user-login"` | Route name |
 | irixBrokerRoute.upstream | object | `{"path":"/auth/realms/eni-login","port":80,"protocol":"http","service":"irix-broker"}` | Route hostname (optional, uses default host rules if not set) host: integration.spacegate.telekom.de |

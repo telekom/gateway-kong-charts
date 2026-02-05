@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -64,6 +64,12 @@ spec:
                 topologyKey: {{ .Values.topologyKey }}
 {{- end }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+
+{{ if include "cosign.enabled" $ }}
+{{ include "cosign.validatePublicKey" $ }}
+      initContainers:
+{{ include "cosign.initContainer" $ | nindent 6 }}
+{{- end }}
       containers:
 {{- if eq .Values.jumper.enabled true }}
       - name: jumper
@@ -210,9 +216,12 @@ spec:
         volumeMounts:
         {{- include "kong.volumeMounts" $ | indent 8 }}
       volumes:
-      {{- include "kong.volumes" $ | indent 6 }}
-      {{- include "kong.jumper.volumes" $ | indent 6 }}
-      {{- include "kong.issuerService.volumes" $ | indent 6 }}
+      {{- include "kong.volumes" $ | nindent 6 }}
+      {{- include "kong.jumper.volumes" $ | nindent 6 }}
+      {{- include "kong.issuerService.volumes" $ | nindent 6 }}
+{{ if include "cosign.enabled" $ }}
+      {{- include "cosign.keyVolume" $ | nindent 6 }}
+{{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: {{ add .Values.global.preStopSleepBase 60 }}

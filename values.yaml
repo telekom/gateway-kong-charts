@@ -48,10 +48,10 @@ global:
     length: 12
     # -- Password must match these regex patterns
     mustMatch:
-      - "[a-z]"
-      - "[A-Z]"
-      - "[0-9]"
-      - "[^a-zA-Z0-9]"
+    - '[a-z]'
+    - '[A-Z]'
+    - '[0-9]'
+    - '[^a-zA-Z0-9]'
 
   database:
     # -- Database location: 'local' (deploy with chart) or 'external' (provided externally)
@@ -108,6 +108,7 @@ imagePullPolicy: IfNotPresent
 # -- Migration mode for database initialization or upgrades
 migrations: none
 
+
 # Kong Admin API configuration
 adminApi:
   # -- Create Service for Kong Admin API
@@ -142,6 +143,7 @@ adminApi:
       #  hosts:
       #    - hostNameMatchingCertInSecret
 
+
 # Kong Proxy configuration
 proxy:
   tls:
@@ -172,13 +174,13 @@ proxy:
 
 # -- Post-deployment configuration script (curl commands for Admin API)
 #configuration: |
-#Place your curl commands for configuring the Admin API here
+  #Place your curl commands for configuring the Admin API here
 
 # SSL/TLS configuration
 # -- Enable SSL certificate verification for upstream traffic
 sslVerify: false
 # -- SSL certificate verification depth
-sslVerifyDepth: "1"
+sslVerifyDepth: '1'
 
 # -- CA certificates bundle in PEM format for SSL verification
 #trustedCaCertificates: |
@@ -221,7 +223,7 @@ containerSecurityContext:
   privileged: false
   capabilities:
     drop:
-      - ALL
+    - ALL
 
 # -- Topology key for pod anti-affinity (spread pods across zones for high availability)
 topologyKey: kubernetes.io/hostname
@@ -238,7 +240,7 @@ jobs:
     privileged: false
     capabilities:
       drop:
-        - ALL
+      - ALL
 
 # -- Kong memory cache size for database entities
 memCacheSize: 128m
@@ -304,52 +306,52 @@ hpaAutoscaling:
 kedaAutoscaling:
   # -- Enable KEDA-based autoscaling (disables standard HPA if enabled)
   enabled: false
-
+  
   # ============================================================================
   # Replica Boundaries
   # ============================================================================
-
+  
   # -- Minimum number of replicas (must be >= 1)
   minReplicas: 2
-
+  
   # -- Maximum number of replicas (must be >= minReplicas)
   maxReplicas: 10
-
+  
   # ============================================================================
   # Timing Configuration (Anti-Flapping)
   # ============================================================================
-
+  
   # -- Polling interval in seconds (how often KEDA checks metrics)
   # Lower values = more responsive but more API calls
   # Recommended: 30-60 seconds for balanced behavior
   pollingInterval: 30
-
+  
   # -- Cooldown period in seconds (minimum time between scale-down actions)
   # Prevents rapid scale-down oscillations
   # Recommended: 300 seconds (5 minutes) for stable workloads
   cooldownPeriod: 300
-
+  
   # ============================================================================
   # Fallback Configuration
   # ============================================================================
   # Defines behavior when all scaling triggers fail (e.g., metrics unavailable)
-
+  
   fallback:
     # -- Enable fallback to a fixed replica count when all triggers fail
     enabled: false
-
+    
     # -- Number of replicas to maintain when all triggers fail (e.g. maxReplicas)
     replicas: 10
-
+  
   # ============================================================================
   # Advanced HPA Behavior Configuration
   # ============================================================================
   # Fine-tune scaling behavior using Kubernetes HPA v2 behavior policies
-
+  
   advanced:
     # -- Restore to original replica count when ScaledObject is deleted
     restoreToOriginalReplicaCount: false
-
+    
     # -- HPA behavior configuration (scale-up/scale-down policies)
     horizontalPodAutoscalerConfig:
       # -- Scaling behavior policies
@@ -358,52 +360,53 @@ kedaAutoscaling:
         scaleDown:
           # -- Stabilization window for scale-down in seconds (KEDA waits before scaling down)
           stabilizationWindowSeconds: 300
-
+          
           # -- Scale-down policies (multiple policies can be defined)
           policies:
-            - type: Percent
-              value: 10 # Max 10% reduction per period
-              periodSeconds: 60
-
+          - type: Percent
+            value: 10        # Max 10% reduction per period
+            periodSeconds: 60
+          
           # -- Policy selection (Min = most conservative, Max = most aggressive)
           selectPolicy: Min
-
+        
         # -- Scale-up behavior (aggressive for availability)
         scaleUp:
           # -- Stabilization window for scale-up in seconds (0 = immediate scale-up)
           stabilizationWindowSeconds: 0
-
+          
           # -- Scale-up policies
           policies:
-            - type: Percent
-              value: 100 # Max 100% increase per period
-              periodSeconds: 60
-            - type: Pods
-              value: 4 # Or max 4 pods per period
-              periodSeconds: 60
-
+          - type: Percent
+            value: 100       # Max 100% increase per period
+            periodSeconds: 60
+          - type: Pods
+            value: 4         # Or max 4 pods per period
+            periodSeconds: 60
+          
           # -- Policy selection (Max = use most aggressive policy)
           selectPolicy: Max
-
+  
   # ============================================================================
   # Scaling Triggers
   # ============================================================================
   # Multiple triggers can be enabled simultaneously (OR logic)
   # If ANY trigger suggests scale-up → scale up
   # If ALL triggers suggest scale-down → scale down (after cooldown)
-
+  
   triggers:
+    
     # ==========================================================================
     # CPU Resource Scalers (Per-Container)
     # ==========================================================================
     # Scales based on CPU utilization percentage for individual containers
     # Requires: Kubernetes metrics server
     # Multiple containers can be monitored independently
-
+    
     cpu:
       # -- Enable CPU-based scaling for any container
       enabled: true
-
+      
       # -- Per-container CPU thresholds (any container exceeding threshold triggers scaling)
       containers:
         # -- Kong container CPU scaling configuration
@@ -412,32 +415,32 @@ kedaAutoscaling:
           enabled: true
           # -- CPU utilization threshold percentage (0-100, recommended: 60-80% for headroom)
           threshold: 70
-
+        
         # -- Jumper container CPU scaling configuration
         jumper:
           # -- Enable CPU monitoring for Jumper container
           enabled: true
           # -- CPU utilization threshold percentage (0-100)
           threshold: 70
-
+        
         # -- Issuer Service container CPU scaling configuration
         issuerService:
           # -- Enable CPU monitoring for Issuer Service container
           enabled: true
           # -- CPU utilization threshold percentage (0-100)
           threshold: 70
-
+    
     # ==========================================================================
     # Memory Resource Scalers (Per-Container)
     # ==========================================================================
     # Scales based on memory utilization percentage for individual containers
     # Requires: Kubernetes metrics server
     # Multiple containers can be monitored independently
-
+    
     memory:
       # -- Enable memory-based scaling for any container
       enabled: true
-
+      
       # -- Per-container memory thresholds (any container exceeding threshold triggers scaling)
       containers:
         # -- Kong container memory scaling configuration
@@ -446,39 +449,39 @@ kedaAutoscaling:
           enabled: true
           # -- Memory utilization threshold percentage (0-100, recommended: 80-90%)
           threshold: 95
-
+        
         # -- Jumper container memory scaling configuration
         jumper:
           # -- Enable memory monitoring for Jumper container
           enabled: true
           # -- Memory utilization threshold percentage (0-100)
           threshold: 85
-
+        
         # -- Issuer Service container memory scaling configuration
         issuerService:
           # -- Enable memory monitoring for Issuer Service container
           enabled: true
           # -- Memory utilization threshold percentage (0-100)
           threshold: 85
-
+    
     # ==========================================================================
     # Prometheus/Victoria Metrics Scaler
     # ==========================================================================
     # Scales based on custom metrics from Victoria Metrics
     # Requires: Victoria Metrics accessible, authentication configured
-
+    
     prometheus:
       # -- Enable Prometheus/Victoria Metrics based scaling
       enabled: true
-
+      
       # -- Victoria Metrics server address (REQUIRED if enabled)
       # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
       # Can use template variables: "{{ .Values.global.vmauth.url }}"
       serverAddress: ""
-
+      
       # -- Metric name (used for identification in KEDA)
       metricName: "kong_request_rate"
-
+      
       # -- PromQL query to execute
       # Must return a single numeric value
       # Can use Helm template variables (e.g., {{ .Values.global.zone }})
@@ -486,21 +489,21 @@ kedaAutoscaling:
       #   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))
       #   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m]))
       query: 'sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ .Values.global.zone }}",ei_telekom_de_environment="{{ .Values.global.environment }}",app_kubernetes_io_instance="{{ .Release.Name }}-kong"}[1m]))'
-
+      
       # -- Threshold value for the metric
       # Scales up when query result exceeds this value
       # For request rate: total requests/second across all pods
       threshold: "100"
-
+      
       # -- Activation threshold (optional)
       # Minimum metric value to activate this scaler
       # Prevents scaling from 0 on minimal load
       activationThreshold: ""
-
+      
       # -- Authentication mode for Victoria Metrics
       # Options: "basic", "bearer", "tls"
       authModes: "basic"
-
+      
       # -- KEDA authentication configuration for Victoria Metrics access
       # Reference to existing TriggerAuthentication or ClusterTriggerAuthentication resource
       authentication:
@@ -508,7 +511,7 @@ kedaAutoscaling:
         # Use "TriggerAuthentication" for namespace-scoped environments
         # Use "ClusterTriggerAuthentication" for cluster-wide shared credentials
         kind: "ClusterTriggerAuthentication"
-
+        
         # -- Name of the TriggerAuthentication or ClusterTriggerAuthentication resource
         # This resource must be created separately and contain Victoria Metrics credentials
         # Example ClusterTriggerAuthentication:
@@ -540,24 +543,24 @@ kedaAutoscaling:
         #       name: victoria-metrics-secret
         #       key: password
         name: "eni-keda-vmselect-creds"
-
+    
     # ==========================================================================
     # Cron-Based Scalers
     # ==========================================================================
     # Scales based on time schedules (predictable traffic patterns)
     # Multiple schedules can be defined for different time windows
-
+    
     cron:
       # -- Enable cron-based (schedule) scaling
       enabled: false
-
+      
       # -- Timezone for cron schedules
       # Use IANA timezone database names for automatic DST handling
       # Europe/Berlin automatically handles CET (UTC+1) and CEST (UTC+2) transitions
       # Format: IANA timezone (e.g., "Europe/Berlin", "America/New_York", "Asia/Tokyo")
       # See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
       timezone: "Europe/Berlin"
-
+      
       # -- Cron schedule definitions (time windows with desired replica counts)
       # Each schedule defines start/end times and replica count
       # Multiple schedules can overlap (highest desiredReplicas wins)
@@ -567,7 +570,7 @@ kedaAutoscaling:
       #   start: "0 8 * * 1-5"      # 8 AM Monday-Friday
       #   end: "0 18 * * 1-5"       # 6 PM Monday-Friday
       #   desiredReplicas: 5
-      #
+      # 
       # - name: "weekend-scale-down"
       #   start: "0 0 * * 6-7"      # Midnight Saturday-Sunday
       #   end: "0 23 * * 6-7"       # 11 PM Saturday-Sunday
@@ -650,7 +653,7 @@ setupJobs:
     privileged: false
     capabilities:
       drop:
-        - ALL
+      - ALL
 
 # Kong plugin configuration
 plugins:
@@ -664,7 +667,7 @@ plugins:
     privileged: false
     capabilities:
       drop:
-        - ALL
+      - ALL
   # -- Additional Kong plugins to enable (beyond bundled and jwt-keycloak)
   enabled:
     - rate-limiting-merged
@@ -672,14 +675,14 @@ plugins:
   acl:
     # -- Plugin ID for Kong configuration
     pluginId: bc823d55-83b5-4184-b03f-ce63cd3b75c7
-
+      
   jwtKeycloak:
     # -- Enable JWT Keycloak plugin
     enabled: true
     # -- Plugin ID for Kong configuration
     pluginId: b864d58b-7183-4889-8b32-0b92d6c4d513
     # -- Allowed identity provider issuer URLs (used for authenticating Admin API requests from the Rover realm)
-    allowedIss:
+    allowedIss: 
       - https://<your-iris-host>/auth/realms/rover
 
   prometheus:
@@ -787,20 +790,20 @@ irixBrokerRoute:
 jumper:
   # -- Enable Jumper container deployment
   enabled: true
-
+  
   # -- Jumper image configuration (inherits from global.image)
   image:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-jumper
     tag: "4.4.1"
-
+  
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent
-
+  
   # -- Jumper container port
   port: 8080
-
+  
   # -- Issuer service URL for gateway token issuance (your gateway's auth realm endpoint)
   issuerUrl: https://<your-gateway-host>/auth/realms/default
   # -- Tracing collector URL (optional)
@@ -856,7 +859,7 @@ jumper:
     privileged: false
     capabilities:
       drop:
-        - ALL
+      - ALL
   # Zone health monitoring configuration (requires Redis)
   zoneHealth:
     # -- Default health status when Redis is unavailable
@@ -903,14 +906,14 @@ jumper:
 issuerService:
   # -- Enable Issuer Service container deployment
   enabled: true
-
+  
   # -- Issuer Service image configuration (inherits from global.image)
   image:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-issuer-service-go
     tag: "2.2.1"
-
+  
   # -- Image pull policy for Issuer Service container
   imagePullPolicy: IfNotPresent
 
@@ -951,7 +954,7 @@ issuerService:
     privileged: false
     capabilities:
       drop:
-        - ALL
+      - ALL
 
   # -- Additional environment variables for Issuer Service container
   #- {name: foo, value: bar}
@@ -970,14 +973,14 @@ issuerService:
 circuitbreaker:
   # -- Enable circuit breaker component deployment
   enabled: false
-
+  
   # -- Circuit breaker image configuration (inherits from global.image)
   image:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-circuitbreaker
     tag: "2.1.0"
-
+  
   # -- Image pull policy for circuit breaker container
   imagePullPolicy: IfNotPresent
 
@@ -996,7 +999,7 @@ circuitbreaker:
     privileged: false
     capabilities:
       drop:
-        - ALL
+      - ALL
 
   # -- Circuit breaker container resource limits and requests
   resources:
@@ -1015,15 +1018,15 @@ postgresql:
     # namespace: ""  # Override global.image.namespace
     repository: postgresql
     tag: "16.5"
-
+  
   # -- Image pull policy for PostgreSQL container
   imagePullPolicy: IfNotPresent
-
+  
   # -- Pod security context for PostgreSQL
   podSecurityContext:
     fsGroup: 999
     supplementalGroups: [999]
-
+  
   # -- Container security context for PostgreSQL
   containerSecurityContext:
     runAsUser: 999
@@ -1034,20 +1037,20 @@ postgresql:
     privileged: false
     capabilities:
       drop:
-        - ALL
-
+      - ALL
+  
   # -- Database admin password
   #adminPassword: "changeme"
-
+  
   # -- Maximum number of client connections
   maxConnections: "100"
-
+  
   # -- Shared memory buffer size for data caching
   sharedBuffers: "32MB"
-
+  
   # -- Maximum prepared transactions (0 disables prepared transactions)
   maxPreparedTransactions: "0"
-
+  
   # -- PostgreSQL container resource limits and requests
   resources:
     requests:
@@ -1056,7 +1059,7 @@ postgresql:
     limits:
       cpu: 100m
       memory: 500Mi
-
+  
   persistence:
     # -- Keep PVC on chart deletion
     keepOnDelete: false
@@ -1067,8 +1070,8 @@ postgresql:
       requests:
         storage: 1Gi
     # -- Data directory mount path
-    mountDir: "/var/lib/postgresql/data"
-
+    mountDir: '/var/lib/postgresql/data'
+  
   # -- Additional deployment annotations
   deployment:
     annotations: {}
@@ -1188,15 +1191,11 @@ imageVerification:
       cpu: 200m
       memory: 128Mi
 
-  # -- Progress deadline in seconds for the Deployment when verification is enabled.
-  # If the InitContainer keeps failing, the Deployment will be marked as failed after this timeout,
-  # allowing Argo Rollouts to properly rollback. Set to 0 to disable.
-  progressDeadlineSeconds: 300
 
 # ============================================================================
 # Argo Rollouts Configuration
 # ============================================================================
-# Argo Rollouts provides advanced deployment capabilities with progressive
+# Argo Rollouts provides advanced deployment capabilities with progressive 
 # delivery strategies like canary and blue-green deployments.
 #
 # Prerequisites:
@@ -1210,7 +1209,7 @@ imageVerification:
 argoRollouts:
   # -- Enable Argo Rollouts progressive delivery (replaces standard Deployment)
   enabled: false
-
+  
   workloadRef:
     # -- Scale-down strategy for workloadRef (progressively or immediately)
     scaleDown: progressively
@@ -1223,7 +1222,7 @@ argoRollouts:
   strategy:
     # -- Deployment strategy type: "canary" or "blueGreen"
     type: canary
-
+    
     # -- Canary strategy configuration
     canary:
       # -- Additional canary deployment properties
@@ -1255,7 +1254,7 @@ argoRollouts:
             duration: 1m
         - setWeight: 60
         - pause:
-            duration: 1m
+            duration: 1m            
         - setWeight: 80
         - pause:
             duration: 1m
@@ -1264,7 +1263,7 @@ argoRollouts:
       # Analysis Configuration
       # ============================================================================
       # Optional background analysis during canary deployment
-
+      
       # -- Background analysis configuration
       analysis:
         # -- AnalysisTemplate names for background analysis
@@ -1284,16 +1283,16 @@ argoRollouts:
   # Analysis Templates Configuration
   # ============================================================================
   # Define metrics and success criteria for automated rollout validation
-
+  
   analysisTemplates:
     # -- Enable creation of AnalysisTemplates
     enabled: true
-
+    
     # ============================================================================
     # Error Rate Analysis Template
     # ============================================================================
     # Validates that error rate stays below acceptable threshold
-
+    
     errorRate:
       # -- Enable error rate analysis
       enabled: false
@@ -1318,12 +1317,12 @@ argoRollouts:
       # -- Prometheus server address (must be accessible)
       # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
       prometheusAddress: ""
-
+      
       # -- Prometheus Basic Auth authentication configuration
       authentication:
         # -- Enable authentication for Prometheus queries
         enabled: true
-
+        
         # -- Secret name containing Prometheus credentials (must exist in same namespace as Rollout)
         # Example secret:
         #   apiVersion: v1
@@ -1335,7 +1334,7 @@ argoRollouts:
         #     username: "my-username"
         #     password: "my-password"
         secretName: "victoria-metrics-secret"
-
+        
         # -- Secret key for base64 encoded user:password Basic Auth header
         basicKey: "basic-auth"
 
@@ -1343,7 +1342,7 @@ argoRollouts:
     # Success Rate Analysis Template
     # ============================================================================
     # Validates that success rate stays above acceptable threshold
-
+    
     successRate:
       # -- Enable success rate analysis
       enabled: true
@@ -1367,15 +1366,15 @@ argoRollouts:
 
       # -- Prometheus server address
       prometheusAddress: ""
-
+      
       # -- Prometheus Basic Auth authentication configuration
       authentication:
         # -- Enable authentication for Prometheus queries
         enabled: true
-
+        
         # -- Secret name containing Prometheus credentials
         secretName: "victoria-metrics-secret"
-
+        
         # -- Secret key for base64 encoded user:password Basic Auth header
         basicKey: "basic-auth"
 
@@ -1389,7 +1388,7 @@ argoRollouts:
 networkPolicy:
   # -- Enable NetworkPolicy for the gateway pods
   enabled: false
-
+  
   # -- Custom ingress rules (if not set, default rules based on enabled components are used)
   # ingress:
   #   - from:
@@ -1399,7 +1398,7 @@ networkPolicy:
   #     ports:
   #       - port: 8000
   #         protocol: TCP
-
+  
   # -- Custom egress rules (if not set, all egress is allowed)
   # egress:
   #   - to:

@@ -33,6 +33,9 @@ spec:
       maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
 {{- end }}
 {{- end }}
+{{- if and (include "cosign.enabled" $) .Values.imageVerification.progressDeadlineSeconds }}
+  progressDeadlineSeconds: {{ .Values.imageVerification.progressDeadlineSeconds }}
+{{- end }}
   selector: 
     matchLabels: {{ include "app.labels.selectorLabels" $ | nindent 6 }}
   template:

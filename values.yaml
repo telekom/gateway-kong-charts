@@ -1142,7 +1142,7 @@ imageVerification:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: cosign
-    tag: "v3.0.4"
+    tag: "v2.5.3"
 
   # -- Public key configuration for signature verification
   # Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef
@@ -1209,6 +1209,15 @@ imageVerification:
 argoRollouts:
   # -- Enable Argo Rollouts progressive delivery (replaces standard Deployment)
   enabled: false
+  
+  # -- Progress deadline in seconds. If pods don't become ready within this time,
+  # the rollout will be marked as degraded. Default: 1200 (20 minutes)
+  progressDeadlineSeconds: 1200
+
+  # -- Automatically abort the rollout when progressDeadlineSeconds is exceeded.
+  # When true, the rollout will abort and rollback to the previous version.
+  progressDeadlineAbort: true
+
   
   workloadRef:
     # -- Scale-down strategy for workloadRef (progressively or immediately)

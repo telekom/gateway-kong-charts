@@ -745,8 +745,8 @@ The following table provides a comprehensive list of all configurable parameters
 | hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
-| image | object | `{"repository":"gateway-kong","tag":"1.3.0"}` | Kong Gateway image configuration (inherits from global.image) |
-| image.tag | string | `"1.3.0"` | Kong Gateway image tag |
+| image | object | `{"repository":"gateway-kong","tag":"1.4.0"}` | Kong Gateway image configuration (inherits from global.image) |
+| image.tag | string | `"1.4.0"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
 | imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
@@ -772,7 +772,7 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.enabled | bool | `true` | Enable Issuer Service container deployment |
 | issuerService.environment | list | `[]` | Additional environment variables for Issuer Service container - {name: foo, value: bar} |
 | issuerService.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token signing (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| issuerService.image | object | `{"repository":"gateway-issuer-service-go","tag":"2.2.1"}` | Issuer Service image configuration (inherits from global.image) |
+| issuerService.image | object | `{"repository":"gateway-issuer-service-go","tag":"2.3.1"}` | Issuer Service image configuration (inherits from global.image) |
 | issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | Issuer Service liveness probe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | Issuer Service readiness probe configuration |
@@ -784,7 +784,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.4.1"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.5.0"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |

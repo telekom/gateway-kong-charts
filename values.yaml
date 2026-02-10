@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2023 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -1123,6 +1123,76 @@ pdb:
   maxUnavailable:
 
 # ============================================================================
+# Image Signature Verification Configuration
+# ============================================================================
+# Cosign-based container image signature verification runs as an InitContainer
+# on every pod start (supports KEDA autoscaling, pod restarts, rollouts).
+# Disable this if using Kyverno or another admission controller for verification.
+# ============================================================================
+
+imageVerification:
+  # -- Enable cosign image signature verification (disable if using Kyverno policy)
+  enabled: false
+
+  # -- Verification mode: "enforce" (block pod on invalid signature) or "audit" (log and continue)
+  mode: enforce
+
+  # -- Cosign image configuration (inherits from global.image)
+  image:
+    # registry: ""  # Override global.image.registry
+    # namespace: ""  # Override global.image.namespace
+    repository: cosign
+    tag: "v2.5.3"
+
+  # -- Public key configuration for signature verification
+  # Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef
+  publicKey:
+    # -- Source type: "value" (inline), "configMap", or "secret"
+    source: secret
+
+    # -- Inline public key PEM (used when source: value)
+    # value: |
+    #   -----BEGIN PUBLIC KEY-----
+    #   MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+    #   -----END PUBLIC KEY-----
+
+    # -- ConfigMap reference (used when source: configMap)
+    configMapRef:
+      # -- Name of the ConfigMap containing the public key
+      name: ""
+      # -- Key within the ConfigMap
+      key: "cosign.pub"
+
+    # -- Secret reference (used when source: secret)
+    secretRef:
+      # -- Name of the Secret containing the public key
+      name: "cosign-public-key"
+      # -- Key within the Secret
+      key: "cosign.pub"
+
+  # -- Container security context for verification InitContainer
+  containerSecurityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    privileged: false
+    capabilities:
+      drop:
+        - ALL
+
+  # -- Resource limits and requests for verification InitContainer
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+
+# ============================================================================
 # Argo Rollouts Configuration
 # ============================================================================
 # Argo Rollouts provides advanced deployment capabilities with progressive 
@@ -1139,6 +1209,15 @@ pdb:
 argoRollouts:
   # -- Enable Argo Rollouts progressive delivery (replaces standard Deployment)
   enabled: false
+  
+  # -- Progress deadline in seconds. If pods don't become ready within this time,
+  # the rollout will be marked as degraded. Default: 1200 (20 minutes)
+  progressDeadlineSeconds: 1200
+
+  # -- Automatically abort the rollout when progressDeadlineSeconds is exceeded.
+  # When true, the rollout will abort and rollback to the previous version.
+  progressDeadlineAbort: true
+
   
   workloadRef:
     # -- Scale-down strategy for workloadRef (progressively or immediately)

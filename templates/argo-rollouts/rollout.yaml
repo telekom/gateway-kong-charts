@@ -28,9 +28,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Release.Name }}
-    scaleDown: {{ .Values.argoRollouts.workloadRef.scaleDown | default "progressively" }}
+    scaleDown: {{ .Values.argoRollouts.workloadRef.scaleDown }}
   
-  progressDeadlineSeconds: {{ .Values.argoRollouts.progressDeadlineSeconds | default 1200 }}
+  progressDeadlineSeconds: {{ .Values.argoRollouts.progressDeadlineSeconds }}
+  progressDeadlineAbort: {{ .Values.argoRollouts.progressDeadlineAbort }}
 
   # ============================================================================
   # Selector

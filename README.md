@@ -577,6 +577,75 @@ prometheus:
     [...]
 ```
 
+### Image Signature Verification (Cosign)
+
+[Cosign](https://github.com/sigstore/cosign)-based container image signature verification runs as an InitContainer on every pod start. This ensures that all container images deployed by the Gateway have valid signatures, providing supply chain security for KEDA autoscaling, pod restarts, and rollouts.
+
+Disable this feature if you are using [Kyverno](https://kyverno.io/) or another admission controller for image verification.
+
+**How It Works:**
+
+On each pod startup, the cosign InitContainer:
+
+1. Iterates over all enabled container images (Kong, Jumper, Issuer Service, Circuit Breaker)
+2. Authenticates to the image registry using the configured `imagePullSecrets`
+3. Verifies each image signature against the configured public key
+4. Blocks pod startup if verification fails (in `enforce` mode) or logs a warning and continues (in `audit` mode)
+
+**Verification Modes:**
+
+- **`enforce`** (default): Pod startup is blocked if any image signature is invalid or missing
+- **`audit`**: Verification failures are logged but the pod starts normally
+
+**Public Key Sources:**
+
+Exactly one of the following sources must be configured:
+
+- **`secret`** (default): References an existing Kubernetes Secret containing the cosign public key
+- **`configMap`**: References an existing ConfigMap containing the cosign public key
+- **`value`**: Inline public key PEM in `values.yaml` (the chart creates a ConfigMap automatically)
+
+**Minimal Configuration** (using an existing Secret):
+
+```yaml
+imageVerification:
+  enabled: true
+  publicKey:
+    source: secret
+    secretRef:
+      name: cosign-public-key
+      key: cosign.pub
+```
+
+**Configuration with inline public key:**
+
+```yaml
+imageVerification:
+  enabled: true
+  mode: enforce
+  publicKey:
+    source: value
+    value: |
+      -----BEGIN PUBLIC KEY-----
+      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+      -----END PUBLIC KEY-----
+```
+
+**Audit mode** (log-only, does not block pod startup):
+
+```yaml
+imageVerification:
+  enabled: true
+  mode: audit
+```
+
+For configuration options, see the `imageVerification.*` values in the [Parameters](#parameters) section below.
+
+**References:**
+
+- [Cosign Documentation](https://docs.sigstore.dev/cosign/overview/)
+- [Sigstore](https://www.sigstore.dev/)
+
 ## Parameters
 
 The following table provides a comprehensive list of all configurable parameters in `values.yaml`:
@@ -619,6 +688,8 @@ The following table provides a comprehensive list of all configurable parameters
 | argoRollouts.analysisTemplates.successRate.query | string | `"sum(irate(\n  kong_http_requests_total{ei_telekom_de_zone=\"{{ args.zone }}\",ei_telekom_de_environment=\"{{ args.environment }}\",app_kubernetes_io_instance=\"{{ args.instance }}\",route=~\"{{ args.route-regex }}\",role=\"canary\",code!~\"(4|5).*\"}[1m]\n)) /\nsum(irate(\n  kong_http_requests_total{ei_telekom_de_zone=\"{{ args.zone }}\",ei_telekom_de_environment=\"{{ args.environment }}\",app_kubernetes_io_instance=\"{{ args.instance }}\",route=~\"{{ args.route-regex }}\",role=\"canary\"}[1m]\n))\n"` | Success rate threshold (95% = 0.95) PromQL query to calculate success rate over last 1 minute |
 | argoRollouts.analysisTemplates.successRate.successCondition | string | `"all(result, # >= 0.95)"` | Success criteria (PromQL query must return > threshold) |
 | argoRollouts.enabled | bool | `false` | Enable Argo Rollouts progressive delivery (replaces standard Deployment) |
+| argoRollouts.progressDeadlineAbort | bool | `true` | Automatically abort the rollout when progressDeadlineSeconds is exceeded. When true, the rollout will abort and rollback to the previous version. |
+| argoRollouts.progressDeadlineSeconds | int | `1200` | Progress deadline in seconds. If pods don't become ready within this time, the rollout will be marked as degraded. Default: 1200 (20 minutes) |
 | argoRollouts.strategy.blueGreen | object | `{"autoPromotionEnabled":false}` | Blue-Green strategy configuration (activeService and previewService handled by template) |
 | argoRollouts.strategy.blueGreen.autoPromotionEnabled | bool | `false` | Enable automatic promotion to new version |
 | argoRollouts.strategy.canary | object | `{"additionalProperties":{"dynamicStableScale":true,"maxSurge":"25%","maxUnavailable":"50%"},"analysis":{"args":[],"startingStep":null,"templates":[{"templateName":"success-rate-analysis"}]},"steps":[{"setWeight":10},{"pause":{"duration":"1m"}},{"setWeight":20},{"pause":{"duration":"1m"}},{"setWeight":40},{"pause":{"duration":"1m"}},{"setWeight":60},{"pause":{"duration":"1m"}},{"setWeight":80},{"pause":{"duration":"1m"}}]}` | Canary strategy configuration |
@@ -677,6 +748,19 @@ The following table provides a comprehensive list of all configurable parameters
 | image | object | `{"repository":"gateway-kong","tag":"1.3.0"}` | Kong Gateway image configuration (inherits from global.image) |
 | image.tag | string | `"1.3.0"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
+| imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
+| imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
+| imageVerification.image | object | `{"repository":"cosign","tag":"v2.5.3"}` | Cosign image configuration (inherits from global.image) |
+| imageVerification.mode | string | `"enforce"` | Verification mode: "enforce" (block pod on invalid signature) or "audit" (log and continue) |
+| imageVerification.publicKey | object | `{"configMapRef":{"key":"cosign.pub","name":""},"secretRef":{"key":"cosign.pub","name":"cosign-public-key"},"source":"secret"}` | Public key configuration for signature verification Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef |
+| imageVerification.publicKey.configMapRef | object | `{"key":"cosign.pub","name":""}` | ConfigMap reference (used when source: configMap) |
+| imageVerification.publicKey.configMapRef.key | string | `"cosign.pub"` | Key within the ConfigMap |
+| imageVerification.publicKey.configMapRef.name | string | `""` | Name of the ConfigMap containing the public key |
+| imageVerification.publicKey.secretRef | object | `{"key":"cosign.pub","name":"cosign-public-key"}` | Secret reference (used when source: secret) |
+| imageVerification.publicKey.secretRef.key | string | `"cosign.pub"` | Key within the Secret |
+| imageVerification.publicKey.secretRef.name | string | `"cosign-public-key"` | Name of the Secret containing the public key |
+| imageVerification.publicKey.source | string | `"secret"` | Source type: "value" (inline), "configMap", or "secret" |
+| imageVerification.resources | object | `{"limits":{"cpu":"200m","memory":"128Mi"},"requests":{"cpu":"50m","memory":"64Mi"}}` | Resource limits and requests for verification InitContainer |
 | irixBrokerRoute.enabled | bool | `false` | Enable IRIX broker route |
 | irixBrokerRoute.name | string | `"user-login"` | Route name |
 | irixBrokerRoute.upstream | object | `{"path":"/auth/realms/eni-login","port":80,"protocol":"http","service":"irix-broker"}` | Route hostname (optional, uses default host rules if not set) host: integration.spacegate.telekom.de |

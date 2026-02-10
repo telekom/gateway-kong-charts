@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 {{- define "kong.issuerService.env" }}
 - name: CERT_MOUNT_PATH
   value: /data/keys
-{{- end -}}
+{{- end }}
 
 {{- define "kong.circuitbreaker.env" }}
 - name: KONG_AUTH

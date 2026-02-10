@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -43,4 +43,8 @@ Usage: include "images.build" (dict "root" $ "imageConfig" .Values.<component>.i
 
 {{- define "images.postgresql" -}}
 {{- include "images.build" (dict "root" . "imageConfig" .Values.postgresql.image) -}}
+{{- end -}}
+
+{{- define "images.cosign" -}}
+{{- include "images.build" (dict "root" . "imageConfig" .Values.imageVerification.image) -}}
 {{- end -}}

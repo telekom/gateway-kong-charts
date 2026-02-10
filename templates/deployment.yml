@@ -65,10 +65,10 @@ spec:
 {{- end }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
 
-{{ if include "cosign.enabled" $ }}
-{{ include "cosign.validatePublicKey" $ }}
+{{- if include "cosign.enabled" $ }}
+{{- include "cosign.validatePublicKey" $ }}
       initContainers:
-{{ include "cosign.initContainer" $ | nindent 6 }}
+{{- include "cosign.initContainer" $ | nindent 6 }}
 {{- end }}
       containers:
 {{- if eq .Values.jumper.enabled true }}

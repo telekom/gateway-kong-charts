@@ -577,6 +577,75 @@ prometheus:
     [...]
 ```
 
+### Image Signature Verification (Cosign)
+
+[Cosign](https://github.com/sigstore/cosign)-based container image signature verification runs as an InitContainer on every pod start. This ensures that all container images deployed by the Gateway have valid signatures, providing supply chain security for KEDA autoscaling, pod restarts, and rollouts.
+
+Disable this feature if you are using [Kyverno](https://kyverno.io/) or another admission controller for image verification.
+
+**How It Works:**
+
+On each pod startup, the cosign InitContainer:
+
+1. Iterates over all enabled container images (Kong, Jumper, Issuer Service, Circuit Breaker)
+2. Authenticates to the image registry using the configured `imagePullSecrets`
+3. Verifies each image signature against the configured public key
+4. Blocks pod startup if verification fails (in `enforce` mode) or logs a warning and continues (in `audit` mode)
+
+**Verification Modes:**
+
+- **`enforce`** (default): Pod startup is blocked if any image signature is invalid or missing
+- **`audit`**: Verification failures are logged but the pod starts normally
+
+**Public Key Sources:**
+
+Exactly one of the following sources must be configured:
+
+- **`secret`** (default): References an existing Kubernetes Secret containing the cosign public key
+- **`configMap`**: References an existing ConfigMap containing the cosign public key
+- **`value`**: Inline public key PEM in `values.yaml` (the chart creates a ConfigMap automatically)
+
+**Minimal Configuration** (using an existing Secret):
+
+```yaml
+imageVerification:
+  enabled: true
+  publicKey:
+    source: secret
+    secretRef:
+      name: cosign-public-key
+      key: cosign.pub
+```
+
+**Configuration with inline public key:**
+
+```yaml
+imageVerification:
+  enabled: true
+  mode: enforce
+  publicKey:
+    source: value
+    value: |
+      -----BEGIN PUBLIC KEY-----
+      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+      -----END PUBLIC KEY-----
+```
+
+**Audit mode** (log-only, does not block pod startup):
+
+```yaml
+imageVerification:
+  enabled: true
+  mode: audit
+```
+
+For configuration options, see the `imageVerification.*` values in the [Parameters](#parameters) section below.
+
+**References:**
+
+- [Cosign Documentation](https://docs.sigstore.dev/cosign/overview/)
+- [Sigstore](https://www.sigstore.dev/)
+
 ## Parameters
 
 The following table provides a comprehensive list of all configurable parameters in `values.yaml`:
@@ -681,7 +750,7 @@ The following table provides a comprehensive list of all configurable parameters
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
 | imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
-| imageVerification.image | object | `{"repository":"cosign","tag":"v3.0.4"}` | Cosign image configuration (inherits from global.image) |
+| imageVerification.image | object | `{"repository":"cosign","tag":"v2.5.3"}` | Cosign image configuration (inherits from global.image) |
 | imageVerification.mode | string | `"enforce"` | Verification mode: "enforce" (block pod on invalid signature) or "audit" (log and continue) |
 | imageVerification.publicKey | object | `{"configMapRef":{"key":"cosign.pub","name":""},"secretRef":{"key":"cosign.pub","name":"cosign-public-key"},"source":"secret"}` | Public key configuration for signature verification Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef |
 | imageVerification.publicKey.configMapRef | object | `{"key":"cosign.pub","name":""}` | ConfigMap reference (used when source: configMap) |

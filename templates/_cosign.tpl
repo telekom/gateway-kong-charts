@@ -152,7 +152,7 @@ Returns the InitContainer for cosign image verification.
     for IMAGE in $(echo "$IMAGES" | tr -d '[]"' | tr ',' ' '); do
       echo "Verifying: $IMAGE"
       REGISTRY=$(echo "$IMAGE" | cut -d'/' -f1)
-      IMAGE_VERIFIED=0
+      IMAGE_PROCESSED=0
 
       # Try each pull secret until verification succeeds
       for SECRET_DIR in /pull-secrets/*; do
@@ -182,7 +182,7 @@ Returns the InitContainer for cosign image verification.
 
               if [ $EXIT_CODE -eq 0 ]; then
                 echo "✓ $IMAGE: signature valid"
-                IMAGE_VERIFIED=1
+                IMAGE_PROCESSED=1
                 break
               elif echo "$OUTPUT" | grep -q "UNAUTHORIZED"; then
                 echo "  (auth failed with secret in $SECRET_DIR, trying next...)"
@@ -191,7 +191,7 @@ Returns the InitContainer for cosign image verification.
                 echo "✗ $IMAGE: signature verification FAILED"
                 echo "$OUTPUT"
                 FAILED=1
-                IMAGE_VERIFIED=1
+                IMAGE_PROCESSED=1
                 break
               fi
             fi
@@ -199,7 +199,7 @@ Returns the InitContainer for cosign image verification.
         fi
       done
 
-      if [ "$IMAGE_VERIFIED" -eq 0 ]; then
+      if [ "$IMAGE_PROCESSED" -eq 0 ]; then
         echo "✗ $IMAGE: UNAUTHORIZED with all available secrets"
         FAILED=1
       fi

@@ -368,6 +368,10 @@ false
   value: 'false'
 - name: KONG_NGINX_HTTP_CLIENT_BODY_BUFFER_SIZE
   value: '{{ .Values.httpClientBodyBufferSize | default "4m" }}'
+{{- if .Values.mallocArenaMax }}
+- name: MALLOC_ARENA_MAX
+  value: '{{ .Values.mallocArenaMax }}'
+{{- end }}
 {{- if .Values.trustedIps }}
 - name: KONG_TRUSTED_IPS
   value: '{{ .Values.trustedIps }}'

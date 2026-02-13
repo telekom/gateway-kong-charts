@@ -712,7 +712,7 @@ The following table provides a comprehensive list of all configurable parameters
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for circuit breaker container |
 | circuitbreaker.interval | string | `"60s"` | Check interval for circuit breaker |
 | circuitbreaker.resources | object | `{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Circuit breaker container resource limits and requests |
-| containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for Kong container (hardened defaults) |
+| containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100,"seccompProfile":{"type":"RuntimeDefault"}}` | Container security context for Kong container (hardened defaults) |
 | dbUpdateFrequency | int | `10` | Frequency in seconds to poll database for updates |
 | dbUpdatePropagation | int | `0` | Delay in seconds before propagating database updates |
 | disableUpstreamCache | bool | `false` | Disable upstream response caching |
@@ -779,7 +779,7 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.resources | object | `{"limits":{"cpu":"500m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"10Mi"}}` | Issuer Service container resource limits and requests |
 | issuerService.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"periodSeconds":1}` | Issuer Service startup probe configuration |
 | job | object | `{"image":{"repository":"bash-curl","tag":"8.13.0"}}` | Job image configuration for setup jobs (inherits from global.image) |
-| jobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for setup jobs |
+| jobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Container security context for setup jobs |
 | jumper.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for Jumper |
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
@@ -893,7 +893,7 @@ The following table provides a comprehensive list of all configurable parameters
 | plugins.requestTransformer.pluginId | string | `"e9fb4272-0aff-4208-9efa-6bfec5d9df53"` | Plugin ID for Kong configuration |
 | plugins.zipkin.enabled | bool | `true` | Enable distributed tracing via ENI Zipkin plugin |
 | plugins.zipkin.pluginId | string | `"e8ff1211-816f-4d93-9011-a4b194586073"` | Plugin ID for Kong configuration |
-| podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsUser":100,"supplementalGroups":[1000]}` | Pod security context for Kong deployment (hardened defaults) |
+| podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsUser":100,"seccompProfile":{"type":"RuntimeDefault"},"supplementalGroups":[1000]}` | Pod security context for Kong deployment (hardened defaults) |
 | postgresql.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999}` | Container security context for PostgreSQL |
 | postgresql.deployment | object | `{"annotations":{}}` | Additional deployment annotations |
 | postgresql.image | object | `{"repository":"postgresql","tag":"16.5"}` | PostgreSQL image configuration (inherits from global.image) |
@@ -903,7 +903,7 @@ The following table provides a comprehensive list of all configurable parameters
 | postgresql.persistence.keepOnDelete | bool | `false` | Keep PVC on chart deletion |
 | postgresql.persistence.mountDir | string | `"/var/lib/postgresql/data"` | Data directory mount path |
 | postgresql.persistence.resources | object | `{"requests":{"storage":"1Gi"}}` | Storage resource requests |
-| postgresql.podSecurityContext | object | `{"fsGroup":999,"supplementalGroups":[999]}` | Pod security context for PostgreSQL |
+| postgresql.podSecurityContext | object | `{"fsGroup":999,"seccompProfile":{"type":"RuntimeDefault"},"supplementalGroups":[999]}` | Pod security context for PostgreSQL |
 | postgresql.resources | object | `{"limits":{"cpu":"100m","memory":"500Mi"},"requests":{"cpu":"20m","memory":"200Mi"}}` | PostgreSQL container resource limits and requests |
 | postgresql.sharedBuffers | string | `"32MB"` | Shared memory buffer size for data caching |
 | proxy.accessLog | string | `"/dev/stdout"` | Access log target |

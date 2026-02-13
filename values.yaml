@@ -212,6 +212,8 @@ podSecurityContext:
   runAsGroup: 1000
   fsGroup: 1000
   supplementalGroups: [1000]
+  seccompProfile:
+    type: RuntimeDefault
 
 # -- Container security context for Kong container (hardened defaults)
 containerSecurityContext:
@@ -221,6 +223,8 @@ containerSecurityContext:
   readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
   privileged: false
+  seccompProfile:
+    type: RuntimeDefault
   capabilities:
     drop:
     - ALL
@@ -238,6 +242,8 @@ jobs:
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     privileged: false
+    seccompProfile:
+      type: RuntimeDefault
     capabilities:
       drop:
       - ALL
@@ -1026,6 +1032,8 @@ postgresql:
   podSecurityContext:
     fsGroup: 999
     supplementalGroups: [999]
+    seccompProfile:
+      type: RuntimeDefault
   
   # -- Container security context for PostgreSQL
   containerSecurityContext:

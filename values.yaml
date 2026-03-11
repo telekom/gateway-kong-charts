@@ -99,7 +99,7 @@ image:
   # namespace: ""  # Override global.image.namespace
   repository: gateway-kong
   # -- Kong Gateway image tag
-  tag: "1.4.0"
+  tag: "1.4.1"
 
 # -- Image pull policy for Kong container
 imagePullPolicy: IfNotPresent

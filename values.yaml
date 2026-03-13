@@ -842,7 +842,7 @@ jumper:
       path: /actuator/health/readiness
       port: jumper
       scheme: HTTP
-    initialDelaySeconds: 5
+    initialDelaySeconds: 20
   # -- Jumper startup probe configuration
   startupProbe:
     httpGet:

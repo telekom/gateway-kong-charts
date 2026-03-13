@@ -792,7 +792,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/actuator/health/liveness","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | Jumper liveness probe configuration |
 | jumper.port | int | `8080` | Jumper container port |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` | Event publisher URL |
-| jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":5}` | Jumper readiness probe configuration |
+| jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":20}` | Jumper readiness probe configuration |
 | jumper.resources | object | `{"limits":{"cpu":"5000m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
 | jumper.stargateUrl | string | `"https://<your-gateway-host>"` | Gateway URL for Gateway-to-Gateway communication |
 | jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |

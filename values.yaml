@@ -920,7 +920,7 @@ issuerService:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-issuer-service-go
-    tag: "2.3.1"
+    tag: "2.3.2"
   
   # -- Image pull policy for Issuer Service container
   imagePullPolicy: IfNotPresent

@@ -772,7 +772,7 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.enabled | bool | `true` | Enable Issuer Service container deployment |
 | issuerService.environment | list | `[]` | Additional environment variables for Issuer Service container - {name: foo, value: bar} |
 | issuerService.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token signing (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| issuerService.image | object | `{"repository":"gateway-issuer-service-go","tag":"2.3.1"}` | Issuer Service image configuration (inherits from global.image) |
+| issuerService.image | object | `{"repository":"gateway-issuer-service-go","tag":"2.3.2"}` | Issuer Service image configuration (inherits from global.image) |
 | issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | Issuer Service liveness probe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | Issuer Service readiness probe configuration |

@@ -622,7 +622,7 @@ livenessProbe:
 # -- Kong readiness probe configuration
 readinessProbe:
   httpGet:
-    path: /status
+    path: /status/ready
     port: status
     scheme: HTTP
   timeoutSeconds: 2

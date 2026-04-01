@@ -913,7 +913,7 @@ The following table provides a comprehensive list of all configurable parameters
 | proxy.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"Prefix"}]}]` | Ingress hosts configuration |
 | proxy.ingress.tls | list | `[]` | TLS configuration (secretName optional for cloud load balancers) |
 | proxy.tls.enabled | bool | `false` | Enable TLS for proxy |
-| readinessProbe | object | `{"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"timeoutSeconds":2}` | Kong readiness probe configuration |
+| readinessProbe | object | `{"httpGet":{"path":"/status/ready","port":"status","scheme":"HTTP"},"timeoutSeconds":2}` | Kong readiness probe configuration |
 | replicas | int | `1` | Number of Kong pod replicas (ignored when HPA, KEDA, or Argo Rollouts is enabled) |
 | resources | object | `{"limits":{"cpu":"2500m","memory":"4Gi"},"requests":{"cpu":"1500m","memory":"3Gi"}}` | Kong container resource limits and requests |
 | setupJobs.activeDeadlineSeconds | int | `3600` | Maximum job duration in seconds |

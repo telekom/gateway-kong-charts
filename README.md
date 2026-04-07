@@ -325,6 +325,7 @@ For configuration options, see the `hpaAutoscaling.*` values in the [Parameters]
 - **Anti-flapping protection**: Sophisticated cooldown periods and stabilization windows
 - **Custom metrics**: Scale based on request rate, error rate, or any Prometheus/Victoria Metrics query
 - **Schedule-based scaling**: Pre-scale for known traffic patterns (business hours, weekends, etc.)
+- **External scalers**: Integrate any gRPC-based [KEDA external scaler](https://keda.sh/docs/2.19/scalers/external/) for custom scaling logic
 
 **Prerequisites:**
 - KEDA must be installed in the cluster: `helm install keda kedacore/keda --namespace keda --create-namespace`
@@ -354,11 +355,38 @@ kedaAutoscaling:
       enabled: false
 ```
 
+**External Scaler** (e.g. for proactive time-window based scaling):
+
+Each entry in `external.scalers` produces a separate KEDA external trigger.
+The `metadata` map is forwarded 1:1 to the scaler service via gRPC.
+Only `scalerAddress` is required by the chart; all other keys are scaler-specific.
+This is typically provided via Argo CD `helmValues` or a separate values file.
+
+```yaml
+kedaAutoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 200
+  triggers:
+    external:
+      enabled: true
+      scalers:
+        - metadata:
+            scalerAddress: "my-external-scaler.keda.svc.cluster.local:6000"
+            campaignName: "fifa-worldcup-2026"
+            targetReplicas: "100"
+        - metadata:
+            scalerAddress: "my-external-scaler.keda.svc.cluster.local:6000"
+            campaignName: "black-friday-2026"
+            targetReplicas: "50"
+```
+
 For configuration options, see the `kedaAutoscaling.*` values in the [Parameters](#parameters) section below.
 
 **References:**
 - [KEDA Documentation](https://keda.sh/docs/)
 - [KEDA Scalers](https://keda.sh/docs/scalers/)
+- [KEDA External Scalers](https://keda.sh/docs/2.19/scalers/external/)
 - [Victoria Metrics PromQL](https://docs.victoriametrics.com/MetricsQL.html)
 
 ### Argo Rollouts (Progressive Delivery)
@@ -839,6 +867,8 @@ The following table provides a comprehensive list of all configurable parameters
 | kedaAutoscaling.triggers.cron.enabled | bool | `false` | Enable cron-based (schedule) scaling |
 | kedaAutoscaling.triggers.cron.schedules | list | `[]` | Cron schedule definitions (time windows with desired replica counts) Each schedule defines start/end times and replica count Multiple schedules can overlap (highest desiredReplicas wins) |
 | kedaAutoscaling.triggers.cron.timezone | string | `"Europe/Berlin"` | Timezone for cron schedules Use IANA timezone database names for automatic DST handling Europe/Berlin automatically handles CET (UTC+1) and CEST (UTC+2) transitions Format: IANA timezone (e.g., "Europe/Berlin", "America/New_York", "Asia/Tokyo") See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones |
+| kedaAutoscaling.triggers.external.enabled | bool | `false` | Enable external scaler triggers |
+| kedaAutoscaling.triggers.external.scalers | list | `[]` | List of external scaler trigger definitions Each entry produces a separate KEDA external trigger in the ScaledObject. The metadata map of each entry is forwarded 1:1 to the scaler via gRPC. scalerAddress is REQUIRED in every entry; all other keys depend on the external scaler implementation. |
 | kedaAutoscaling.triggers.memory.containers | object | `{"issuerService":{"enabled":true,"threshold":85},"jumper":{"enabled":true,"threshold":85},"kong":{"enabled":true,"threshold":95}}` | Per-container memory thresholds (any container exceeding threshold triggers scaling) |
 | kedaAutoscaling.triggers.memory.containers.issuerService | object | `{"enabled":true,"threshold":85}` | Issuer Service container memory scaling configuration |
 | kedaAutoscaling.triggers.memory.containers.issuerService.enabled | bool | `true` | Enable memory monitoring for Issuer Service container |

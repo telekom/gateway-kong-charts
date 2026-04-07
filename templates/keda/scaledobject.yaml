@@ -134,4 +134,13 @@ spec:
     {{- end }}
   {{- end }}
   {{- end }}
+  
+  # External Scalers
+  {{- if .Values.kedaAutoscaling.triggers.external.enabled }}
+  {{- range .Values.kedaAutoscaling.triggers.external.scalers }}
+  - type: external
+    metadata:
+      {{- toYaml .metadata | nindent 6 }}
+  {{- end }}
+  {{- end }}
 {{- end }}

@@ -764,7 +764,7 @@ The following table provides a comprehensive list of all configurable parameters
 | global.passwordRules.length | int | `12` | Minimum password length |
 | global.passwordRules.mustMatch | list | `["[a-z]","[A-Z]","[0-9]","[^a-zA-Z0-9]"]` | Password must match these regex patterns |
 | global.podAntiAffinity.required | bool | `false` | Use required (hard) or preferred (soft) pod anti-affinity |
-| global.preStopSleepBase | int | `30` | Base sleep duration in seconds for pre-stop lifecycle hook |
+| global.preStopSleepBase | int | `15` | Base sleep duration in seconds for pre-stop lifecycle hook |
 | global.tracing.collectorUrl | string | `"http://guardians-drax-collector.skoll:9411/api/v2/spans"` | Zipkin collector URL (e.g., Jaeger collector), must include http(s) scheme |
 | global.tracing.defaultServiceName | string | `"stargate"` | Service name displayed in tracing UI |
 | global.tracing.sampleRatio | int | `1` | Sample ratio for requests without trace IDs (0=off, 1=all requests) |

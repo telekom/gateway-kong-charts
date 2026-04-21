@@ -84,7 +84,7 @@ global:
   failOnUnsetValues: true
 
   # -- Base sleep duration in seconds for pre-stop lifecycle hook
-  preStopSleepBase: 30
+  preStopSleepBase: 15
 
 # List template files that should trigger pod restart when changed
 # Useful for ConfigMaps or Secrets that need immediate propagation

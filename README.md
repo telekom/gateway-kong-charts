@@ -62,7 +62,7 @@ For production use-cases, use an external PostgreSQL database by setting `global
 ### Certificate Management
 
 **Manual Secrets (Required):**
-You must provide JWT signing key secrets for the Issuer Service and Jumper components. Configure them using `jumper.existingJwkSecretName` and `issuerService.existingJwkSecretName` in `values.yaml`. 
+You must provide JWT signing key secrets for the Issuer Service and Jumper components. Configure them using `jumper.existingJwkSecretName` and `issuerService.existingJwkSecretName` in `values.yaml`.
 
 Both components must use identical secrets with the following three-key format:
 - `prev-tls.crt`, `prev-tls.key`, `prev-tls.kid` - Previous key (for verifying older tokens)
@@ -422,7 +422,7 @@ Normally, the Helm chart does not render the replica field. However, during init
 ```yaml
 argoRollouts:
   enabled: true
-  
+ 
   strategy:
     type: canary
     canary:
@@ -440,7 +440,7 @@ argoRollouts:
 ```yaml
 argoRollouts:
   enabled: true
-  
+ 
   strategy:
     type: canary
     canary:
@@ -448,7 +448,7 @@ argoRollouts:
         maxUnavailable: "50%"
         maxSurge: "25%"
         dynamicStableScale: true
-      
+     
       steps:
         - setWeight: 10
         - pause:
@@ -456,14 +456,14 @@ argoRollouts:
         - setWeight: 50
         - pause:
             duration: 5m
-      
+     
       analysis:
         templates:
           - templateName: success-rate-analysis
-  
+ 
   analysisTemplates:
     enabled: true
-    
+   
     successRate:
       enabled: true
       interval: 30s
@@ -482,7 +482,7 @@ argoRollouts:
 ```yaml
 argoRollouts:
   enabled: true
-  
+ 
   strategy:
     type: blueGreen
     blueGreen:

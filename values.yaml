@@ -717,9 +717,11 @@ plugins:
     enabled: true
     # -- Plugin ID for Kong configuration
     pluginId: b864d58b-7183-4889-8b32-0b92d6c4d513
-    # -- Allowed identity provider issuer URLs (used for authenticating Admin API requests from the Rover realm)
+    # -- Allowed issuers for the admin-api route JWT validation (Rover realm only). Configured per-route via the Kong Admin API by the chart setup job.
     allowedIss:
       - https://<your-iris-host>/auth/realms/rover
+    # -- Zone-wide issuer blocklist. Tokens from these issuers are rejected on ALL routes regardless of per-route allowedIss. Takes effect on Kong restart/redeploy only. Used for emergency revocation of compromised consumer zone gateway issuers without requiring full route reprocessing by Rover.
+    blockedIssuers: []
 
   prometheus:
     # -- Enable Prometheus metrics plugin

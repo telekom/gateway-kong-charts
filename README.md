@@ -905,7 +905,8 @@ The following table provides a comprehensive list of all configurable parameters
 | plugins.acl.pluginId | string | `"bc823d55-83b5-4184-b03f-ce63cd3b75c7"` | Plugin ID for Kong configuration |
 | plugins.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for plugin containers |
 | plugins.enabled | list | `["rate-limiting-merged"]` | Additional Kong plugins to enable (beyond bundled and jwt-keycloak) |
-| plugins.jwtKeycloak.allowedIss | list | `["https://<your-iris-host>/auth/realms/rover"]` | Allowed identity provider issuer URLs (used for authenticating Admin API requests from the Rover realm) |
+| plugins.jwtKeycloak.allowedIss | list | `["https://<your-iris-host>/auth/realms/rover"]` | Allowed issuers for the admin-api route JWT validation (Rover realm only). Configured per-route via the Kong Admin API by the chart setup job. |
+| plugins.jwtKeycloak.blockedIssuers | list | `[]` | Zone-wide issuer blocklist. Tokens from these issuers are rejected on ALL routes regardless of per-route allowedIss. Takes effect on Kong restart/redeploy only. Used for emergency revocation of compromised consumer zone gateway issuers without requiring full route reprocessing by Rover. |
 | plugins.jwtKeycloak.enabled | bool | `true` | Enable JWT Keycloak plugin |
 | plugins.jwtKeycloak.pluginId | string | `"b864d58b-7183-4889-8b32-0b92d6c4d513"` | Plugin ID for Kong configuration |
 | plugins.prometheus.enabled | bool | `true` | Enable Prometheus metrics plugin |

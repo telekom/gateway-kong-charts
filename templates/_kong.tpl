@@ -445,6 +445,10 @@ false
   value: {{ .Values.adminApi.errorLog | quote }}
 {{- end }}
 {{- include "kong.kongLuaSslTrustedCertificatePath" . -}}
+{{- if .Values.plugins.jwtKeycloak.blockedIssuers }}
+- name: JWT_KEYCLOAK_BLOCKED_ISSUERS
+  value: {{ join "," .Values.plugins.jwtKeycloak.blockedIssuers | quote }}
+{{- end }}
 {{- end }}
 
 {{- define "kong.kongLuaSslTrustedCertificatePath" -}}

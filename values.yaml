@@ -666,6 +666,7 @@ startupProbe:
 
 # Setup jobs configuration
 setupJobs:
+  ttlSecondsAfterFinished: 1209600 # 14 days
   # -- Maximum number of retries for failed jobs
   backoffLimit: 15
   # -- Maximum job duration in seconds

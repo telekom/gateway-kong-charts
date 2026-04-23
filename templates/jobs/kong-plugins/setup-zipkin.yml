@@ -14,6 +14,7 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
+  ttlSecondsAfterFinished: {{ .Values.setupJobs.ttlSecondsAfterFinished }}
   backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
   template:
@@ -24,6 +25,7 @@ spec:
       - name: zipkin-setup
         image: {{ include "images.job" $ }}
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
         env:
         - name: X_TARDIS_GATEWAY_ADMIN
           valueFrom:

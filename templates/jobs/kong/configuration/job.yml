@@ -15,6 +15,7 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook-weight": "-1"
 spec:
+  ttlSecondsAfterFinished: {{ .Values.setupJobs.ttlSecondsAfterFinished }}
   backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
   template:
@@ -26,6 +27,7 @@ spec:
         image: {{ include "images.job" $ }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
         command: [ "/bin/sh" ]
         args: [ "-c", "/tmp/configuration.sh" ]
         env:

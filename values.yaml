@@ -371,7 +371,7 @@ kedaAutoscaling:
           policies:
             - type: Percent
               value: 10 # Max 10% reduction per period
-              periodSeconds: 60
+              periodSeconds: 300
 
           # -- Policy selection (Min = most conservative, Max = most aggressive)
           selectPolicy: Min
@@ -493,7 +493,11 @@ kedaAutoscaling:
       # Example queries:
       #   - Request rate: sum(rate(kong_http_requests_total{zone="zone1"}[1m]))
       #   - Error rate: sum(rate(kong_http_requests_total{status=~"5.."}[1m]))
-      query: 'sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ .Values.global.zone }}",ei_telekom_de_environment="{{ .Values.global.environment }}",app_kubernetes_io_instance="{{ .Release.Name }}-kong"}[1m]))'
+      # Wrapped in max_over_time with a 15m/30s subquery so that brief metric
+      # pipeline outages (e.g. VM agent down) returning zero/low values do not
+      # trigger a scale-down. Scale-up is unaffected because the latest peak is
+      # always included in the max.
+      query: 'max_over_time((sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ .Values.global.zone }}",ei_telekom_de_environment="{{ .Values.global.environment }}",app_kubernetes_io_instance="{{ .Release.Name }}-kong"}[1m])))[15m:30s])'
 
       # -- Threshold value for the metric
       # Scales up when query result exceeds this value

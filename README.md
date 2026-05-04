@@ -804,7 +804,7 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | Issuer Service liveness probe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | Issuer Service readiness probe configuration |
-| issuerService.resources | object | `{"limits":{"cpu":"500m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"10Mi"}}` | Issuer Service container resource limits and requests |
+| issuerService.resources | object | `{"limits":{"cpu":"50m","memory":"10Mi"},"requests":{"cpu":"50m","memory":"10Mi"}}` | Issuer Service container resource limits and requests |
 | issuerService.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"periodSeconds":1}` | Issuer Service startup probe configuration |
 | job | object | `{"image":{"repository":"bash-curl","tag":"8.13.0"}}` | Job image configuration for setup jobs (inherits from global.image) |
 | jobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Container security context for setup jobs |
@@ -821,7 +821,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.port | int | `8080` | Jumper container port |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` | Event publisher URL |
 | jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":20}` | Jumper readiness probe configuration |
-| jumper.resources | object | `{"limits":{"cpu":"5000m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
+| jumper.resources | object | `{"limits":{"cpu":"1500m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
 | jumper.stargateUrl | string | `"https://<your-gateway-host>"` | Gateway URL for Gateway-to-Gateway communication |
 | jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
 | jumper.zoneHealth.databaseConnectionTimeout | int | `500` | Redis connection timeout in milliseconds |
@@ -945,7 +945,7 @@ The following table provides a comprehensive list of all configurable parameters
 | proxy.tls.enabled | bool | `false` | Enable TLS for proxy |
 | readinessProbe | object | `{"httpGet":{"path":"/status/ready","port":"status","scheme":"HTTP"},"timeoutSeconds":2}` | Kong readiness probe configuration |
 | replicas | int | `1` | Number of Kong pod replicas (ignored when HPA, KEDA, or Argo Rollouts is enabled) |
-| resources | object | `{"limits":{"cpu":"2500m","memory":"4Gi"},"requests":{"cpu":"1500m","memory":"3Gi"}}` | Kong container resource limits and requests |
+| resources | object | `{"limits":{"cpu":"1500m","memory":"3500Mi"},"requests":{"cpu":"1500m","memory":"3500Mi"}}` | Kong container resource limits and requests |
 | setupJobs.activeDeadlineSeconds | int | `3600` | Maximum job duration in seconds |
 | setupJobs.backoffLimit | int | `15` | Maximum number of retries for failed jobs |
 | setupJobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for setup jobs |

@@ -629,10 +629,10 @@ kedaAutoscaling:
 resources:
   requests:
     cpu: 1500m
-    memory: 3Gi
+    memory: 3500Mi
   limits:
-    cpu: 2500m
-    memory: 4Gi
+    cpu: 1500m
+    memory: 3500Mi
 
 # -- Nginx log format: debug, default, json, or plain
 logFormat: json
@@ -935,7 +935,7 @@ jumper:
       cpu: 1500m
       memory: 1Gi
     limits:
-      cpu: 5000m
+      cpu: 1500m
       memory: 1Gi
 
 # Issuer Service component for OAuth token generation
@@ -1002,8 +1002,8 @@ issuerService:
       cpu: 50m
       memory: 10Mi
     limits:
-      cpu: 500m
-      memory: 50Mi
+      cpu: 50m
+      memory: 10Mi
 
 # Circuit breaker component configuration
 circuitbreaker:

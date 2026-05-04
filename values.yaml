@@ -1005,11 +1005,11 @@ issuerService:
   # -- Issuer Service container resource limits and requests
   resources:
     requests:
-      cpu: 50m
+      cpu: 20m
       memory: 10Mi
     limits:
-      cpu: 500m
-      memory: 50Mi
+      cpu: 200m
+      memory: 130Mi
 
 # Circuit breaker component configuration
 circuitbreaker:

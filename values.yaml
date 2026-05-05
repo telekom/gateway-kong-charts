@@ -1006,10 +1006,10 @@ issuerService:
   resources:
     requests:
       cpu: 50m
-      memory: 10Mi
+      memory: 50Mi
     limits:
       cpu: 50m
-      memory: 10Mi
+      memory: 50Mi
 
 # Circuit breaker component configuration
 circuitbreaker:

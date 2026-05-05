@@ -804,7 +804,7 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | Issuer Service liveness probe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | Issuer Service readiness probe configuration |
-| issuerService.resources | object | `{"limits":{"cpu":"50m","memory":"10Mi"},"requests":{"cpu":"50m","memory":"10Mi"}}` | Issuer Service container resource limits and requests |
+| issuerService.resources | object | `{"limits":{"cpu":"50m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"50Mi"}}` | Issuer Service container resource limits and requests |
 | issuerService.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"periodSeconds":1}` | Issuer Service startup probe configuration |
 | job | object | `{"image":{"repository":"bash-curl","tag":"8.13.0"}}` | Job image configuration for setup jobs (inherits from global.image) |
 | jobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Container security context for setup jobs |

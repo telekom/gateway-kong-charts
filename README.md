@@ -789,13 +789,6 @@ The following table provides a comprehensive list of all configurable parameters
 | imageVerification.publicKey.secretRef.name | string | `"cosign-public-key"` | Name of the Secret containing the public key |
 | imageVerification.publicKey.source | string | `"secret"` | Source type: "value" (inline), "configMap", or "secret" |
 | imageVerification.resources | object | `{"limits":{"cpu":"200m","memory":"128Mi"},"requests":{"cpu":"50m","memory":"64Mi"}}` | Resource limits and requests for verification InitContainer |
-| irixBrokerRoute.enabled | bool | `false` | Enable IRIX broker route |
-| irixBrokerRoute.name | string | `"user-login"` | Route name |
-| irixBrokerRoute.upstream | object | `{"path":"/auth/realms/eni-login","port":80,"protocol":"http","service":"irix-broker"}` | Route hostname (optional, uses default host rules if not set) host: integration.spacegate.telekom.de |
-| irixBrokerRoute.upstream.path | string | `"/auth/realms/eni-login"` | Upstream service path |
-| irixBrokerRoute.upstream.port | int | `80` | Upstream service port |
-| irixBrokerRoute.upstream.protocol | string | `"http"` | Upstream protocol |
-| irixBrokerRoute.upstream.service | string | `"irix-broker"` | Upstream service name |
 | issuerService.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for Issuer Service |
 | issuerService.enabled | bool | `true` | Enable Issuer Service container deployment |
 | issuerService.environment | list | `[]` | Additional environment variables for Issuer Service container - {name: foo, value: bar} |

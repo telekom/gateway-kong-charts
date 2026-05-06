@@ -594,22 +594,3 @@ admin-api
 {{- $mergedAnnotations | toYaml -}}
 {{ end -}}
 
-{{- define "kong.irixBrokerRoute.spacegateHost" -}}
-{{- if .Values.irixBrokerRoute.host -}}
-{{ .Values.irixBrokerRoute.host -}}
-{{- else -}}
-{{- (first .Values.proxy.ingress.hosts).host -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "kong.irixBrokerRoute.upstreamHost" -}}
-{{- if .Values.irixBrokerRoute.upstream.host -}}
-{{ .Values.irixBrokerRoute.upstream.host -}}
-{{- else -}}
-{{- if .Values.irixBrokerRoute.upstream.namespace -}}
-{{ .Values.irixBrokerRoute.upstream.service | default "iris-broker" }}.{{ .Values.irixBrokerRoute.upstream.namespace -}}
-{{- else -}}
-{{ .Values.irixBrokerRoute.upstream.service | default "iris-broker" }}.{{ .Release.Namespace -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}

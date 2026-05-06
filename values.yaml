@@ -806,28 +806,6 @@ plugins:
     #  <CA certificate in PEM format>
     #  -----END CERTIFICATE-----
 
-# IRIX Broker route configuration (proxy route to IRIX broker service)
-irixBrokerRoute:
-  # -- Enable IRIX broker route
-  enabled: false
-  # -- Route name
-  name: user-login
-  # -- Route hostname (optional, uses default host rules if not set)
-  #host: integration.spacegate.telekom.de
-  upstream:
-    # -- Upstream protocol
-    protocol: http
-    # -- Upstream service name
-    service: irix-broker
-    # -- Upstream service path
-    path: /auth/realms/eni-login
-    # -- Upstream service port
-    port: 80
-    # -- Upstream hostname (optional, for ingress access)
-    #host: integration.spacegate.telekom.de
-    # -- Upstream service namespace (optional, for cross-namespace access)
-    #namespace: integration
-
 # Jumper component for Gateway-to-Gateway communication and Last Mile Security
 jumper:
   # -- Enable Jumper container deployment

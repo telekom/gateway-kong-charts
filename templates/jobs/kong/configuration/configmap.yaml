@@ -120,50 +120,6 @@ data:
           "consumer_match_claim_custom_id" : true
         }
       }'
-    {{- if eq .Values.irixBrokerRoute.enabled true }}
-    echo ""
-    echo "8) Create service (upstream: {{ .Values.irixBrokerRoute.upstream.protocol }}//{{ include "kong.irixBrokerRoute.upstreamHost" . }}:{{ .Values.irixBrokerRoute.upstream.port }})"
-    curl --request PUT \
-      --url {{ $apiUrl }}/services/{{ .Values.irixBrokerRoute.name }} \
-      --header 'Content-Type: application/json' \
-      -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
-      --data \
-      '{
-        "name": "{{ .Values.irixBrokerRoute.name }}",
-        "tags": ["irix-broker","{{ .Values.irixBrokerRoute.name }}"],
-        "protocol": "{{ .Values.irixBrokerRoute.upstream.protocol }}",
-        "host": "{{ include "kong.irixBrokerRoute.upstreamHost" . }}",
-        "port": {{ .Values.irixBrokerRoute.upstream.port }},
-        "path": "{{ .Values.irixBrokerRoute.upstream.path }}"
-      }'
-    echo ""
-    echo "9) Create route (/{{ .Values.irixBrokerRoute.name }}) "
-    curl --request PUT \
-      --url {{ $apiUrl }}/services/{{ .Values.irixBrokerRoute.name }}/routes/{{ .Values.irixBrokerRoute.name }} \
-      --header 'Content-Type: application/json' \
-      -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
-      --data \
-      '{
-        "name": "{{ .Values.irixBrokerRoute.name }}",
-        "tags": ["irix-broker","{{ .Values.irixBrokerRoute.name }}"],
-        "strip_path": true,
-        "preserve_host": true,
-        "protocols": ["http","https"],
-        "methods": ["GET","POST"],
-        "hosts": [
-          {{- if .Values.irixBrokerRoute.host -}}
-          {{ .Values.irixBrokerRoute.host | quote }}
-          {{- else -}}
-          {{- range $index, $element := .Values.proxy.ingress.hosts }}
-          {{ $element.host | quote }}{{- if ne $index (sub (len $.Values.proxy.ingress.hosts) 1) }},{{- end }}
-          {{- end -}}
-          {{- end }}
-        ],
-        "paths": [
-          "/{{ .Values.irixBrokerRoute.name }}"
-        ]
-      }'
-    {{- end -}}
     {{- end -}}
     {{- end -}}
 

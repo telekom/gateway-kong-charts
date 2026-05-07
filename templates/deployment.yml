@@ -223,6 +223,10 @@ spec:
       {{- include "cosign.keyVolume" $ | nindent 6 }}
       {{- include "cosign.pullSecretVolumes" $ | nindent 6 }}
 {{- end }}
-      dnsPolicy: ClusterFirst
+      dnsPolicy: {{ .Values.dns.dnsPolicy }}
+      {{- if .Values.dns.dnsConfig }}
+      dnsConfig:
+        {{- toYaml .Values.dns.dnsConfig | nindent 8 }}
+      {{- end }}
       restartPolicy: Always
       terminationGracePeriodSeconds: {{ add .Values.global.preStopSleepBase 1 60 }}

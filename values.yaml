@@ -86,6 +86,16 @@ global:
   # -- Base sleep duration in seconds for pre-stop lifecycle hook
   preStopSleepBase: 15
 
+# DNS Configuration (Pod-level)
+# Allows configuration of pod DNS settings to enable optimized external DNS resolution
+dns:
+  # -- DNS policy for the pod. Defaults to ClusterFirst.
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy
+  dnsPolicy: ClusterFirst
+  # -- Custom DNS configuration for the pod. Passed through directly to PodSpec.dnsConfig.
+  # Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+  dnsConfig: {}
+
 # List template files that should trigger pod restart when changed
 # Useful for ConfigMaps or Secrets that need immediate propagation
 #templateChangeTriggers:

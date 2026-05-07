@@ -744,6 +744,8 @@ The following table provides a comprehensive list of all configurable parameters
 | dbUpdateFrequency | int | `10` | Frequency in seconds to poll database for updates |
 | dbUpdatePropagation | int | `0` | Delay in seconds before propagating database updates |
 | disableUpstreamCache | bool | `false` | Disable upstream response caching |
+| dns.dnsConfig | object | `{}` | Custom DNS configuration for the pod. Passed through directly to PodSpec.dnsConfig. Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config |
+| dns.dnsPolicy | string | `"ClusterFirst"` | DNS policy for the pod. Defaults to ClusterFirst. Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy |
 | externalDatabase.ssl | bool | `true` | Enable SSL for external database connections |
 | externalDatabase.sslVerify | bool | `false` | Verify SSL certificates for external database |
 | global.database.database | string | `"kong"` | Database name |

@@ -8,6 +8,74 @@ SPDX-License-Identifier: CC0-1.0
 
 This document provides guidance for upgrading between versions of the Gateway Helm chart.
 
+## From 9.x.x to 10.0.0
+
+### `imageVerification.publicKey` replaced by `imageVerification.publicKeys` (BREAKING)
+
+The singular `imageVerification.publicKey` field has been replaced with a list
+`imageVerification.publicKeys`. This enables verifying images against multiple
+public keys, where verification succeeds if **any** key validates the signature
+(useful for key rotation).
+
+**Before:**
+```yaml
+imageVerification:
+  enabled: true
+  publicKey:
+    source: secret
+    secretRef:
+      name: cosign-public-key
+      key: cosign.pub
+```
+
+**After:**
+```yaml
+imageVerification:
+  enabled: true
+  publicKeys:
+    - source: secret
+      secretRef:
+        name: cosign-public-key
+        key: cosign.pub
+```
+
+All three source types are supported in the list:
+
+```yaml
+imageVerification:
+  enabled: true
+  publicKeys:
+    # Inline PEM (creates a ConfigMap automatically)
+    - source: value
+      value: |
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+        -----END PUBLIC KEY-----
+
+    # From an existing ConfigMap
+    - source: configMap
+      configMapRef:
+        name: my-cosign-keys
+        key: cosign.pub
+
+    # From an existing Secret
+    - source: secret
+      secretRef:
+        name: cosign-public-key
+        key: cosign.pub
+```
+
+### `configMapRef.key` and `secretRef.key` are now required at render time
+
+Previously, omitting `configMapRef.key` (for `source: configMap` entries) or
+`secretRef.key` (for `source: secret` entries) was not caught at
+`helm template`/`helm install` time and only failed at pod startup.
+The new validation rejects the configuration at render time. Ensure
+`configMapRef.key` is set on every `source: configMap` entry and
+`secretRef.key` is set on every `source: secret` entry.
+
+---
+
 ## From 8.x.x to 9.x.x
 
 Version 9.0.0 introduces several breaking changes that modernize the chart structure and align with Kubernetes best practices. Review all changes carefully before upgrading.

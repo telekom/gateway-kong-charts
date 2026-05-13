@@ -222,7 +222,7 @@ Returns the InitContainer for cosign image verification.
   {{- include "cosign.dockerConfigVolumeMount" . | nindent 2 }}
   {{- include "cosign.pullSecretVolumeMounts" . | nindent 2 }}
   command:
-  - /bin/sh
+  - /bin/bash
   - -c
   - |
     FAILED=0

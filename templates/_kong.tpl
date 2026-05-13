@@ -518,6 +518,10 @@ false
 - name: JUMPER_WARMUP_URLS
   value: {{ .Values.jumper.warmup.urls | join "," | quote }}
 {{- end }}
+{{- if .Values.jumper.warmup.enabled }}
+- name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+  value: "readinessState,warmup"
+{{- end }}
 {{- end }}
 - name: JAVA_TOOL_OPTIONS
   value: {{ .Values.jumper.jvmOpts }}

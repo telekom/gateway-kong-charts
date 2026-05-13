@@ -66,7 +66,7 @@ spec:
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
 
 {{- if include "cosign.enabled" $ }}
-{{- include "cosign.validatePublicKey" $ }}
+{{- include "cosign.validatePublicKeys" $ }}
       initContainers:
 {{- include "cosign.initContainer" $ | nindent 6 }}
 {{- end }}
@@ -220,7 +220,8 @@ spec:
       {{- include "kong.jumper.volumes" $ | nindent 6 }}
       {{- include "kong.issuerService.volumes" $ | nindent 6 }}
 {{- if include "cosign.enabled" $ }}
-      {{- include "cosign.keyVolume" $ | nindent 6 }}
+      {{- include "cosign.keyVolumes" $ | nindent 6 }}
+      {{- include "cosign.dockerConfigVolume" $ | nindent 6 }}
       {{- include "cosign.pullSecretVolumes" $ | nindent 6 }}
 {{- end }}
       dnsPolicy: {{ .Values.dns.dnsPolicy }}

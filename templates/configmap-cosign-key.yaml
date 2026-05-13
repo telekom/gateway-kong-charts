@@ -4,13 +4,23 @@ SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if and (include "cosign.enabled" $) (eq .Values.imageVerification.publicKey.source "value") }}
+{{- if include "cosign.enabled" $ }}
+{{- $valueKeys := list -}}
+{{- range .Values.imageVerification.publicKeys -}}
+{{- if eq .source "value" -}}
+{{- $valueKeys = append $valueKeys . -}}
+{{- end -}}
+{{- end -}}
+{{- if $valueKeys }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-cosign-public-key
   labels: {{ include "app.labels.standard" $ | nindent 4 }}
 data:
-  cosign.pub: |
-    {{- .Values.imageVerification.publicKey.value | nindent 4 }}
+{{- range $i, $entry := $valueKeys }}
+  cosign.pub.{{ $i }}: |
+    {{- $entry.value | nindent 4 }}
+{{- end }}
+{{- end }}
 {{- end }}

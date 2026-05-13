@@ -1176,31 +1176,44 @@ imageVerification:
     repository: cosign
     tag: "v2.5.3"
 
-  # -- Public key configuration for signature verification
-  # Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef
-  publicKey:
-    # -- Source type: "value" (inline), "configMap", or "secret"
-    source: secret
-
-    # -- Inline public key PEM (used when source: value)
-    # value: |
-    #   -----BEGIN PUBLIC KEY-----
-    #   MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
-    #   -----END PUBLIC KEY-----
-
-    # -- ConfigMap reference (used when source: configMap)
-    configMapRef:
-      # -- Name of the ConfigMap containing the public key
-      name: ""
-      # -- Key within the ConfigMap
-      key: "cosign.pub"
-
-    # -- Secret reference (used when source: secret)
-    secretRef:
-      # -- Name of the Secret containing the public key
-      name: "cosign-public-key"
-      # -- Key within the Secret
-      key: "cosign.pub"
+  # -- List of public keys for signature verification.
+  # Verification succeeds if ANY key in the list validates the signature (OR logic).
+  # This enables key rotation: include both old and new key during a transition period.
+  #
+  # Each entry must specify 'source' and the corresponding fields for that source:
+  #
+  #   source: value       — inline PEM in values.yaml; all value-source entries are
+  #                         stored in a single auto-created ConfigMap.
+  #   source: configMap   — public key is a data entry in an existing ConfigMap.
+  #   source: secret      — public key is a data entry in an existing Secret.
+  #
+  # Examples:
+  #
+  #   # Inline PEM
+  #   - source: value
+  #     value: |
+  #       -----BEGIN PUBLIC KEY-----
+  #       MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+  #       -----END PUBLIC KEY-----
+  #
+  #   # From an existing ConfigMap
+  #   - source: configMap
+  #     configMapRef:
+  #       name: "my-cosign-keys"
+  #       key: "cosign.pub"
+  #
+  #   # From an existing Secret
+  #   - source: secret
+  #     secretRef:
+  #       name: "cosign-public-key"
+  #       key: "cosign.pub"
+  publicKeys:
+    - source: secret
+      secretRef:
+        # -- Name of the Secret containing the public key
+        name: "cosign-public-key"
+        # -- Key within the Secret
+        key: "cosign.pub"
 
   # -- Container security context for verification InitContainer
   containerSecurityContext:

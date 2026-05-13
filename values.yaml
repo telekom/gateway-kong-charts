@@ -915,6 +915,16 @@ jumper:
     # -- Enable zone health monitoring
     enabled: false
 
+  # -- Warmup configuration for cold start optimization
+  warmup:
+    # -- Enable warmup on startup (set to false to completely disable)
+    enabled: false
+    # -- Maximum overall warmup duration (omit to use Jumper's built-in default of 15s)
+    #timeout: 15s
+    # -- List of URLs to warm up (DNS, TLS handshake, connection pool, LMS token generation)
+    # Example: [https://iris.2.2.2.2.nip.io, https://iris.3.3.3.3.nip.io]
+    urls: []
+
   # -- List of zones that are considered internet-facing (empty list uses Jumper's default configuration)
   # Example: [space, canis, aries]
   internetFacingZones: []

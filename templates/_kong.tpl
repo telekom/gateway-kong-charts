@@ -507,6 +507,18 @@ false
 - name: JUMPER_INTERNET_FACING_ZONES
   value: {{ .Values.jumper.internetFacingZones | join "," | quote }}
 {{- end }}
+{{- if hasKey .Values.jumper "warmup" }}
+- name: JUMPER_WARMUP_ENABLED
+  value: {{ .Values.jumper.warmup.enabled | quote }}
+{{- if .Values.jumper.warmup.timeout }}
+- name: JUMPER_WARMUP_TIMEOUT
+  value: {{ .Values.jumper.warmup.timeout | quote }}
+{{- end }}
+{{- if not (empty .Values.jumper.warmup.urls) }}
+- name: JUMPER_WARMUP_URLS
+  value: {{ .Values.jumper.warmup.urls | join "," | quote }}
+{{- end }}
+{{- end }}
 - name: JAVA_TOOL_OPTIONS
   value: {{ .Values.jumper.jvmOpts }}
 - name: PUBLISH_EVENT_URL

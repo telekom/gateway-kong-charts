@@ -807,7 +807,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.6.1"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.8.0"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |
@@ -819,6 +819,9 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.resources | object | `{"limits":{"cpu":"1500m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
 | jumper.stargateUrl | string | `"https://<your-gateway-host>"` | Gateway URL for Gateway-to-Gateway communication |
 | jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
+| jumper.warmup | object | `{"enabled":false,"urls":[]}` | Warmup configuration for cold start optimization |
+| jumper.warmup.enabled | bool | `false` | Enable warmup on startup (set to false to completely disable) |
+| jumper.warmup.urls | list | `[]` | List of URLs to warm up (DNS, TLS handshake, connection pool, LMS token generation) Example: [https://iris.2.2.2.2.nip.io, https://iris.3.3.3.3.nip.io] |
 | jumper.zoneHealth.databaseConnectionTimeout | int | `500` | Redis connection timeout in milliseconds |
 | jumper.zoneHealth.databaseHost | string | `"localhost"` | Redis database hostname |
 | jumper.zoneHealth.databaseIndex | int | `2` | Redis database index |

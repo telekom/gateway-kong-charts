@@ -514,6 +514,10 @@ false
 - name: JUMPER_WARMUP_TIMEOUT
   value: {{ .Values.jumper.warmup.timeout | quote }}
 {{- end }}
+{{- if .Values.jumper.warmup.iterations }}
+- name: JUMPER_WARMUP_ITERATIONS
+  value: {{ .Values.jumper.warmup.iterations | quote }}
+{{- end }}
 {{- if not (empty .Values.jumper.warmup.urls) }}
 - name: JUMPER_WARMUP_URLS
   value: {{ .Values.jumper.warmup.urls | join "," | quote }}

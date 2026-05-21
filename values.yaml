@@ -921,6 +921,8 @@ jumper:
     enabled: false
     # -- Maximum overall warmup duration (omit to use Jumper's built-in default of 15s)
     #timeout: 15s
+    # -- Number of iterations per URL for JIT warmup (omit to use Jumper's built-in default of 1)
+    #iterations:
     # -- List of URLs to warm up (DNS, TLS handshake, connection pool, LMS token generation)
     # Example: [https://iris.2.2.2.2.nip.io, https://iris.3.3.3.3.nip.io]
     urls: []

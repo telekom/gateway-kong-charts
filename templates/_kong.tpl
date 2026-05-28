@@ -269,6 +269,18 @@ false
 - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
   value: '{{ .Values.nginxLargeClientBuffers }}'
 {{- end -}}
+{{- if .Values.nginxProxyBufferSize }}
+- name: KONG_NGINX_PROXY_PROXY_BUFFER_SIZE
+  value: '{{ .Values.nginxProxyBufferSize }}'
+{{- end -}}
+{{- if .Values.nginxProxyBuffers }}
+- name: KONG_NGINX_PROXY_PROXY_BUFFERS
+  value: '{{ .Values.nginxProxyBuffers }}'
+{{- end -}}
+{{- if .Values.nginxProxyBusyBuffersSize }}
+- name: KONG_NGINX_PROXY_PROXY_BUSY_BUFFERS_SIZE
+  value: '{{ .Values.nginxProxyBusyBuffersSize }}'
+{{- end -}}
 {{- if .Values.defaultTlsSecret }}
 - name: KONG_SSL_CERT
   value: /opt/kong/default-https/tls.crt

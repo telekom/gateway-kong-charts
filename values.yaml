@@ -264,6 +264,18 @@ nginxWorkerProcesses: 4
 nginxHttpLuaSharedDict: "prometheus_metrics 15m"
 # -- Nginx large client header buffers configuration
 #nginxLargeClientBuffers: "8 16k"
+# -- Nginx proxy buffer size for upstream response headers (e.g. "16k", "32k").
+#    Fixes "upstream sent too big header" 502 errors.
+#    NOTE: When increasing this, you must also set nginxProxyBuffers so that
+#    the total proxy_buffers size exceeds 2 * proxy_buffer_size. Otherwise Nginx
+#    will fail to start with a proxy_busy_buffers_size constraint error.
+#nginxProxyBufferSize: "16k"
+# -- Nginx proxy buffers count and size for upstream response body (e.g. "8 16k").
+#    Must be set when nginxProxyBufferSize is increased beyond the default buffer size (4k/8k).
+#nginxProxyBuffers: "8 16k"
+# -- Nginx proxy busy buffers size (defaults to 2 * proxy_buffer_size if not set).
+#    Only needed if you want to override the automatic default.
+#nginxProxyBusyBuffersSize: "32k"
 # -- Kong worker consistency mode (eventual or strict)
 workerConsistency: eventual
 # -- Frequency in seconds to poll for worker state updates

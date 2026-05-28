@@ -585,6 +585,48 @@ You can tune Kong's asynchronous route refresh behavior with these variables:
 [db_update_propagation]: https://docs.konghq.com/gateway/2.8.x/reference/configuration/#db_update_propagation
 [worker_state_update_frequency]: https://docs.konghq.com/gateway/2.8.x/reference/configuration/#worker_state_update_frequency
 
+### Nginx Proxy Buffer Tuning
+
+If upstream services return large response headers (e.g. verbose `Set-Cookie`, `Authorization`, or custom headers), Kong/Nginx may return **502 Bad Gateway** with:
+
+```
+upstream sent too big header while reading response header from upstream
+```
+
+This is caused by Nginx's `proxy_buffer_size` being too small for the response headers. The default is **4k** (or 8k on 64-bit platforms).
+
+> **Note:** This is different from `nginxLargeClientBuffers` (`large_client_header_buffers`), which controls buffers for **incoming request** headers from clients. The `proxy_buffer_size` directive controls the buffer for **response** headers from upstream backends.
+
+**Configuration:**
+
+| Helm Value | Kong Env Var | Nginx Directive | Purpose |
+|---|---|---|---|
+| `nginxProxyBufferSize` | `KONG_NGINX_PROXY_PROXY_BUFFER_SIZE` | `proxy_buffer_size` | Buffer for upstream response headers |
+| `nginxProxyBuffers` | `KONG_NGINX_PROXY_PROXY_BUFFERS` | `proxy_buffers` | Number and size of buffers for response body |
+| `nginxProxyBusyBuffersSize` | `KONG_NGINX_PROXY_PROXY_BUSY_BUFFERS_SIZE` | `proxy_busy_buffers_size` | Max size of busy buffers (auto-derived if not set) |
+
+**Recommended configuration:**
+
+When increasing `proxy_buffer_size`, you **must** also increase `proxy_buffers` so that the total buffer size satisfies Nginx's constraint: `proxy_busy_buffers_size` (defaults to `2 × proxy_buffer_size`) must be less than the total `proxy_buffers` size minus one buffer.
+
+```yaml
+# Fix for "upstream sent too big header" 502 errors
+nginxProxyBufferSize: "16k"
+nginxProxyBuffers: "8 16k"
+# nginxProxyBusyBuffersSize is optional — defaults to 2 × proxy_buffer_size (32k),
+# which is satisfied when proxy_buffers total (8 × 16k = 128k) > 32k.
+```
+
+**Value format:**
+- `nginxProxyBufferSize` takes a single size: `"16k"`, `"32k"`
+- `nginxProxyBuffers` takes `<count> <size>`: `"8 16k"` means 8 buffers of 16 KiB each
+- `nginxProxyBusyBuffersSize` takes a single size: `"32k"`
+
+**References:**
+- [Nginx proxy_buffer_size](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffer_size)
+- [Nginx proxy_buffers](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffers)
+- [Kong: Injecting Nginx directives](https://docs.konghq.com/gateway/latest/reference/configuration/#injecting-individual-nginx-directives)
+
 ### Relabeling application metrics
 
 In case you need to manipulate existing application metrcis or add new ones,
@@ -966,6 +1008,27 @@ The following table provides a comprehensive list of all configurable parameters
 ## Troubleshooting
 
 If the Gateway deployment fails to start, check the container logs for error messages.
+
+### Proxy Buffer Size Error
+
+**Symptom:**
+
+```
+nginx: [emerg] "proxy_busy_buffers_size" must be less than the size of all "proxy_buffers" minus one buffer
+nginx: configuration file /kong/nginx.conf test failed
+```
+
+**Solution:**
+This error occurs when `nginxProxyBufferSize` is set without also increasing `nginxProxyBuffers`. The default `proxy_buffers` (`8 4k` = 32k total) is too small to satisfy the constraint when `proxy_buffer_size` is increased.
+
+Set both values together:
+
+```yaml
+nginxProxyBufferSize: "16k"
+nginxProxyBuffers: "8 16k"
+```
+
+See [Nginx Proxy Buffer Tuning](#nginx-proxy-buffer-tuning) for details.
 
 ### SSL Verification Error
 

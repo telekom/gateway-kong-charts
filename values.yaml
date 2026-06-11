@@ -95,10 +95,6 @@ global:
     # -- Sample ratio for requests without trace IDs (0=off, 1=all requests)
     sampleRatio: 1
 
-  podAntiAffinity:
-    # -- Use required (hard) or preferred (soft) pod anti-affinity
-    required: false
-
   # -- Fail template rendering on unset required values
   failOnUnsetValues: true
 
@@ -260,8 +256,26 @@ containerSecurityContext:
     drop:
       - ALL
 
-# -- Topology key for pod anti-affinity (spread pods across zones for high availability)
-topologyKey: kubernetes.io/hostname
+# -- Affinity rules for the gateway pods. Rendered through `tpl`, so values may
+# embed template expressions (e.g. `{{ .Release.Name }}`). Override this whole
+# object per-environment to apply custom or multiple (anti-)affinity rules.
+# Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+affinity:
+  podAntiAffinity:
+    # Require pods of this instance to be spread across nodes (one per node)
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+        topologyKey: kubernetes.io/hostname
+    # Prefer also spreading across availability zones (mitigates AZ imbalance)
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+          topologyKey: topology.kubernetes.io/zone
 
 # Job security configuration
 jobs:

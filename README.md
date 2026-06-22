@@ -767,8 +767,9 @@ The following table provides a comprehensive list of all configurable parameters
 | global.passwordRules.mustMatch | list | `["[a-z]","[A-Z]","[0-9]","[^a-zA-Z0-9]"]` | Password must match these regex patterns |
 | global.podAntiAffinity.required | bool | `false` | Use required (hard) or preferred (soft) pod anti-affinity |
 | global.preStopSleepBase | int | `15` | Base sleep duration in seconds for pre-stop lifecycle hook |
-| global.tracing.collectorUrl | string | `"http://guardians-drax-collector.skoll:9411/api/v2/spans"` | Zipkin collector URL (e.g., Jaeger collector), must include http(s) scheme |
+| global.tracing.collectorUrl | string | `"http://guardians-drax-collector.skoll:9411/api/v2/spans"` | Trace collector URL, used VERBATIM by both Kong and Jumper (no path is appended or stripped by the chart). Provide the FULL endpoint URL matching the selected `exporter`:   * exporter=zipkin -> full Zipkin v2 spans endpoint INCLUDING the path,       e.g. "http://collector:9411/api/v2/spans"   * exporter=otlp   -> full OTLP/HTTP traces endpoint INCLUDING the path,       e.g. "http://collector:4318/v1/traces" The same URL is applied to every target:   * Kong   + zipkin -> plugin `http_endpoint`   * Kong   + otlp   -> plugin `traces_endpoint`   * Jumper + zipkin -> TRACING_URL (Spring Boot zipkin endpoint)   * Jumper + otlp   -> TRACING_URL (Spring Boot otlp endpoint) Must include the http(s) scheme. IMPORTANT: when you switch `exporter`, update this URL to the target collector's protocol port AND path (Zipkin and OTLP usually listen on different ports/paths, e.g. 9411/api/v2/spans vs 4318/v1/traces). |
 | global.tracing.defaultServiceName | string | `"stargate"` | Service name displayed in tracing UI |
+| global.tracing.exporter | string | `"zipkin"` | Active trace exporter for the whole gateway: 'zipkin' or 'otlp'. Selects which Kong tracing plugin is configured (zipkin vs opentelemetry) and which exporter Jumper uses. Exactly one is active at runtime. |
 | global.tracing.sampleRatio | int | `1` | Sample ratio for requests without trace IDs (0=off, 1=all requests) |
 | global.zone | string | `"default"` | Zone identifier for the gateway instance (must match control plane configuration) |
 | hpaAutoscaling | object | `{"cpuUtilizationPercentage":80,"enabled":false,"maxReplicas":10,"minReplicas":3}` | Horizontal Pod Autoscaler configuration |
@@ -907,6 +908,9 @@ The following table provides a comprehensive list of all configurable parameters
 | plugins.jwtKeycloak.blockedIssuers | list | `[]` | Zone-wide issuer blocklist. Tokens from these issuers are rejected on ALL routes regardless of per-route allowedIss. Takes effect on Kong restart/redeploy only. Used for emergency revocation of compromised consumer zone gateway issuers without requiring full route reprocessing by Rover. |
 | plugins.jwtKeycloak.enabled | bool | `true` | Enable JWT Keycloak plugin |
 | plugins.jwtKeycloak.pluginId | string | `"b864d58b-7183-4889-8b32-0b92d6c4d513"` | Plugin ID for Kong configuration |
+| plugins.opentelemetry.enabled | bool | `true` | Enable distributed tracing via the ENI OpenTelemetry plugin (OTLP/HTTP). Whether this plugin is actually configured at runtime is gated by global.tracing.exporter == "otlp"; this flag only allows disabling it entirely. The zipkin and opentelemetry plugins are mutually exclusive at runtime (selected by global.tracing.exporter). |
+| plugins.opentelemetry.instrumentations | string | `"all"` | Kong built-in tracing instrumentations required for native span generation (e.g. "all", or "request,balancer,db_query"). Set as KONG_TRACING_INSTRUMENTATIONS. |
+| plugins.opentelemetry.pluginId | string | `"7b1d3f9a-2c84-4d6e-9f10-5a3b8c2e7d41"` | Plugin ID for Kong configuration |
 | plugins.prometheus.enabled | bool | `true` | Enable Prometheus metrics plugin |
 | plugins.prometheus.path | string | `"/metrics"` | Metrics endpoint path |
 | plugins.prometheus.pluginId | string | `"3d232d3c-dc2b-4705-aa8d-4e07c4e0ff4c"` | Plugin ID for Kong configuration |

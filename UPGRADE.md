@@ -217,6 +217,61 @@ proxy:
     className: traefik
 ```
 
+### Tracing Exporter Selection (OpenTelemetry / OTLP)
+
+The gateway can now export traces either as **Zipkin** (default, unchanged) or
+via **OpenTelemetry (OTLP/HTTP)**. Exactly one exporter is active at runtime,
+selected by `global.tracing.exporter` and applied consistently to both Kong and
+Jumper.
+
+The default remains `zipkin`, so existing installations do not need to set `global.tracing.exporter` explicitly.
+
+> Note: this release also changes how the collector URL is passed to Jumper. If your Jumper configuration expects a Zipkin **base** URL (without `/api/v2/spans`), set `jumper.tracingUrl` accordingly.
+
+#### One collector URL, format depends on the exporter
+
+There is a **single** `global.tracing.collectorUrl`. It is used **verbatim** by
+both Kong and Jumper — the chart neither appends nor strips any path. Provide the
+**full endpoint URL** matching `global.tracing.exporter`:
+
+| `exporter` | `collectorUrl` you set | Kong endpoint | Jumper endpoint |
+|---|---|---|---|
+| `zipkin` (default) | full Zipkin v2 path, e.g. `http://collector:9411/api/v2/spans` | used verbatim as `http_endpoint` | used verbatim as `TRACING_URL` |
+| `otlp` | full OTLP/HTTP path, e.g. `http://collector:4318/v1/traces` | used verbatim as `traces_endpoint` | used verbatim as `TRACING_URL` |
+
+> ⚠️ **When you switch `exporter`, update `collectorUrl` accordingly.** Zipkin and
+> OTLP/HTTP usually listen on **different ports and paths** (commonly
+> `9411/api/v2/spans` vs `4318/v1/traces`). The default value is a Zipkin URL, so
+> leaving it unchanged while setting `exporter: otlp` would send OTLP traffic to
+> the wrong port/path.
+
+**To switch the whole gateway to OTLP:**
+
+```yaml
+global:
+  tracing:
+    exporter: otlp
+    # Full OTLP/HTTP traces endpoint INCLUDING the path; used verbatim by both
+    # Kong and Jumper.
+    collectorUrl: "http://my-otel-collector:4318/v1/traces"
+```
+
+Behavior when `exporter: otlp`:
+
+- Kong runs the `opentelemetry` plugin (native OTLP/protobuf) instead of `zipkin`.
+  The setup job configures it and **deletes the `zipkin` plugin** so only one
+  exporter is active. Switching back to `zipkin` reverses this automatically.
+- Kong receives `KONG_TRACING_INSTRUMENTATIONS` (default `all`) and
+  `KONG_TRACING_SAMPLING_RATE`, which are required for native span generation.
+- Jumper receives `TRACING_EXPORTER=otlp` and a `TRACING_URL` pointing at the OTLP/HTTP traces endpoint (including the `/v1/traces` path).
+- Wire propagation stays **B3**, preserving trace continuity and the Tardis
+  trace ID flow between Kong and Jumper.
+
+Both the `zipkin` and `opentelemetry` plugins ship in the gateway image; the
+chart only enables the one matching `global.tracing.exporter`. The mutually
+exclusive cleanup runs as part of the post-install/post-upgrade setup hooks, so
+flipping the exporter is a redeploy-only operation (no image rebuild).
+
 ## From 7.x.x to 8.x.x
 
 ### HPA Configuration

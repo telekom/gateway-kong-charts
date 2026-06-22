@@ -69,7 +69,26 @@ global:
 
   # Global tracing configuration (can be overridden per component)
   tracing:
-    # -- Zipkin collector URL (e.g., Jaeger collector), must include http(s) scheme
+    # -- Active trace exporter for the whole gateway: 'zipkin' or 'otlp'.
+    # Selects which Kong tracing plugin is configured (zipkin vs opentelemetry)
+    # and which exporter Jumper uses. Exactly one is active at runtime.
+    exporter: "zipkin"
+    # -- Trace collector URL, used VERBATIM by both Kong and Jumper (no path is
+    # appended or stripped by the chart). Provide the FULL endpoint URL matching
+    # the selected `exporter`:
+    #   * exporter=zipkin -> full Zipkin v2 spans endpoint INCLUDING the path,
+    #       e.g. "http://collector:9411/api/v2/spans"
+    #   * exporter=otlp   -> full OTLP/HTTP traces endpoint INCLUDING the path,
+    #       e.g. "http://collector:4318/v1/traces"
+    # The same URL is applied to every target:
+    #   * Kong   + zipkin -> plugin `http_endpoint`
+    #   * Kong   + otlp   -> plugin `traces_endpoint`
+    #   * Jumper + zipkin -> TRACING_URL (Spring Boot zipkin endpoint)
+    #   * Jumper + otlp   -> TRACING_URL (Spring Boot otlp endpoint)
+    # Must include the http(s) scheme. IMPORTANT: when you switch `exporter`,
+    # update this URL to the target collector's protocol port AND path (Zipkin
+    # and OTLP usually listen on different ports/paths, e.g.
+    # 9411/api/v2/spans vs 4318/v1/traces).
     collectorUrl: "http://guardians-drax-collector.skoll:9411/api/v2/spans"
     # -- Service name displayed in tracing UI
     defaultServiceName: "stargate"
@@ -815,6 +834,33 @@ plugins:
     #  -----BEGIN CERTIFICATE-----
     #  <CA certificate in PEM format>
     #  -----END CERTIFICATE-----
+
+  opentelemetry:
+    # -- Enable distributed tracing via the ENI OpenTelemetry plugin (OTLP/HTTP).
+    # Whether this plugin is actually configured at runtime is gated by
+    # global.tracing.exporter == "otlp"; this flag only allows disabling it
+    # entirely. The zipkin and opentelemetry plugins are mutually exclusive at
+    # runtime (selected by global.tracing.exporter).
+    enabled: true
+    # -- Plugin ID for Kong configuration
+    pluginId: 7b1d3f9a-2c84-4d6e-9f10-5a3b8c2e7d41
+    # -- Full OTLP/HTTP traces endpoint INCLUDING the path, used verbatim as the
+    # plugin `traces_endpoint` (defaults to global.tracing.collectorUrl). Only
+    # set this to override the global URL for the OTLP exporter specifically,
+    # e.g. "http://guardians-drax-collector.skoll:4318/v1/traces".
+    #collectorUrl: "http://guardians-drax-collector.skoll:4318/v1/traces"
+    # -- Sampling rate for requests without trace IDs (0=off, 1=all requests)
+    #sampleRatio: 1
+    # -- Zone name for traces
+    #zone: null
+    # -- Trace header type / propagation format (b3 keeps continuity with Jumper)
+    #headerType: "b3"
+    # -- Service name displayed in tracing UI (set as the service.name resource attribute)
+    #defaultServiceName: "stargate"
+    # -- Kong built-in tracing instrumentations required for native span generation
+    # (e.g. "all", or "request,balancer,db_query"). Set as KONG_TRACING_INSTRUMENTATIONS.
+    instrumentations: "all"
+
 
 # Jumper component for Gateway-to-Gateway communication and Last Mile Security
 jumper:

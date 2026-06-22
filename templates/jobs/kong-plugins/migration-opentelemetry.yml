@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-plugin-migration-zipkin
+  name: {{ .Release.Name }}-plugin-migration-opentelemetry
   labels: {{ include "app.labels.standard" $ | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
@@ -23,7 +23,7 @@ spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
-      - name: zipkin-deletion
+      - name: opentelemetry-deletion
         image: {{ include "images.job" $ }}
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
@@ -37,7 +37,7 @@ spec:
           - /bin/bash
           - -c
           - |-
-            echo "Removing old Kong ENI flavoured Zipkin plugin via DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins"
+            echo "Removing old Kong ENI flavoured OpenTelemetry plugin via DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins"
 
             ADMIN_API_HTTP_RETURN_CODE=`curl -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
             if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then
@@ -49,7 +49,7 @@ spec:
             -o /dev/null \
             -w "%{http_code}" \
             -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
-            -X DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.zipkin.pluginId }}`
+            -X DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.opentelemetry.pluginId }}`
 
             if [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "204" ] && [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "404" ]; then
               echo "Plugin deletion failed"

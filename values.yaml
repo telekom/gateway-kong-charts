@@ -114,6 +114,10 @@ image:
 # -- Image pull policy for Kong container
 imagePullPolicy: IfNotPresent
 
+# -- Additional environment variables for Kong container
+#- {name: foo, value: bar}
+environment: []
+
 # Migration behavior: 'bootstrap' (new deployment), 'upgrade' (Kong version upgrade), 'jobs' (ENI plugin migration), or 'none'
 # -- Migration mode for database initialization or upgrades
 migrations: none

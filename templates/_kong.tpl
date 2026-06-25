@@ -57,8 +57,24 @@ false
 {{- end -}}
 {{- end -}}
 
+{{- define "kong.tracing.exporter" -}}
+{{- $exporter := .Values.global.tracing.exporter | default "zipkin" -}}
+{{- if not (has $exporter (list "zipkin" "otlp")) -}}
+{{- fail (printf "global.tracing.exporter must be 'zipkin' or 'otlp', got %q" $exporter) -}}
+{{- end -}}
+{{- $exporter -}}
+{{- end -}}
+
 {{- define "kong.isZipkinEnabled" -}}
-{{- if (eq .Values.plugins.zipkin.enabled true) -}}
+{{- if and (eq .Values.plugins.zipkin.enabled true) (eq (include "kong.tracing.exporter" $) "zipkin") -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{- define "kong.isOpentelemetryEnabled" -}}
+{{- if and (eq .Values.plugins.opentelemetry.enabled true) (eq (include "kong.tracing.exporter" $) "otlp") -}}
 true
 {{- else -}}
 false
@@ -445,6 +461,15 @@ false
   value: {{ .Values.adminApi.errorLog | quote }}
 {{- end }}
 {{- include "kong.kongLuaSslTrustedCertificatePath" . -}}
+{{- if eq (include "kong.isOpentelemetryEnabled" $) "true" }}
+# Native Kong tracing instrumentations are required for the opentelemetry plugin
+# to generate spans (request/balancer/phase spans). Only set when the OTLP
+# exporter is selected so the zipkin path is unaffected.
+- name: KONG_TRACING_INSTRUMENTATIONS
+  value: '{{ .Values.plugins.opentelemetry.instrumentations | default "all" }}'
+- name: KONG_TRACING_SAMPLING_RATE
+  value: '{{ .Values.plugins.opentelemetry.sampleRatio | default .Values.global.tracing.sampleRatio }}'
+{{- end }}
 {{- if .Values.plugins.jwtKeycloak.blockedIssuers }}
 - name: JWT_KEYCLOAK_BLOCKED_ISSUERS
   value: {{ join "," .Values.plugins.jwtKeycloak.blockedIssuers | quote }}
@@ -463,8 +488,14 @@ false
 {{- end -}}
 
 {{- define "kong.jumper.collectorUrl" -}}
-{{ $url := .Values.jumper.tracingUrl | default .Values.global.tracing.collectorUrl -}}
-{{ trimSuffix "/api/v2/spans" $url -}}
+{{/*
+Jumper consumes the trace collector URL verbatim for both exporters: the
+Spring Boot profiles (application-zipkin.yml / application-otlp.yml) carry the
+full endpoint path in TRACING_URL (".../api/v2/spans" or ".../v1/traces"), so
+no trim/append is needed here. An optional jumper.tracingUrl overrides the
+global collectorUrl.
+*/}}
+{{- .Values.jumper.tracingUrl | default .Values.global.tracing.collectorUrl -}}
 {{- end -}}
 
 {{- define "kong.jumper.env" }}
@@ -474,6 +505,8 @@ false
   value: {{ .Values.global.zone }}
 - name: TRACING_URL
   value: {{ include "kong.jumper.collectorUrl" . }}
+- name: TRACING_EXPORTER
+  value: {{ include "kong.tracing.exporter" $ | quote }}
 - name: STARGATE_URL
   value: {{ .Values.jumper.stargateUrl }}
 {{- if .Values.jumper.zoneHealth.enabled }}

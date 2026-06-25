@@ -1,14 +1,14 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- if and (.Values.adminApi.enabled) (eq (include "kong.isZipkinEnabled" $) "true") }}
+{{- if and (.Values.adminApi.enabled) (eq (include "kong.isOpentelemetryEnabled" $) "true") }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-zipkin-setup
+  name: {{ .Release.Name }}-opentelemetry-setup
   labels: {{ include "app.labels.standard" $ | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
@@ -22,7 +22,7 @@ spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
       containers:
-      - name: zipkin-setup
+      - name: opentelemetry-setup
         image: {{ include "images.job" $ }}
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
@@ -32,11 +32,11 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}
               key: gatewayAdminApiKey
-        command:        
+        command:
           - /bin/bash
           - -c
-          - |- 
-            echo "Enabling Kong ENI flavoured Zipkin plugin via PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins"
+          - |-
+            echo "Enabling Kong ENI flavoured OpenTelemetry plugin via PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins"
 
             ADMIN_API_HTTP_RETURN_CODE=`curl -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
             if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then
@@ -48,22 +48,21 @@ spec:
             -o /dev/null \
             -w "%{http_code}" \
             -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
-            -X PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.zipkin.pluginId }} \
+            -X PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.opentelemetry.pluginId }} \
             --header 'Content-Type: application/json' \
             --data \
             '{
-              "name" : "zipkin",
-              "tags" : ["tardis","zipkin","eni-zipkin"],
+              "name" : "opentelemetry",
+              "tags" : ["tardis","otel","eni-opentelemetry"],
               "config" : {
-                "http_endpoint" : "{{ .Values.plugins.zipkin.collectorUrl | default .Values.global.tracing.collectorUrl }}",
-                "sample_ratio" : {{ .Values.plugins.zipkin.sampleRatio | default .Values.global.tracing.sampleRatio }},
-                "include_credential" : {{ .Values.plugins.zipkin.includeCredential | default true }},
-                "default_service_name" : "{{ .Values.plugins.zipkin.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
-                "local_component_name" : "{{ .Values.plugins.zipkin.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
-                "environment" : "{{ .Values.plugins.zipkin.environment | default .Values.global.environment | default "default" }}",
-                "zone" : "{{ .Values.plugins.zipkin.zone | default .Values.global.zone | default "unknown" }}",
-                "force_sample" : {{ .Values.plugins.zipkin.forceSample | default true }},
-                "header_type" : "{{ .Values.plugins.zipkin.headerType | default "b3" }}"
+                "traces_endpoint" : "{{ .Values.plugins.opentelemetry.collectorUrl | default .Values.global.tracing.collectorUrl }}",
+                "sampling_rate" : {{ .Values.plugins.opentelemetry.sampleRatio | default .Values.global.tracing.sampleRatio }},
+                "resource_attributes" : {
+                  "service.name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}"
+                },
+                "local_service_name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
+                "zone" : "{{ .Values.plugins.opentelemetry.zone | default .Values.global.zone | default "unknown" }}",
+                "header_type" : "{{ .Values.plugins.opentelemetry.headerType | default "b3" }}"
               }
             }'`
 
@@ -72,16 +71,16 @@ spec:
               exit 1
             fi
 
-            # Ensure the OpenTelemetry plugin is not active at the same time
+            # Ensure the Zipkin plugin is not active at the same time
             # (exactly one trace exporter must run). Ignore 404 (already absent).
-            echo "Removing OpenTelemetry plugin (if present) via DELETE"
-            OTEL_DELETE_HTTP_RETURN_CODE=`curl \
+            echo "Removing Zipkin plugin (if present) via DELETE"
+            ZIPKIN_DELETE_HTTP_RETURN_CODE=`curl \
             -o /dev/null \
             -w "%{http_code}" \
             -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
-            -X DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.opentelemetry.pluginId }}`
-            if [ "$OTEL_DELETE_HTTP_RETURN_CODE" != "204" ] && [ "$OTEL_DELETE_HTTP_RETURN_CODE" != "404" ]; then
-              echo "OpenTelemetry plugin removal failed: $OTEL_DELETE_HTTP_RETURN_CODE"
+            -X DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.zipkin.pluginId }}`
+            if [ "$ZIPKIN_DELETE_HTTP_RETURN_CODE" != "204" ] && [ "$ZIPKIN_DELETE_HTTP_RETURN_CODE" != "404" ]; then
+              echo "Zipkin plugin removal failed: $ZIPKIN_DELETE_HTTP_RETURN_CODE"
               exit 1
             fi
 

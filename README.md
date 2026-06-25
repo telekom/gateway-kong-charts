@@ -502,11 +502,41 @@ For detailed configuration, examples, and troubleshooting, see the [Argo Rollout
 - [Argo Rollouts Canary Strategy](https://argoproj.github.io/rollouts/features/canary/)
 - [Argo Rollouts Analysis](https://argoproj.github.io/rollouts/features/analysis/)
 
-### Pod Anti-Affinity and Topology Key
+### Pod Anti-Affinity
 
-Distribute pods across multiple nodes for high availability. If one node fails, pods on other nodes continue serving traffic.
+Distribute pods across failure domains (nodes, availability zones, ...) for high
+availability. If one domain fails, pods in other domains continue serving traffic.
 
-Configure pod distribution using the `topologyKey` setting. See the [Parameters](#parameters) section for configuration options and the [Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity) for details on pod anti-affinity.
+Pod scheduling is configured through the single `affinity` value, which is passed
+straight into the pod spec's `affinity` field (rendered through `tpl`, so it may
+contain template expressions such as `{{ .Release.Name }}`). The chart
+default **requires** pods of the same instance to be spread across nodes
+(one per node), and additionally **prefers** spreading them across availability
+zones:
+
+```yaml
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+        topologyKey: kubernetes.io/hostname
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+          topologyKey: topology.kubernetes.io/zone
+```
+
+> **Note:** the required per-node rule means a deployment cannot run more replicas
+> than it has schedulable nodes — excess pods stay `Pending`. Override `affinity`
+> (e.g. switch the node rule to `preferred`) if you run more replicas than nodes.
+
+Override the whole `affinity` object to define custom (anti-)affinity rules.
+See the [Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity) for details on pod affinity and anti-affinity.
 
 ### Automatic Certificate and Key Rotation
 
@@ -692,6 +722,7 @@ The following table provides a comprehensive list of all configurable parameters
 | adminApi.ingress.hosts | list | `[{"host":"chart-example.local","paths":[{"path":"/","pathType":"Prefix"}]}]` | Ingress hosts configuration |
 | adminApi.ingress.tls | list | `[]` |  |
 | adminApi.tls.enabled | bool | `false` | Enable HTTPS for Admin API |
+| affinity | object | `{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/instance":"{{ .Release.Name }}-kong"}},"topologyKey":"topology.kubernetes.io/zone"},"weight":100}],"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/instance":"{{ .Release.Name }}-kong"}},"topologyKey":"kubernetes.io/hostname"}]}}` | Affinity rules for the gateway pods. Rendered through `tpl`, so values may embed template expressions (e.g. `{{ .Release.Name }}`). Override this whole object per-environment to apply custom or multiple (anti-)affinity rules. Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity |
 | argoRollouts.analysisTemplates.enabled | bool | `true` | Enable creation of AnalysisTemplates |
 | argoRollouts.analysisTemplates.errorRate.authentication | object | `{"basicKey":"basic-auth","enabled":true,"secretName":"victoria-metrics-secret"}` | Prometheus Basic Auth authentication configuration |
 | argoRollouts.analysisTemplates.errorRate.authentication.basicKey | string | `"basic-auth"` | Secret key for base64 encoded user:password Basic Auth header |
@@ -765,7 +796,6 @@ The following table provides a comprehensive list of all configurable parameters
 | global.passwordRules.enabled | bool | `false` | Enable password rule enforcement |
 | global.passwordRules.length | int | `12` | Minimum password length |
 | global.passwordRules.mustMatch | list | `["[a-z]","[A-Z]","[0-9]","[^a-zA-Z0-9]"]` | Password must match these regex patterns |
-| global.podAntiAffinity.required | bool | `false` | Use required (hard) or preferred (soft) pod anti-affinity |
 | global.preStopSleepBase | int | `15` | Base sleep duration in seconds for pre-stop lifecycle hook |
 | global.tracing.collectorUrl | string | `"http://guardians-drax-collector.skoll:9411/api/v2/spans"` | Trace collector URL, used VERBATIM by both Kong and Jumper (no path is appended or stripped by the chart). Provide the FULL endpoint URL matching the selected `exporter`:   * exporter=zipkin -> full Zipkin v2 spans endpoint INCLUDING the path,       e.g. "http://collector:9411/api/v2/spans"   * exporter=otlp   -> full OTLP/HTTP traces endpoint INCLUDING the path,       e.g. "http://collector:4318/v1/traces" The same URL is applied to every target:   * Kong   + zipkin -> plugin `http_endpoint`   * Kong   + otlp   -> plugin `traces_endpoint`   * Jumper + zipkin -> TRACING_URL (Spring Boot zipkin endpoint)   * Jumper + otlp   -> TRACING_URL (Spring Boot otlp endpoint) Must include the http(s) scheme. IMPORTANT: when you switch `exporter`, update this URL to the target collector's protocol port AND path (Zipkin and OTLP usually listen on different ports/paths, e.g. 9411/api/v2/spans vs 4318/v1/traces). |
 | global.tracing.defaultServiceName | string | `"stargate"` | Service name displayed in tracing UI |
@@ -963,7 +993,6 @@ The following table provides a comprehensive list of all configurable parameters
 | startupProbe | object | `{"failureThreshold":295,"httpGet":{"path":"/status","port":"status","scheme":"HTTP"},"initialDelaySeconds":5,"periodSeconds":1,"timeoutSeconds":1}` | Kong startup probe configuration |
 | strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"},"type":"RollingUpdate"}` | Deployment strategy configuration |
 | templateChangeTriggers | list | `[]` | List of template files for which a checksum annotation will be created |
-| topologyKey | string | `"kubernetes.io/hostname"` | Topology key for pod anti-affinity (spread pods across zones for high availability) |
 | workerConsistency | string | `"eventual"` | Kong worker consistency mode (eventual or strict) |
 | workerStateUpdateFrequency | int | `10` | Frequency in seconds to poll for worker state updates |
 

@@ -105,6 +105,59 @@ image:
   tag: "2.0.0"
 ```
 
+### `global.podAntiAffinity` and `topologyKey` replaced by `affinity` (BREAKING)
+
+The bespoke `global.podAntiAffinity.required` toggle and the top-level
+`topologyKey` value have been removed. Pod scheduling is now configured through a
+single top-level `affinity` value that is passed straight into the pod spec's
+`affinity` field. This allows arbitrary affinity/anti-affinity rules, including
+spreading across multiple topology domains at once.
+
+The value is rendered through `tpl`, so it may contain template expressions
+(e.g. to reference the release name in label selectors).
+
+**Before:**
+```yaml
+global:
+  podAntiAffinity:
+    required: true   # hard per-node anti-affinity
+topologyKey: kubernetes.io/hostname
+```
+
+**After (equivalent hard per-node rule):**
+```yaml
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+        topologyKey: kubernetes.io/hostname
+```
+
+The chart default now **requires** pods of the same instance to be spread across
+nodes (one per node) and additionally **prefers** spreading across availability
+zones:
+```yaml
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+        topologyKey: kubernetes.io/hostname
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: "{{ .Release.Name }}-kong"
+          topologyKey: topology.kubernetes.io/zone
+```
+Note: the required per-node rule means the number of replicas cannot exceed the
+number of schedulable nodes; override `affinity` if you need more replicas than
+nodes.
+
 ### Platform Configuration Removal (BREAKING)
 
 The platform-specific configuration mechanism has been removed. Platform-specific values are now integrated as explicit defaults in `values.yaml`.

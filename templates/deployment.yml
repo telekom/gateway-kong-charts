@@ -165,6 +165,9 @@ spec:
         {{- include "kong.nginx.directives" $ | indent 8 }}
         {{- include "kong.customPlugins.env" $ | indent 8 }}
         {{- include "kong.env" $ | indent 8 }}
+        {{- with .Values.environment }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
         command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong start" ]
         resources: {{ .Values.resources | toYaml | nindent 10 }}
         lifecycle:

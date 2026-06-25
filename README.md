@@ -776,8 +776,8 @@ The following table provides a comprehensive list of all configurable parameters
 | hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
-| image | object | `{"repository":"gateway-kong","tag":"1.6.1"}` | Kong Gateway image configuration (inherits from global.image) |
-| image.tag | string | `"1.6.1"` | Kong Gateway image tag |
+| image | object | `{"repository":"gateway-kong","tag":"1.7.0"}` | Kong Gateway image configuration (inherits from global.image) |
+| image.tag | string | `"1.7.0"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
 | imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
@@ -808,7 +808,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.8.3"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.9.0"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |

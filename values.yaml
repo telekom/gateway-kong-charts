@@ -863,7 +863,7 @@ plugins:
     #defaultServiceName: "stargate"
     # -- Kong built-in tracing instrumentations required for native span generation
     # (e.g. "all", or "request,balancer,db_query"). Set as KONG_TRACING_INSTRUMENTATIONS.
-    instrumentations: "all"
+    instrumentations: "request,balancer"
 
 
 # Jumper component for Gateway-to-Gateway communication and Last Mile Security

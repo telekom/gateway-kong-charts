@@ -910,7 +910,7 @@ The following table provides a comprehensive list of all configurable parameters
 | plugins.jwtKeycloak.enabled | bool | `true` | Enable JWT Keycloak plugin |
 | plugins.jwtKeycloak.pluginId | string | `"b864d58b-7183-4889-8b32-0b92d6c4d513"` | Plugin ID for Kong configuration |
 | plugins.opentelemetry.enabled | bool | `true` | Enable distributed tracing via the ENI OpenTelemetry plugin (OTLP/HTTP). Whether this plugin is actually configured at runtime is gated by global.tracing.exporter == "otlp"; this flag only allows disabling it entirely. The zipkin and opentelemetry plugins are mutually exclusive at runtime (selected by global.tracing.exporter). |
-| plugins.opentelemetry.instrumentations | string | `"all"` | Kong built-in tracing instrumentations required for native span generation (e.g. "all", or "request,balancer,db_query"). Set as KONG_TRACING_INSTRUMENTATIONS. |
+| plugins.opentelemetry.instrumentations | string | `"request,balancer"` | Kong built-in tracing instrumentations required for native span generation (e.g. "all", or "request,balancer,db_query"). Set as KONG_TRACING_INSTRUMENTATIONS. |
 | plugins.opentelemetry.pluginId | string | `"7b1d3f9a-2c84-4d6e-9f10-5a3b8c2e7d41"` | Plugin ID for Kong configuration |
 | plugins.prometheus.enabled | bool | `true` | Enable Prometheus metrics plugin |
 | plugins.prometheus.path | string | `"/metrics"` | Metrics endpoint path |

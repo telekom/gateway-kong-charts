@@ -674,6 +674,12 @@ For configuration options, see the `imageVerification.*` values in the [Paramete
 - [Cosign Documentation](https://docs.sigstore.dev/cosign/overview/)
 - [Sigstore](https://www.sigstore.dev/)
 
+### Rate Limiting with Valkey
+
+The Gateway uses [Valkey](https://valkey.io/) (a Redis-compatible store) to back the `rate-limiting-merged` plugin's counters. Valkey is treated as external infrastructure and is not bundled with the chart.
+
+For recommended versions, deployment topology, capacity and sizing, high-availability guidance, and fail-open behavior, see the [Valkey Recommendations](docs/VALKEY.md).
+
 ## Parameters
 
 The following table provides a comprehensive list of all configurable parameters in `values.yaml`:

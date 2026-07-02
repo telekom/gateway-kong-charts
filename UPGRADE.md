@@ -8,7 +8,71 @@ SPDX-License-Identifier: CC0-1.0
 
 This document provides guidance for upgrading between versions of the Gateway Helm chart.
 
+## Default Image Registry Changed to Artifactory (9.11.0 and up)
+
+### New Default Image Registry
+
+The chart's default `global.image.registry`/`namespace` were repointed from the Magenta Trusted Registry (MTR),
+which is being retired, to the Artifactory/JFrog Platform mirror:
+
+```yaml
+# Before
+global:
+  image:
+    registry: mtr.devops.telekom.de
+    namespace: eu_it_co_development/o28m
+
+# After
+global:
+  image:
+    registry: artifactory.devops.telekom.de
+    namespace: mcicd-internal-oci/tardis/components/gateway
+```
+
+If you rely on the chart's default image references (rather than overriding `global.image.registry`/`namespace`
+explicitly), your deployment will start pulling from Artifactory instead of MTR. This is not a schema/API
+change (no key renames), so it does not require a major version bump, but it is a behavior change worth
+reviewing before upgrading — especially if your cluster cannot reach `artifactory.devops.telekom.de`.
+
+### Pull Credentials
+
+The default registry host, `artifactory.devops.telekom.de`, requires an image pull secret. The credentials do
+not need special repository permissions; any Artifactory service account that can authenticate to the untrusted
+Artifactory endpoint is sufficient because the `mcicd-internal-oci` mirror is readable by authenticated users.
+
+If your cluster is part of the DTAG Hitnet, you can avoid pull secrets by overriding only the registry host and
+using the trusted Artifactory endpoint:
+
+```yaml
+global:
+  image:
+    registry: trusted.artifactory.devops.telekom.de
+```
+
+### Component Image Names
+
+Component-level `repository` defaults were also renamed to match the new Artifactory image names, so a single
+global namespace override remains sufficient (no per-image `repository` overrides required):
+
+| Component | Old `repository` default | New `repository` default |
+| - | - | - |
+| Kong | `gateway-kong` | `kong` |
+| Jumper | `gateway-jumper` | `jumper` |
+| Issuer Service | `gateway-issuer-service-go` | `issuer-service` |
+| Circuitbreaker | `gateway-circuitbreaker` | `circuitbreaker-service` |
+
+### Third-Party Image Defaults
+
+Third-party image defaults changed too (cosign kept at the same version, only the registry path changed):
+
+| Image | Old default | New default |
+| - | - | - |
+| PostgreSQL | `eu_it_co_development/o28m/postgresql:16.5` | `hub.docker.com/postgres:16-alpine` (Artifactory remote repo) |
+| cosign (`imageVerification.image`) | `eu_it_co_development/o28m/cosign:v2.5.3` | `mcicd-internal-oci/tardis/infra/components/ghcr.io.docker/sigstore/cosign/cosign:v2.5.3` |
+| curl (`job.image`) | `eu_it_co_development/o28m/bash-curl:8.13.0` | `mcicd-internal-oci/tardis/infra/components/helper/curl:8.17.0-r1` |
+
 ## From 8.x.x to 9.x.x
+
 
 Version 9.0.0 introduces several breaking changes that modernize the chart structure and align with Kubernetes best practices. Review all changes carefully before upgrading.
 

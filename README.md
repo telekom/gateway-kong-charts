@@ -92,14 +92,14 @@ Images are configured using a cascading defaults system with global and componen
 ```yaml
 global:
   image:
-    registry: mtr.devops.telekom.de
-    namespace: eu_it_co_development/o28m
+    registry: artifactory.devops.telekom.de
+    namespace: mcicd-internal-oci/tardis/components/gateway
 
 image:
   # registry: ""       # Optional: Override global.image.registry
   # namespace: ""      # Optional: Override global.image.namespace
-  repository: gateway-kong
-  tag: "1.1.0"
+  repository: kong
+  tag: "1.7.0"
 ```
 
 Images are constructed as: `{registry}/{namespace}/{repository}:{tag}`
@@ -742,7 +742,7 @@ The following table provides a comprehensive list of all configurable parameters
 | circuitbreaker.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for circuit breaker |
 | circuitbreaker.count | int | `4` | Failure count threshold for circuit breaker activation |
 | circuitbreaker.enabled | bool | `false` | Enable circuit breaker component deployment |
-| circuitbreaker.image | object | `{"repository":"gateway-circuitbreaker","tag":"2.1.0"}` | Circuit breaker image configuration (inherits from global.image) |
+| circuitbreaker.image | object | `{"repository":"circuitbreaker-service","tag":"2.1.0"}` | Circuit breaker image configuration (inherits from global.image) |
 | circuitbreaker.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for circuit breaker container |
 | circuitbreaker.interval | string | `"60s"` | Check interval for circuit breaker |
 | circuitbreaker.resources | object | `{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"50m","memory":"200Mi"}}` | Circuit breaker container resource limits and requests |
@@ -763,8 +763,8 @@ The following table provides a comprehensive list of all configurable parameters
 | global.database.username | string | `"kong"` | Database username |
 | global.environment | string | `"default"` | Environment name (e.g. playground, preprod, ...) |
 | global.failOnUnsetValues | bool | `true` | Fail template rendering on unset required values |
-| global.image.namespace | string | `"eu_it_co_development/o28m"` | Default image namespace |
-| global.image.registry | string | `"mtr.devops.telekom.de"` | Default image registry |
+| global.image.namespace | string | `"mcicd-internal-oci/tardis/components/gateway"` | Default image namespace |
+| global.image.registry | string | `"artifactory.devops.telekom.de"` | Default image registry |
 | global.imagePullPolicy | string | `"IfNotPresent"` | Default image pull policy |
 | global.imagePullSecrets | list | `[]` | Array of pull secret names for image pulling |
 | global.ingress.annotations | object | `{}` | Common annotations for all ingress resources (can be extended per component) |
@@ -783,12 +783,12 @@ The following table provides a comprehensive list of all configurable parameters
 | hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
-| image | object | `{"repository":"gateway-kong","tag":"1.7.1"}` | Kong Gateway image configuration (inherits from global.image) |
+| image | object | `{"repository":"kong","tag":"1.7.1"}` | Kong Gateway image configuration (inherits from global.image) |
 | image.tag | string | `"1.7.1"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
 | imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
-| imageVerification.image | object | `{"repository":"cosign","tag":"v2.5.3"}` | Cosign image configuration (inherits from global.image) |
+| imageVerification.image | object | `{"namespace":"mcicd-internal-oci/tardis/infra/components/ghcr.io.docker/sigstore/cosign","repository":"cosign","tag":"v2.5.3"}` | Cosign image configuration (does not inherit global.image namespace) |
 | imageVerification.mode | string | `"enforce"` | Verification mode: "enforce" (block pod on invalid signature) or "audit" (log and continue) |
 | imageVerification.publicKey | object | `{"configMapRef":{"key":"cosign.pub","name":""},"secretRef":{"key":"cosign.pub","name":"cosign-public-key"},"source":"secret"}` | Public key configuration for signature verification Exactly ONE of the three sources must be configured: value, configMapRef, or secretRef |
 | imageVerification.publicKey.configMapRef | object | `{"key":"cosign.pub","name":""}` | ConfigMap reference (used when source: configMap) |
@@ -803,19 +803,19 @@ The following table provides a comprehensive list of all configurable parameters
 | issuerService.enabled | bool | `true` | Enable Issuer Service container deployment |
 | issuerService.environment | list | `[]` | Additional environment variables for Issuer Service container - {name: foo, value: bar} |
 | issuerService.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token signing (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| issuerService.image | object | `{"repository":"gateway-issuer-service-go","tag":"2.3.4"}` | Issuer Service image configuration (inherits from global.image) |
+| issuerService.image | object | `{"repository":"issuer-service","tag":"2.3.4"}` | Issuer Service image configuration (inherits from global.image) |
 | issuerService.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Issuer Service container |
 | issuerService.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"timeoutSeconds":5}` | Issuer Service liveness probe configuration |
 | issuerService.readinessProbe | object | `{"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"}}` | Issuer Service readiness probe configuration |
 | issuerService.resources | object | `{"limits":{"cpu":"50m","memory":"50Mi"},"requests":{"cpu":"50m","memory":"50Mi"}}` | Issuer Service container resource limits and requests |
 | issuerService.startupProbe | object | `{"failureThreshold":60,"httpGet":{"path":"/health","port":"issuer-service","scheme":"HTTP"},"periodSeconds":1}` | Issuer Service startup probe configuration |
-| job | object | `{"image":{"repository":"bash-curl","tag":"8.13.0"}}` | Job image configuration for setup jobs (inherits from global.image) |
+| job | object | `{"image":{"namespace":"mcicd-internal-oci/tardis/infra/components/helper","repository":"curl","tag":"8.17.0-r1"}}` | Job image configuration for setup jobs (curl helper image, does not inherit global.image namespace) |
 | jobs.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000,"seccompProfile":{"type":"RuntimeDefault"}}` | Container security context for setup jobs |
 | jumper.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for Jumper |
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"gateway-jumper","tag":"4.12.0"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"jumper","tag":"4.12.0"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |
@@ -936,7 +936,7 @@ The following table provides a comprehensive list of all configurable parameters
 | podSecurityContext | object | `{"fsGroup":1000,"runAsGroup":1000,"runAsUser":100,"seccompProfile":{"type":"RuntimeDefault"},"supplementalGroups":[1000]}` | Pod security context for Kong deployment (hardened defaults) |
 | postgresql.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":999,"runAsNonRoot":true,"runAsUser":999}` | Container security context for PostgreSQL |
 | postgresql.deployment | object | `{"annotations":{}}` | Additional deployment annotations |
-| postgresql.image | object | `{"repository":"postgresql","tag":"16.5"}` | PostgreSQL image configuration (inherits from global.image) |
+| postgresql.image | object | `{"namespace":"hub.docker.com","repository":"postgres","tag":"16-alpine"}` | PostgreSQL image configuration (Artifactory hub.docker.com remote repo, does not inherit global.image.namespace; registry is inherited since it's the same Artifactory host) |
 | postgresql.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for PostgreSQL container |
 | postgresql.maxConnections | string | `"100"` | Maximum number of client connections |
 | postgresql.maxPreparedTransactions | string | `"0"` | Maximum prepared transactions (0 disables prepared transactions) |

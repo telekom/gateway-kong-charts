@@ -27,12 +27,12 @@ global:
 
   # Default image configuration (can be overridden per component)
   # Images are constructed as: {registry}/{namespace}/{repository}:{tag}
-  # Example: mtr.devops.telekom.de/eu_it_co_development/o28m/gateway-kong:1.1.0
+  # Example: artifactory.devops.telekom.de/mcicd-internal-oci/tardis/components/gateway/kong:1.7.0
   image:
     # -- Default image registry
-    registry: mtr.devops.telekom.de
+    registry: artifactory.devops.telekom.de
     # -- Default image namespace
-    namespace: eu_it_co_development/o28m
+    namespace: mcicd-internal-oci/tardis/components/gateway
 
   # -- Array of pull secret names for image pulling
   imagePullSecrets: []
@@ -126,7 +126,7 @@ templateChangeTriggers: []
 image:
   # registry: ""  # Override global.image.registry
   # namespace: ""  # Override global.image.namespace
-  repository: gateway-kong
+  repository: kong
   # -- Kong Gateway image tag
   tag: "1.7.1"
 
@@ -874,7 +874,7 @@ jumper:
   image:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
-    repository: gateway-jumper
+    repository: jumper
     tag: "4.12.0"
 
   # -- Image pull policy for Jumper container
@@ -1002,7 +1002,7 @@ issuerService:
   image:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
-    repository: gateway-issuer-service-go
+    repository: issuer-service
     tag: "2.3.4"
 
   # -- Image pull policy for Issuer Service container
@@ -1069,7 +1069,7 @@ circuitbreaker:
   image:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
-    repository: gateway-circuitbreaker
+    repository: circuitbreaker-service
     tag: "2.1.0"
 
   # -- Image pull policy for circuit breaker container
@@ -1103,12 +1103,13 @@ circuitbreaker:
 
 # PostgreSQL database configuration
 postgresql:
-  # -- PostgreSQL image configuration (inherits from global.image)
+  # -- PostgreSQL image configuration (Artifactory hub.docker.com remote repo, does not inherit
+  # global.image.namespace; registry is inherited since it's the same Artifactory host)
   image:
     # registry: ""  # Override global.image.registry
-    # namespace: ""  # Override global.image.namespace
-    repository: postgresql
-    tag: "16.5"
+    namespace: hub.docker.com
+    repository: postgres
+    tag: "16-alpine"
 
   # -- Image pull policy for PostgreSQL container
   imagePullPolicy: IfNotPresent
@@ -1183,13 +1184,13 @@ externalDatabase:
   #  <CA certificate in PEM format>
   #  -----END CERTIFICATE-----
 
-# -- Job image configuration for setup jobs (inherits from global.image)
+# -- Job image configuration for setup jobs (curl helper image, does not inherit global.image namespace)
 job:
   image:
     # registry: ""  # Override global.image.registry
-    # namespace: ""  # Override global.image.namespace
-    repository: bash-curl
-    tag: "8.13.0"
+    namespace: mcicd-internal-oci/tardis/infra/components/helper
+    repository: curl
+    tag: "8.17.0-r1"
 
 # Automatic certificate/key rotation (requires cert-manager and gateway-rotator)
 # Alternative: use jumper.existingJwkSecretName and issuerService.existingJwkSecretName
@@ -1230,10 +1231,10 @@ imageVerification:
   # -- Verification mode: "enforce" (block pod on invalid signature) or "audit" (log and continue)
   mode: enforce
 
-  # -- Cosign image configuration (inherits from global.image)
+  # -- Cosign image configuration (does not inherit global.image namespace)
   image:
     # registry: ""  # Override global.image.registry
-    # namespace: ""  # Override global.image.namespace
+    namespace: mcicd-internal-oci/tardis/infra/components/ghcr.io.docker/sigstore/cosign
     repository: cosign
     tag: "v2.5.3"
 

@@ -865,7 +865,6 @@ plugins:
     # (e.g. "all", or "request,balancer,db_query"). Set as KONG_TRACING_INSTRUMENTATIONS.
     instrumentations: "request,balancer"
 
-
 # Jumper component for Gateway-to-Gateway communication and Last Mile Security
 jumper:
   # -- Enable Jumper container deployment
@@ -876,7 +875,7 @@ jumper:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-jumper
-    tag: "4.10.0"
+    tag: "4.11.0"
 
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent

@@ -128,7 +128,7 @@ image:
   # namespace: ""  # Override global.image.namespace
   repository: gateway-kong
   # -- Kong Gateway image tag
-  tag: "1.7.0"
+  tag: "1.7.1"
 
 # -- Image pull policy for Kong container
 imagePullPolicy: IfNotPresent
@@ -876,7 +876,7 @@ jumper:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-jumper
-    tag: "4.9.0"
+    tag: "4.10.0"
 
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent
@@ -1004,7 +1004,7 @@ issuerService:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: gateway-issuer-service-go
-    tag: "2.3.2"
+    tag: "2.3.4"
 
   # -- Image pull policy for Issuer Service container
   imagePullPolicy: IfNotPresent

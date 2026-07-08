@@ -154,6 +154,24 @@ Returns the InitContainer for cosign image verification.
       REGISTRY=$(echo "$IMAGE" | cut -d'/' -f1)
       IMAGE_PROCESSED=0
 
+      # Trusted/public registries do not need credentials. Try without login first.
+      # Only fall back to imagePullSecrets when the registry explicitly denies access.
+      rm -f "$DOCKER_CONFIG/config.json"
+      OUTPUT=$(cosign verify --insecure-ignore-tlog=true --key /cosign/{{ include "cosign.publicKeyFilename" . }} "$IMAGE" 2>&1)
+      EXIT_CODE=$?
+
+      if [ $EXIT_CODE -eq 0 ]; then
+        echo "✓ $IMAGE: signature valid"
+        IMAGE_PROCESSED=1
+        continue
+      elif ! echo "$OUTPUT" | grep -q "UNAUTHORIZED"; then
+        echo "✗ $IMAGE: signature verification FAILED"
+        echo "$OUTPUT"
+        FAILED=1
+        IMAGE_PROCESSED=1
+        continue
+      fi
+
       # Try each pull secret until verification succeeds
       for SECRET_DIR in /pull-secrets/*; do
         if [ -d "$SECRET_DIR" ]; then

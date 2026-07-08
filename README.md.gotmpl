@@ -616,8 +616,8 @@ Disable this feature if you are using [Kyverno](https://kyverno.io/) or another 
 On each pod startup, the cosign InitContainer:
 
 1. Iterates over all enabled container images (Kong, Jumper, Issuer Service, Circuit Breaker)
-2. Authenticates to the image registry using the configured `imagePullSecrets`
-3. Verifies each image signature against the configured public key
+2. Verifies each image signature against the configured public key
+3. Falls back to configured `imagePullSecrets` only if the registry requires authentication
 4. Blocks pod startup if verification fails (in `enforce` mode) or logs a warning and continues (in `audit` mode)
 
 **Verification Modes:**

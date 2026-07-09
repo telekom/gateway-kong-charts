@@ -1012,7 +1012,7 @@ issuerService:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: issuer-service
-    tag: "2.3.4"
+    tag: "2.3.5"
 
   # -- Image pull policy for Issuer Service container
   imagePullPolicy: IfNotPresent

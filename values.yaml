@@ -957,9 +957,18 @@ jumper:
     keyChannel: stargate-zone-status
     # -- Maximum request rate per second
     requestRate: 10000
-    # -- Secret name containing Redis credentials
+    # -- Redis password (optional). When set, the chart creates and manages its
+    # own Secret entry (key `zoneHealthDatabasePassword` in the release Secret)
+    # and injects it into Jumper. This takes precedence over
+    # databaseSecretName/databaseSecretKey and removes the dependency on an
+    # externally-managed Secret. Leave unset to reference an existing Secret via
+    # databaseSecretName/databaseSecretKey instead.
+    #databasePassword: ""
+    # -- Name of an existing Secret containing the Redis password (used only when
+    # databasePassword is not set)
     databaseSecretName: redis
-    # -- Secret key for Redis password
+    # -- Key within the existing Secret that holds the Redis password (used only
+    # when databasePassword is not set)
     databaseSecretKey: redis-password
     # -- Enable zone health monitoring
     enabled: false

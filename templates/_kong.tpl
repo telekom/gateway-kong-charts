@@ -520,7 +520,13 @@ global collectorUrl.
   value: {{ .Values.jumper.zoneHealth.databasePort | quote }}
 - name: ZONE_HEALTH_DATABASE_INDEX
   value: {{ .Values.jumper.zoneHealth.databaseIndex | quote }}
-{{- if and .Values.jumper.zoneHealth.databaseSecretName .Values.jumper.zoneHealth.databaseSecretKey }}
+{{- if .Values.jumper.zoneHealth.databasePassword }}
+- name: ZONE_HEALTH_DATABASE_PASSWORD
+  valueFrom:
+   secretKeyRef:
+    name: {{ .Release.Name }}
+    key: zoneHealthDatabasePassword
+{{- else if and .Values.jumper.zoneHealth.databaseSecretName .Values.jumper.zoneHealth.databaseSecretKey }}
 - name: ZONE_HEALTH_DATABASE_PASSWORD
   valueFrom:
    secretKeyRef:

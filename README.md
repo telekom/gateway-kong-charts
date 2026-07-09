@@ -834,8 +834,8 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.zoneHealth.databaseHost | string | `"localhost"` | Redis database hostname |
 | jumper.zoneHealth.databaseIndex | int | `2` | Redis database index |
 | jumper.zoneHealth.databasePort | int | `6379` | Redis database port |
-| jumper.zoneHealth.databaseSecretKey | string | `"redis-password"` | Secret key for Redis password |
-| jumper.zoneHealth.databaseSecretName | string | `"redis"` | Secret name containing Redis credentials |
+| jumper.zoneHealth.databaseSecretKey | string | `"redis-password"` | Key within the existing Secret that holds the Redis password (used only when databasePassword is not set) |
+| jumper.zoneHealth.databaseSecretName | string | `"redis"` | Name of an existing Secret containing the Redis password (used only when databasePassword is not set) |
 | jumper.zoneHealth.databaseTimeout | int | `500` | Redis operation timeout in milliseconds |
 | jumper.zoneHealth.defaultHealth | bool | `true` | Default health status when Redis is unavailable |
 | jumper.zoneHealth.enabled | bool | `false` | Enable zone health monitoring |

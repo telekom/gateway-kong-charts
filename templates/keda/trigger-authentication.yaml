@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+{{/*
+Optional Secret for KEDA Prometheus TriggerAuthentication.
+Created only when credentials are provided directly via values
+(e.g. injected by argocd-conjur-plugin-helm).
+*/}}
+{{- if and .Values.kedaAutoscaling.enabled .Values.kedaAutoscaling.triggers.prometheus.enabled }}
+{{- if and .Values.kedaAutoscaling.triggers.prometheus.credentials .Values.kedaAutoscaling.triggers.prometheus.credentials.create }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.kedaAutoscaling.triggers.prometheus.credentials.secretName | default (printf "%s-keda-prometheus-creds" .Release.Name) }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels.standard" $ | nindent 4 }}
+    app.kubernetes.io/component: autoscaling
+type: Opaque
+stringData:
+  username: {{ .Values.kedaAutoscaling.triggers.prometheus.credentials.username | quote }}
+  password: {{ .Values.kedaAutoscaling.triggers.prometheus.credentials.password | quote }}
+  basic-auth: {{ printf "%s:%s" .Values.kedaAutoscaling.triggers.prometheus.credentials.username .Values.kedaAutoscaling.triggers.prometheus.credentials.password | b64enc | quote }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ .Values.kedaAutoscaling.triggers.prometheus.authentication.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "app.labels.standard" $ | nindent 4 }}
+    app.kubernetes.io/component: autoscaling
+spec:
+  secretTargetRef:
+    - parameter: username
+      name: {{ .Values.kedaAutoscaling.triggers.prometheus.credentials.secretName | default (printf "%s-keda-prometheus-creds" .Release.Name) }}
+      key: username
+    - parameter: password
+      name: {{ .Values.kedaAutoscaling.triggers.prometheus.credentials.secretName | default (printf "%s-keda-prometheus-creds" .Release.Name) }}
+      key: password
+{{- end }}
+{{- end }}

@@ -586,6 +586,20 @@ kedaAutoscaling:
         #       key: password
         name: "eni-keda-vmselect-creds"
 
+      # -- Inline credentials for Prometheus/Victoria Metrics authentication
+      # When create=true, the chart will create a Secret + TriggerAuthentication
+      # from the provided username/password (e.g. injected via Conjur).
+      # This is an alternative to referencing a pre-existing ClusterTriggerAuthentication.
+      credentials:
+        # -- Create the Secret and TriggerAuthentication resources from these values
+        create: false
+        # -- Secret name to create (defaults to "<release>-keda-prometheus-creds")
+        secretName: ""
+        # -- Username for Basic Auth to Prometheus/Victoria Metrics
+        username: ""
+        # -- Password for Basic Auth to Prometheus/Victoria Metrics
+        password: ""
+
     # ==========================================================================
     # Cron-Based Scalers
     # ==========================================================================
@@ -1397,6 +1411,21 @@ argoRollouts:
   analysisTemplates:
     # -- Enable creation of AnalysisTemplates
     enabled: true
+
+    # -- Inline credentials for Prometheus authentication (shared by errorRate and successRate)
+    # When create=true, the chart will create a Secret with username, password,
+    # and a basic-auth key (base64-encoded "user:pass") from the provided values.
+    # This is an alternative to referencing a pre-existing Secret.
+    # Values can be injected via Conjur: "<path:spm/...>"
+    credentials:
+      # -- Create the Secret resource from these values
+      create: false
+      # -- Secret name to create (defaults to "<release>-rollouts-prometheus-creds")
+      secretName: ""
+      # -- Username for Basic Auth to Prometheus/Victoria Metrics
+      username: ""
+      # -- Password for Basic Auth to Prometheus/Victoria Metrics
+      password: ""
 
     # ============================================================================
     # Error Rate Analysis Template

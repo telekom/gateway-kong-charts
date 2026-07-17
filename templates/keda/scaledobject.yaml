@@ -110,6 +110,9 @@ spec:
       {{- if .Values.kedaAutoscaling.triggers.prometheus.activationThreshold }}
       activationThreshold: {{ .Values.kedaAutoscaling.triggers.prometheus.activationThreshold | quote }}
       {{- end }}
+      {{- if .Values.kedaAutoscaling.triggers.prometheus.timeout }}
+      timeout: {{ .Values.kedaAutoscaling.triggers.prometheus.timeout | quote }}
+      {{- end }}
       {{- if .Values.kedaAutoscaling.triggers.prometheus.authModes }}
       authModes: {{ .Values.kedaAutoscaling.triggers.prometheus.authModes }}
       {{- end }}

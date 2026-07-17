@@ -542,6 +542,11 @@ kedaAutoscaling:
       # Prevents scaling from 0 on minimal load
       activationThreshold: ""
 
+      # -- HTTP timeout for Prometheus requests (optional)
+      # Supports milliseconds as a number or a duration such as "10s"
+      # Empty uses KEDA's default of 300ms, or KEDA_HTTP_DEFAULT_TIMEOUT configured on the controller
+      timeout: ""
+
       # -- Authentication mode for Victoria Metrics
       # Options: "basic", "bearer", "tls"
       authModes: "basic"

@@ -1,0 +1,21 @@
+README.md.gotmpl
+  s_220bbe4fde5b54::t_2cc02275bfd102 11-16
+README.md
+  s_220bbe4fde5b54::t_c1845948d2d920 11-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4720073a0e464cdfcf95776343de66f776809967",
+  "prompts": {},
+  "sessions": {
+    "s_220bbe4fde5b54": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06b86e7ecffeXdiaE7YV0hMAO8",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

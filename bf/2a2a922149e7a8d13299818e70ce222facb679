@@ -1,0 +1,20 @@
+AGENTS.md
+  s_b57cbc5f319b05::t_fac2ba6ee9f456 7-26
+  s_b57cbc5f319b05::t_984db93d2e9c02 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "bf2a2a922149e7a8d13299818e70ce222facb679",
+  "prompts": {},
+  "sessions": {
+    "s_b57cbc5f319b05": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06cab5002ffejTLKolz164CESd",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

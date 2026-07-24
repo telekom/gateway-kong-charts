@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# Lefthook git hooks configuration.
+# Install once per clone with: lefthook install
+# Docs: https://lefthook.dev/
+#
+# Skip hooks for one command: LEFTHOOK=0 git commit ...  (or: git commit --no-verify)
+
+# Fail loudly if a dev forgot to run `lefthook install`, instead of silently
+# skipping the checks below.
+assert_lefthook_installed: true
+
+pre-commit:
+  parallel: true
+  jobs:
+    # Re-render README.md from README.md.gotmpl + values.yaml, then re-stage it
+    # so the commit stays in sync. README.md is in the glob so that manual edits
+    # to it are discarded and overwritten by the generated output, keeping
+    # README.md.gotmpl the single source of truth. (stage_fixed only re-stages
+    # the hook's *input* files, not the generated README.md, so we add it.)
+    - name: helm-docs
+      glob: "{values.yaml,README.md.gotmpl,Chart.yaml,charts/**/values.yaml,README.md}"
+      run: helm-docs && git add README.md
+
+    # Mirrors CI (.github/workflows/helm-lint.yml). Same flags so local results
+    # match the gate. Runs when any chart source changes.
+    - name: helm-lint
+      glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*}"
+      run: helm lint . --set global.failOnUnsetValues=false --set keyRotation.enabled=true
+      fail_text: "helm lint failed (or helm missing — see CONTRIBUTING.md)."
+
+    # No CI equivalent — local secret scan over staged changes.
+    - name: gitleaks
+      run: gitleaks git --staged --no-banner --redact
+      fail_text: "Possible secret detected (or gitleaks missing — see CONTRIBUTING.md)."
+
+    # Mirrors CI (.github/workflows/reuse-compliance.yml). Whole-project scan:
+    # any file missing an SPDX header breaks compliance.
+    - name: reuse
+      run: reuse lint
+      fail_text: "REUSE/SPDX non-compliant (or reuse missing — see CONTRIBUTING.md)."
+
+commit-msg:
+  jobs:
+    # Validate Conventional Commits before semantic-release consumes them on
+    # `main`. Policy lives in committed.toml. {1} is the commit message file path.
+    - name: committed
+      run: committed --config committed.toml --commit-file {1}
+      fail_text: |
+        Commit message must follow Conventional Commits.
+        Allowed types: feat, fix, build, chore, ci, docs, style, refactor, perf, test
+        See https://www.conventionalcommits.org/ (policy: committed.toml)

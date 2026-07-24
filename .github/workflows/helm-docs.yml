@@ -20,7 +20,7 @@ jobs:
 
       - name: Install Helm Docs
         run: |
-          HELM_DOCS_VERSION="1.11.0"
+          HELM_DOCS_VERSION="1.14.2"
           wget -q https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz -O - | tar -xzf - helm-docs
           chmod +x ./helm-docs
           sudo mv ./helm-docs /usr/local/bin/helm-docs

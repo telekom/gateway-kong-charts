@@ -975,6 +975,10 @@ The following table provides a comprehensive list of all configurable parameters
 | workerConsistency | string | `"eventual"` | Kong worker consistency mode (eventual or strict) |
 | workerStateUpdateFrequency | int | `10` | Frequency in seconds to poll for worker state updates |
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Troubleshooting
 
 If the Gateway deployment fails to start, check the container logs for error messages.

@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: CC0-1.0
+
+# Conventional Commits policy for the `committed` commit-msg hook (lefthook.yml).
+# Docs: https://github.com/crate-ci/committed
+#
+# Kept in sync with semantic-release on `main`
+# (.github/workflows/release.yml, conventionalcommits preset).
+
+style = "conventional"
+
+subject_capitalized = false
+
+# committed defaults to 50; the repo's existing history uses longer subjects,
+# so allow the common git hard limit of 72.
+subject_length = 72
+
+# Extends committed's defaults with `build` and `ci`.
+allowed_types = ["feat", "fix", "build", "chore", "ci", "docs", "style", "refactor", "perf", "test"]

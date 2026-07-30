@@ -24,7 +24,7 @@ pre-commit:
       glob: "{values.yaml,README.md.gotmpl,Chart.yaml,charts/**/values.yaml,README.md}"
       run: helm-docs && git add README.md
 
-    # Mirrors CI (.github/workflows/helm-lint.yml). Same flags so local results
+    # Mirrors CI (.github/workflows/validate.yml). Same flags so local results
     # match the gate. Runs when any chart source changes.
     - name: helm-lint
       glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*}"
@@ -36,7 +36,7 @@ pre-commit:
       run: gitleaks git --staged --no-banner --redact
       fail_text: "Possible secret detected (or gitleaks missing — see CONTRIBUTING.md)."
 
-    # Mirrors CI (.github/workflows/reuse-compliance.yml). Whole-project scan:
+    # Mirrors CI (.github/workflows/validate.yml). Whole-project scan:
     # any file missing an SPDX header breaks compliance.
     - name: reuse
       run: reuse lint

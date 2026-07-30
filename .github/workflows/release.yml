@@ -1,105 +1,113 @@
-# Copyright 2025 Deutsche Telekom IT GmbH
+# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
 #
 # SPDX-License-Identifier: Apache-2.0
 
 name: Release
 
+# Releases the exact commit that passed validation in validate.yml.
+#
+# semantic-release writes the new version into Chart.yaml, commits it to the release
+# branch, tags it, and publishes a GitHub release. This workflow then calls
+# publish-oci.yml with that tag, which packages and pushes the chart.
+#
+# publish-oci.yml is called rather than left to its own `release: published` trigger.
+# semantic-release authenticates as GITHUB_TOKEN, and GitHub does not start workflow
+# runs from events raised by GITHUB_TOKEN, so that trigger never fires for an automatic
+# release. It remains in place for a release published by hand.
+
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      do_release:
-        description: "Do you want to trigger the release?"
+      source-sha:
+        description: The validated commit this release is built from.
         required: true
-        default: "no"
-        type: choice
-        options:
-          - "yes"
-          - "no"
+        type: string
+
+permissions:
+  contents: read
 
 jobs:
   release:
-    name: Run semantic-release
-    if: ${{ github.ref == 'refs/heads/main' && github.event.inputs.do_release == 'yes' }}
+    name: Tag and publish release
     runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
-      - name: Checkout repo
+      - name: Check out the validated commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
+          ref: ${{ inputs.source-sha }}
           fetch-depth: 0
           fetch-tags: "true"
-      - name: Create temporary release.config.js
+
+      - name: Assert HEAD is the validated commit
+        env:
+          SOURCE_SHA: ${{ inputs.source-sha }}
         run: |
-          cat > release.config.js << 'EOF'
-          module.exports = {
-            plugins: [
-              [
-                '@semantic-release/commit-analyzer',
-                {
-                  releaseRules: [
-                    { type: 'build', release: 'patch' },
-                    { type: 'chore', release: 'patch' },
-                    { type: 'ci', release: 'patch' },
-                    { type: 'docs', release: 'patch' },
-                    { type: 'perf', release: 'patch' },
-                    { type: 'refactor', release: 'patch' },
-                    { type: 'revert', release: 'patch' },
-                    { type: 'style', release: 'patch' },
-                    { type: 'test', release: 'patch' },
-                  ]
-                }
-              ],
-              [
-                '@semantic-release/release-notes-generator',
-                {
-                  preset: 'conventionalcommits',
-                  presetConfig: {
-                    types: [
-                      { type: 'feat', section: 'Features', hidden: false },
-                      { type: 'fix', section: 'Bug Fixes', hidden: false },
-                      { type: 'build', section: 'Build System', hidden: false },
-                      { type: 'chore', section: 'Chores', hidden: false },
-                      { type: 'ci', section: 'Continuous Integration', hidden: false },
-                      { type: 'docs', section: 'Documentation', hidden: false },
-                      { type: 'perf', section: 'Performance Improvements', hidden: false },
-                      { type: 'refactor', section: 'Code Refactoring', hidden: false },
-                      { type: 'revert', section: 'Reverts', hidden: false },
-                      { type: 'style', section: 'Styles', hidden: false },
-                      { type: 'test', section: 'Tests', hidden: false },
-                    ]
-                  }
-                }
-              ],
-              [
-                '@semantic-release/exec',
-                {
-                  prepareCmd: "awk -i inplace '{ gsub(/^version:.*/, \"version: ${nextRelease.version}\") }; { print }' Chart.yaml"
-                }
-              ],
-              [
-                '@semantic-release/git',
-                {
-                  assets: ['Chart.yaml'],
-                  message: 'chore(release): ${nextRelease.version}\n\n${nextRelease.notes}'
-                }
-              ],
-              '@semantic-release/github'
-            ]
-          };
-          EOF
-      - name: Semantic Release
-        id: semantic-release
+          head="$(git rev-parse HEAD)"
+          if [ "${head}" != "${SOURCE_SHA}" ]; then
+            printf 'release: HEAD %s is not the validated commit %s\n' "${head}" "${SOURCE_SHA}" >&2
+            exit 1
+          fi
+
+      - name: Restore the branch reference
+        # Checking out a SHA leaves a detached HEAD. semantic-release compares the local
+        # branch against its remote and pushes the release commit to it, so put HEAD back
+        # on the branch name without moving it off the validated commit.
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: git checkout -B "${BRANCH}"
+
+      - name: Run semantic-release
+        # Configuration lives in the committed release.config.js, so a release can be
+        # reproduced from the source tree alone.
         uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 #v6.0.0
         with:
-          branches: |
-            ['main']
-          tag_format: "${version}"
           extra_plugins: |
             @semantic-release/exec
             @semantic-release/git
             conventional-changelog-conventionalcommits@9.3.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve the tag to publish
+        id: tag
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -uo pipefail
+          # The tag to publish is the release the branch points at on the remote, once
+          # semantic-release has run.
+          #
+          # It cannot be derived from the validated commit. semantic-release puts the
+          # release commit, and the tag, on a *child* of that commit, so a re-run that
+          # releases nothing would not see the tag it is being asked to finish
+          # publishing, and would silently resolve some older ancestor instead.
+          #
+          # Reading the remote branch tip covers both cases on one code path: the release
+          # just made, and a release whose chart was never pushed because an earlier run
+          # was interrupted. Publishing an already-published tag is a no-op, so the path
+          # that completes an interrupted publish is the one every release exercises.
+          git fetch --force --tags origin "+refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}"
+          tag="$(git describe --tags --abbrev=0 "refs/remotes/origin/${BRANCH}" 2>/dev/null || true)"
+          if [ -z "${tag}" ]; then
+            printf 'release: no release exists on %s yet; nothing to publish\n' "${BRANCH}"
+          else
+            printf 'release: publishing %s\n' "${tag}"
+          fi
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+  publish:
+    name: Publish
+    needs: [release]
+    if: needs.release.outputs.tag != ''
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-oci.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}

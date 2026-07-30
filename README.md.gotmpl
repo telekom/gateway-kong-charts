@@ -23,10 +23,10 @@ Each file contains copyright and license information, and license texts can be f
 
 ### Via OCI Registry
 
-The chart is published to GitHub Container Registry and can be installed directly:
+The chart is published to GitHub Container Registry and can be installed directly. Pick a version from the [releases](https://github.com/telekom/gateway-kong-charts/releases) and pin it explicitly:
 
 ```bash
-helm install my-gateway oci://ghcr.io/telekom/o28m-charts/stargate --version 9.0.0 -f my-values.yaml
+helm install my-gateway oci://ghcr.io/telekom/o28m-charts/stargate --version <version> -f my-values.yaml
 ```
 
 ### Via Git Repository

@@ -7,7 +7,7 @@ SPDX-License-Identifier: CC0-1.0
 # Changelog
 
 > [!WARNING]
-> This changelog is an archive. Future changes are documented in the projects [GitHub releases](https://github.com/telekom/gateway-jumper/releases).
+> This changelog is an archive. Future changes are documented in the projects [GitHub releases](https://github.com/telekom/gateway-kong-charts/releases).
 
 > [!IMPORTANT]
 > Please refer to [UPGRADE.md](UPGRADE.md) for upgrade instructions between major versions

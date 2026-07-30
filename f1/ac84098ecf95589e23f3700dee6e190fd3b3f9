@@ -1,0 +1,51 @@
+release.config.js
+  s_fd456e0253f865::t_ac3efcdee4c4f7 1-63,66-75
+  s_fd456e0253f865::t_1c27c77edc0da2 64-65
+.github/workflows/publish-oci.yml
+  s_fd456e0253f865::t_82b32bd92e508e 154-156,159
+  s_fd456e0253f865::t_cbd880ecc25ae7 85-86,91
+  s_fd456e0253f865::t_b53f6153134bfd 7-8,11-12
+  s_fd456e0253f865::t_3b5f89d96f4ebb 1,9-10,14,23-24,26,29,32,34-35,40-47,52-72,74-75,77,79-82,84,88-90,92-109,113,115-123,127-147,149,152-153,157-158
+  s_fd456e0253f865::t_237ae15d97bfb9 48-51
+  s_fd456e0253f865::t_cb3011f5375181 110,114
+  s_fd456e0253f865::t_50c9a5a5411343 125-126
+  s_fd456e0253f865::t_b295f1e5011196 148
+  s_fd456e0253f865::t_125a6e769b22cc 13
+  s_fd456e0253f865::t_ddba05719ffbaf 111-112
+  s_fd456e0253f865::t_25eeaee03f963e 124
+  s_fd456e0253f865::t_4cc6e472705f10 150-151
+.github/workflows/release.yml
+  s_fd456e0253f865::t_32c306f9a95b39 1,7-8,12,14,16-17,19-22,26,33,36,39-42,44-60
+  s_fd456e0253f865::t_5565cb387ab2a0 9-11
+README.md
+  s_fd456e0253f865::t_be7b65f2dcdeb8 1016,1018
+  s_fd456e0253f865::t_bf5617c1484bd7 26,29
+  s_fd456e0253f865::t_44a95a945af3a3 1000,1002,1004,1006,1011-1015,1017,1019,1021-1024
+  s_fd456e0253f865::t_ff2f7b95637837 1001,1003,1005,1007-1010,1020
+.github/workflows/validate.yml
+  s_fd456e0253f865::t_e7e84f16fd795a 1-35,37-100
+README.md.gotmpl
+  s_fd456e0253f865::t_d6cc5ee22f728a 727
+  s_fd456e0253f865::t_ff2f7b95637837 712,714,716,718-721,731,737
+  s_fd456e0253f865::t_02f8084c8193a7 26,29
+  s_fd456e0253f865::t_150ee3bf5bd748 729
+  s_fd456e0253f865::t_5bad34ac4fde13 711,713,715,717,722-726,728,730,732-736,738-739
+CHANGELOG.md
+  s_fd456e0253f865::t_407f9f5755de96 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f1ac84098ecf95589e23f3700dee6e190fd3b3f9",
+  "prompts": {},
+  "sessions": {
+    "s_fd456e0253f865": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0518e2479ffeK6RAN4TQ7VYWtv",
+        "model": "claude-opus-5"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+templates/_common.tpl
+  s_9155d6d01e8598::t_c0a7a414a8cca3 78-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c348c05100e84c1dbd4951e58d1ecd1d984727d0",
+  "prompts": {},
+  "sessions": {
+    "s_9155d6d01e8598": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_04e54ea97ffetQh0mqHW2ZHMy8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+.github/workflows/publish-oci.yml
+  s_fd456e0253f865::t_94fa27bc0689bc 169-192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "cde82e215067ad6afa98718c4e2bf969693cc475",
+  "prompts": {},
+  "sessions": {
+    "s_fd456e0253f865": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0518e2479ffeK6RAN4TQ7VYWtv",
+        "model": "claude-opus-5"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

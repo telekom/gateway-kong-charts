@@ -1,0 +1,25 @@
+values.yaml
+  s_9edc7158335626::t_1edd97bc79e698 883
+UPGRADE.md
+  s_9edc7158335626::t_ed8e6b42ae3125 11-44
+README.md
+  s_9edc7158335626::t_91f1e410f0c359 49,819
+README.md.gotmpl
+  s_9edc7158335626::t_91f1e410f0c359 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f75bb31c4de42732e55143c2adbdf47c0022c9cf",
+  "prompts": {},
+  "sessions": {
+    "s_9edc7158335626": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_052576e52ffeT6mN81VXjkZCIS",
+        "model": "claude-opus-5"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

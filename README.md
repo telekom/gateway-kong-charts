@@ -46,6 +46,7 @@ helm install my-gateway . -f my-values.yaml
 - **Kubernetes Cluster**
 - **Helm**: Version 3.x
 - **Ingress Controller**: NGINX Ingress Controller (or compatible alternative) for external access
+- **Zone connectivity**: if you run a gateway mesh, each provider zone must be able to reach the Issuer Service of every zone that sends it mesh traffic. A mesh call is signed by the consumer gateway, and the provider gateway validates it by retrieving that gateway's JWK set. See [UPGRADE.md](UPGRADE.md) if you are coming from a 9.x.x chart.
 
 ### Container Images
 
@@ -815,7 +816,7 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"jumper","tag":"4.14.0"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"jumper","tag":"5.0.0-rc.1"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |

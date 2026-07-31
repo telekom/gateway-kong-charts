@@ -8,6 +8,35 @@ SPDX-License-Identifier: CC0-1.0
 
 This document provides guidance for upgrading between versions of the Gateway Helm chart.
 
+## From 9.x.x to 10.x.x
+
+### Introduction of Mesh LMS requires connectivity in both directions
+
+Jumper 5 changes how a gateway mesh call is authenticated. A consumer gateway now signs a short-lived
+Mesh LMS token itself, instead of fetching a token from the provider zone's identity provider. The
+provider gateway validates that token by retrieving the JWK set of the consumer gateway that signed
+it, from the consumer gateway's Issuer Service.
+
+Traffic between zones is therefore no longer one-way. Before this version:
+
+```
+consumer zone  ────────────────────>  provider zone
+```
+
+From this version:
+
+```
+consumer zone  ────────────────────>  provider zone
+consumer zone  <────  JWK set  ─────  provider zone
+```
+
+**Before upgrading, confirm that each provider zone can reach the Issuer Service of every zone that
+sends it mesh traffic.** A deployment that keeps one-way connectivity rejects mesh calls. Calls that
+do not cross zones are unaffected.
+
+Nothing in the chart enables or disables this. The requirement follows from the Jumper image, so it
+applies as soon as the new Jumper version runs, and it cannot be switched off through `values.yaml`.
+
 ## Default Image Registry Changed to Artifactory (9.11.0 and up)
 
 ### New Default Image Registry

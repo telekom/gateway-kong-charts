@@ -61,6 +61,7 @@ spec:
                   "service.name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}"
                 },
                 "local_service_name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
+                "environment" : "{{ .Values.plugins.opentelemetry.environment | default .Values.global.environment | default "default" }}",
                 "zone" : "{{ .Values.plugins.opentelemetry.zone | default .Values.global.zone | default "unknown" }}",
                 "header_type" : "{{ .Values.plugins.opentelemetry.headerType | default "b3" }}"
               }

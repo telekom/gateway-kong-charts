@@ -783,8 +783,8 @@ The following table provides a comprehensive list of all configurable parameters
 | hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
-| image | object | `{"repository":"kong","tag":"1.7.1"}` | Kong Gateway image configuration (inherits from global.image) |
-| image.tag | string | `"1.7.1"` | Kong Gateway image tag |
+| image | object | `{"repository":"kong","tag":"1.7.2"}` | Kong Gateway image configuration (inherits from global.image) |
+| image.tag | string | `"1.7.2"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
 | imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |

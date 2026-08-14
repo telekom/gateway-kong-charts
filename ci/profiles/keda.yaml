@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Shared CI render baseline. Required for all profiles.
+global:
+  failOnUnsetValues: false
+
+keyRotation:
+  enabled: true
+
+kedaAutoscaling:
+  enabled: true
+  triggers:
+    prometheus:
+      # TODO: Remove when KEDA can render without a Prometheus endpoint by default.
+      serverAddress: http://prometheus.example

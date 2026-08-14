@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Shared CI render baseline. Required for all profiles.
+global:
+  failOnUnsetValues: false
+
+keyRotation:
+  enabled: true
+
+argoRollouts:
+  enabled: true
+  analysisTemplates:
+    successRate:
+      # TODO: Remove when Argo Rollouts can render without an analysis endpoint by default.
+      prometheusAddress: http://prometheus.example

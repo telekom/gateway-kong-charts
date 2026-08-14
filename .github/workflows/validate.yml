@@ -30,15 +30,16 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  # The chart deliberately fails rendering on unset required values, and the key rotation
-  # components are off by default, so linting needs both overridden.
-  HELM_OPTIONS: "--set global.failOnUnsetValues=false --set keyRotation.enabled=true"
   HELM_DOCS_VERSION: "1.14.2"
 
 jobs:
   lint-chart:
-    name: Lint and render chart
+    name: Lint and render chart (${{ matrix.profile }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [default, argo-rollouts, keda, full]
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -47,10 +48,10 @@ jobs:
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 #v5.0.0
 
       - name: Lint chart
-        run: helm lint . ${HELM_OPTIONS}
+        run: helm lint . -f ci/profiles/${{ matrix.profile }}.yaml
 
       - name: Render chart
-        run: helm template . ${HELM_OPTIONS} > /dev/null
+        run: helm template . -f ci/profiles/${{ matrix.profile }}.yaml > /dev/null
 
   check-docs:
     name: Check generated README

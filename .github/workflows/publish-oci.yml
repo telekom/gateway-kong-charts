@@ -30,7 +30,6 @@ permissions:
   packages: write
 
 env:
-  HELM_OPTIONS: "--set global.failOnUnsetValues=false --set keyRotation.enabled=true"
   HELM_DOCS_VERSION: "1.14.2"
   CHART_NAME: stargate
   REGISTRY: oci://ghcr.io/${{ github.repository_owner }}/o28m-charts
@@ -64,8 +63,8 @@ jobs:
 
       - name: Lint and render chart
         run: |
-          helm lint . ${HELM_OPTIONS}
-          helm template . ${HELM_OPTIONS} > /dev/null
+          helm lint . -f ci/profiles/base.yaml
+          helm template . -f ci/profiles/base.yaml > /dev/null
 
       - name: Install helm-docs
         run: |

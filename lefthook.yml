@@ -24,12 +24,21 @@ pre-commit:
       glob: "{values.yaml,README.md.gotmpl,Chart.yaml,charts/**/values.yaml,README.md}"
       run: helm-docs && git add README.md
 
-    # Mirrors CI (.github/workflows/validate.yml). Same flags so local results
-    # match the gate. Runs when any chart source changes.
+    # Mirrors CI (.github/workflows/validate.yml). Same scenarios so local results
+    # match the gate. Runs when chart sources or render profiles change.
     - name: helm-lint
-      glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*}"
-      run: helm lint . --set global.failOnUnsetValues=false --set keyRotation.enabled=true
-      fail_text: "helm lint failed (or helm missing — see CONTRIBUTING.md)."
+      glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*,ci/profiles/*.yaml}"
+      run: |
+        render() {
+          helm lint . -f ci/profiles/base.yaml "$@" || exit 1
+          helm template . -f ci/profiles/base.yaml "$@" > /dev/null || exit 1
+        }
+
+        render
+        for profile in argo-rollouts keda hpa-optional-resources; do
+          render -f "ci/profiles/${profile}.yaml"
+        done
+      fail_text: "Helm lint/render failed (or Helm is missing; see CONTRIBUTING.md)."
 
     # No CI equivalent — local secret scan over staged changes.
     - name: gitleaks

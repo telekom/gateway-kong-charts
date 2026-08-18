@@ -2,15 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Shared CI render baseline. Required for all profiles.
-global:
-  failOnUnsetValues: false
-  database:
-    location: local
-
-keyRotation:
-  enabled: true
-
+# HPA and optional resources scenario.
 hpaAutoscaling:
   enabled: true
 
@@ -24,3 +16,7 @@ plugins:
   prometheus:
     podMonitor:
       enabled: true
+
+global:
+  database:
+    location: local

@@ -34,12 +34,20 @@ env:
 
 jobs:
   lint-chart:
-    name: Lint and render chart (${{ matrix.profile }})
+    name: Lint and render chart (${{ matrix.scenario }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        profile: [default, argo-rollouts, keda, full]
+        include:
+          - scenario: default
+            values: -f ci/profiles/base.yaml
+          - scenario: argo-rollouts
+            values: -f ci/profiles/base.yaml -f ci/profiles/argo-rollouts.yaml
+          - scenario: keda
+            values: -f ci/profiles/base.yaml -f ci/profiles/keda.yaml
+          - scenario: hpa-optional-resources
+            values: -f ci/profiles/base.yaml -f ci/profiles/hpa-optional-resources.yaml
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -48,10 +56,10 @@ jobs:
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 #v5.0.0
 
       - name: Lint chart
-        run: helm lint . -f ci/profiles/${{ matrix.profile }}.yaml
+        run: helm lint . ${{ matrix.values }}
 
       - name: Render chart
-        run: helm template . -f ci/profiles/${{ matrix.profile }}.yaml > /dev/null
+        run: helm template . ${{ matrix.values }} > /dev/null
 
   check-docs:
     name: Check generated README

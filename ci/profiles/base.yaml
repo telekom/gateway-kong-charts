@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Shared CI render baseline. Required for all profiles.
+# Shared CI render baseline. Required for all scenarios.
 global:
   failOnUnsetValues: false
 

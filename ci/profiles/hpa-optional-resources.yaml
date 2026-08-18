@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# HPA and optional resources scenario.
+hpaAutoscaling:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+
+pdb:
+  create: true
+
+plugins:
+  prometheus:
+    podMonitor:
+      enabled: true
+
+global:
+  database:
+    location: local

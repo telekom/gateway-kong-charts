@@ -1,0 +1,30 @@
+.github/workflows/validate.yml
+  s_ddc3654d632880::t_671833e4efc70b 33,39,41-43,53,56
+  s_ddc3654d632880::t_e31d2fc451c82c 44
+ci/profiles/keda.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-6
+  s_ddc3654d632880::t_4856bb67c5a4de 7-9
+ci/profiles/argo-rollouts.yaml
+  s_ddc3654d632880::t_4856bb67c5a4de 7-9
+  s_ddc3654d632880::t_671833e4efc70b 1-6
+ci/profiles/full.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-21
+ci/profiles/default.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "9d0627bf54b792db7d74db449afcb01fe7279429",
+  "prompts": {},
+  "sessions": {
+    "s_ddc3654d632880": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00f0ed7c6ffeLj4UZK4JxKD5aw",
+        "model": "unknown"
+      },
+      "human_author": null
+    }
+  }
+}

@@ -1,10 +1,57 @@
-<!--
-SPDX-FileCopyrightText: 2023-2024 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: CC0-1.0
 
-SPDX-License-Identifier: CC0-1.0    
--->
+# Helm metadata
+/.helmignore
 
-.helmignore
+# Version control and repository metadata
+/.git
+/.gitignore
+/.gitattributes
+/.gitmodules
+/.github/
+/.gitlab-ci.yml
+/CODEOWNERS
 
-# Matches any license file
+# CI and development tooling
+/ci/
+/AGENTS.md
+/lefthook.yml
+/committed.toml
+/release.config.js
+/.helmdocsignore
+/.ignore
+/.pre-commit-config.yaml
+/.reuse/
+/renovate.json
+/Makefile
+/Taskfile.yml
+
+# Generated sources and contributor documentation
+/README.md.gotmpl
+/CONTRIBUTING.md
+/CODE_OF_CONDUCT.md
+/SECURITY.md
+/CLAUDE.md
+/.docs/
+
+# Tests
+/tests/
+/TEST-*
+
+# Editor, OS, and build artifacts
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+*.rej
+*~
+/*.tgz
+
+# REUSE sidecar metadata; license texts under LICENSES/ remain packaged
 *.license

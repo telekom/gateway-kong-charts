@@ -1,0 +1,19 @@
+.helmignore
+  s_b3940f0cc37cfe::t_850742c17c9dd3 1-3,5-6,8-15,17-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "a5903399e34bab19abf0bb1032efefea1e2776c8",
+  "prompts": {},
+  "sessions": {
+    "s_b3940f0cc37cfe": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_feaca5163ffeWhcUGV9RkSJPAE",
+        "model": "unknown"
+      },
+      "human_author": "Miká Juznik <mika.juznik@telekom.de>"
+    }
+  }
+}

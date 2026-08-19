@@ -26,8 +26,13 @@ data:
       '{
         "name": "{{ include "kong.adminApi.name" . }}",
         "host": "localhost",
+      {{ if .Values.adminApi.tls.enabled }}
+        "protocol": "https",
+        "port": 8444
+      {{ else }}
         "protocol": "http",
         "port": 8001
+      {{ end }}
       }'
 
     echo ""

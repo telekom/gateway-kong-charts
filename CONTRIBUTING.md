@@ -31,6 +31,8 @@ The hooks rely on the following tools. Find installation instructions here:
 - [lefthook](https://lefthook.dev/#how-to-install-lefthook)
 - [helm-docs](https://github.com/norwoodj/helm-docs#installation)
 - [helm](https://helm.sh/docs/intro/install/)
+- [kubeconform](https://github.com/yannh/kubeconform#Installation)
+- [kube-linter](https://docs.kubelinter.io/#/?id=installing-kubelinter)
 - [gitleaks](https://github.com/gitleaks/gitleaks#installing)
 - [committed](https://github.com/crate-ci/committed#install)
 - [reuse](https://github.com/fsfe/reuse-tool#install)

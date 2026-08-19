@@ -11,6 +11,8 @@ metadata:
   name: {{ .Release.Name }}
   labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
+  # TODO: Consider AlwaysAllow in a future release after assessing the eviction behavior change.
+  unhealthyPodEvictionPolicy: IfHealthyBudget
   {{- if .Values.pdb.minAvailable }}
   minAvailable: {{ .Values.pdb.minAvailable }}
   {{- else }}

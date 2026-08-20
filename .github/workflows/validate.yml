@@ -60,10 +60,12 @@ jobs:
 
       - name: Install kubeconform
         run: |
+          set -euo pipefail
           wget -q "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" -O - | sudo tar -xzf - -C /usr/local/bin kubeconform
 
       - name: Install kube-linter
         run: |
+          set -euo pipefail
           wget -q "https://github.com/stackrox/kube-linter/releases/download/v${KUBE_LINTER_VERSION}/kube-linter-linux.tar.gz" -O - | sudo tar -xzf - -C /usr/local/bin kube-linter
 
       - name: Lint chart
@@ -94,6 +96,7 @@ jobs:
 
       - name: Install helm-docs
         run: |
+          set -euo pipefail
           wget -q "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" -O - | tar -xzf - helm-docs
           chmod +x ./helm-docs
           sudo mv ./helm-docs /usr/local/bin/helm-docs

@@ -29,7 +29,7 @@ pre-commit:
     - name: chart-validation
       glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*,ci/profiles/*.yaml}"
       run: |
-        manifest="$(mktemp).yaml"
+        manifest="$(mktemp "${TMPDIR:-/tmp}/gateway-kong-manifest.XXXXXX.yaml")"
         trap 'rm -f "$manifest"' EXIT
 
         validate() {

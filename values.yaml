@@ -1225,6 +1225,8 @@ keyRotation:
 pdb:
   # -- Enable PodDisruptionBudget creation
   create: false
+  # -- Policy for evicting unhealthy pods. Leave unset for clusters that do not support this field
+  unhealthyPodEvictionPolicy:
   # -- Minimum available pods (number or percentage)
   minAvailable:
   # -- Maximum unavailable pods (number or percentage, defaults to 1 if both unset)

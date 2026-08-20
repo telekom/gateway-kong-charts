@@ -26,20 +26,30 @@ pre-commit:
 
     # Mirrors CI (.github/workflows/validate.yml). Same scenarios so local results
     # match the gate. Runs when chart sources or render profiles change.
-    - name: helm-lint
+    - name: chart-validation
       glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*,ci/profiles/*.yaml}"
       run: |
-        render() {
+        manifest="$(mktemp "${TMPDIR:-/tmp}/gateway-kong-manifest.XXXXXX.yaml")"
+        trap 'rm -f "$manifest"' EXIT
+
+        validate() {
           helm lint . -f ci/profiles/base.yaml "$@" || exit 1
-          helm template . -f ci/profiles/base.yaml "$@" > /dev/null || exit 1
+          helm template . -f ci/profiles/base.yaml "$@" > "$manifest" || exit 1
+          kubeconform \
+            -strict \
+            -summary \
+            -kubernetes-version 1.32.4 \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            "$manifest" || exit 1
+          kube-linter lint "$manifest" --fail-if-no-objects-found --format plain || exit 1
         }
 
-        render
+        validate
         for profile in argo-rollouts keda hpa-optional-resources; do
-          render -f "ci/profiles/${profile}.yaml"
+          validate -f "ci/profiles/${profile}.yaml"
         done
-      fail_text: "Helm lint/render failed (or Helm is missing; see CONTRIBUTING.md)."
-
+      fail_text: "Chart validation failed (or a required tool is missing; see CONTRIBUTING.md)."
     # No CI equivalent — local secret scan over staged changes.
     - name: gitleaks
       run: gitleaks git --staged --no-banner --redact

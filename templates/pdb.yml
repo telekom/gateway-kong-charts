@@ -11,6 +11,9 @@ metadata:
   name: {{ .Release.Name }}
   labels: {{ include "app.labels.standard" $ | nindent 4 }}
 spec:
+  {{- with .Values.pdb.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ . }}
+  {{- end }}
   {{- if .Values.pdb.minAvailable }}
   minAvailable: {{ .Values.pdb.minAvailable }}
   {{- else }}

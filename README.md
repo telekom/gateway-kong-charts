@@ -909,6 +909,7 @@ The following table provides a comprehensive list of all configurable parameters
 | pdb.create | bool | `false` | Enable PodDisruptionBudget creation |
 | pdb.maxUnavailable | string | `nil` | Maximum unavailable pods (number or percentage, defaults to 1 if both unset) |
 | pdb.minAvailable | string | `nil` | Minimum available pods (number or percentage) |
+| pdb.unhealthyPodEvictionPolicy | string | `nil` | Policy for evicting unhealthy pods. Leave unset for clusters that do not support this field |
 | plugins.acl.pluginId | string | `"bc823d55-83b5-4184-b03f-ce63cd3b75c7"` | Plugin ID for Kong configuration |
 | plugins.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for plugin containers |
 | plugins.enabled | list | `["rate-limiting-merged"]` | Additional Kong plugins to enable (beyond bundled and jwt-keycloak) |

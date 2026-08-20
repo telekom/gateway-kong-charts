@@ -11,6 +11,7 @@ networkPolicy:
 
 pdb:
   create: true
+  unhealthyPodEvictionPolicy: IfHealthyBudget
 
 plugins:
   prometheus:

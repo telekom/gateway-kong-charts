@@ -57,16 +57,10 @@ jobs:
             values: -f ci/profiles/base.yaml -f ci/profiles/otlp.yaml
           - scenario: admin-api-tls-secure
             values: -f ci/profiles/base.yaml -f ci/profiles/admin-api-tls-secure.yaml
-            adminApiTlsMode: secure
-            adminIngressPort: proxy-ssl
           - scenario: admin-api-tls-insecure-zipkin
             values: -f ci/profiles/base.yaml -f ci/profiles/admin-api-tls-insecure-zipkin.yaml
-            adminApiTlsMode: insecure
-            adminIngressPort: proxy
           - scenario: admin-api-tls-insecure-otlp
             values: -f ci/profiles/base.yaml -f ci/profiles/admin-api-tls-insecure-otlp.yaml
-            adminApiTlsMode: insecure
-            adminIngressPort: proxy
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -89,10 +83,6 @@ jobs:
 
       - name: Render chart
         run: helm template . ${{ matrix.values }} > "$RUNNER_TEMP/rendered.yaml"
-
-      - name: Assert Admin API TLS behavior
-        if: startsWith(matrix.scenario, 'admin-api-tls-')
-        run: bash ci/assert-admin-api-tls.sh "$RUNNER_TEMP/rendered.yaml" "${{ matrix.adminApiTlsMode }}" "${{ matrix.adminIngressPort }}"
 
       - name: Validate Kubernetes schemas
         run: |

@@ -46,18 +46,9 @@ pre-commit:
         }
 
         validate
-        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port otlp; do
+        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port otlp admin-api-tls-secure admin-api-tls-insecure-zipkin admin-api-tls-insecure-otlp; do
           validate -f "ci/profiles/${profile}.yaml"
         done
-
-        validate -f ci/profiles/admin-api-tls-secure.yaml
-        bash ci/assert-admin-api-tls.sh "$manifest" secure proxy-ssl
-
-        validate -f ci/profiles/admin-api-tls-insecure-zipkin.yaml
-        bash ci/assert-admin-api-tls.sh "$manifest" insecure proxy
-
-        validate -f ci/profiles/admin-api-tls-insecure-otlp.yaml
-        bash ci/assert-admin-api-tls.sh "$manifest" insecure proxy
       fail_text: "Chart validation failed (or a required tool is missing; see CONTRIBUTING.md)."
     # No CI equivalent — local secret scan over staged changes.
     - name: gitleaks

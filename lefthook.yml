@@ -46,8 +46,9 @@ pre-commit:
         }
 
         validate
-        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port otlp admin-api-tls-secure admin-api-tls-insecure-zipkin admin-api-tls-insecure-otlp; do
-          validate -f "ci/profiles/${profile}.yaml"
+        for profile in ci/profiles/*.yaml; do
+          [ "$profile" = ci/profiles/base.yaml ] && continue
+          validate -f "$profile"
         done
       fail_text: "Chart validation failed (or a required tool is missing; see CONTRIBUTING.md)."
     # No CI equivalent — local secret scan over staged changes.

@@ -198,17 +198,11 @@ spec:
           containerPort: {{ .Values.plugins.prometheus.port | default 9542 }}
           protocol: TCP
 {{- end -}}
-{{- if .Values.adminApi.enabled -}}
-{{- if .Values.adminApi.tls.enabled }}
-        - name: admin-ssl
-          containerPort: 8444
+{{- if .Values.adminApi.enabled }}
+        - name: {{ include "kong.adminApi.portName" . }}
+          containerPort: {{ include "kong.adminApi.port" . }}
           protocol: TCP
-{{- else }}
-        - name: admin
-          containerPort: 8001
-          protocol: TCP
-{{- end -}}
-{{- end }}
+{{ end }}
         - name: status
           containerPort: 8100
           protocol: TCP

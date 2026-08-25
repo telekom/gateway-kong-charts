@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if .Values.proxy.ingress.enabled }}
-{{- $svcPort := .Values.proxy.tls.enabled | ternary "proxy-ssl" "proxy" -}}
+{{- $svcPort := include "kong.proxy.portName" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

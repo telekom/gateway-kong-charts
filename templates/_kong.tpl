@@ -57,6 +57,32 @@ false
 {{- end -}}
 {{- end -}}
 
+{{- define "kong.adminApi.scheme" -}}
+{{- if .Values.adminApi.tls.enabled -}}https{{- else -}}http{{- end -}}
+{{- end -}}
+
+{{- define "kong.adminApi.port" -}}
+{{- if .Values.adminApi.tls.enabled -}}8444{{- else -}}8001{{- end -}}
+{{- end -}}
+
+{{- define "kong.adminApi.portName" -}}
+{{- if .Values.adminApi.tls.enabled -}}admin-ssl{{- else -}}admin{{- end -}}
+{{- end -}}
+
+{{- define "kong.proxy.portName" -}}
+{{- if .Values.proxy.tls.enabled -}}proxy-ssl{{- else -}}proxy{{- end -}}
+{{- end -}}
+
+{{- define "kong.adminApi.clientEnv" }}
+- name: X_TARDIS_GATEWAY_ADMIN
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Release.Name }}
+      key: gatewayAdminApiKey
+- name: CURL_OPTS
+  value: {{ ternary "--insecure" "" (and .Values.adminApi.tls.enabled .Values.adminApi.tls.insecure) | quote }}
+{{- end -}}
+
 {{- define "kong.tracing.exporter" -}}
 {{- $exporter := .Values.global.tracing.exporter | default "zipkin" -}}
 {{- if not (has $exporter (list "zipkin" "otlp")) -}}
@@ -450,11 +476,7 @@ false
   value: '0.0.0.0:8100'
 {{- if .Values.adminApi.enabled }}
 - name: KONG_ADMIN_LISTEN
-{{- if .Values.adminApi.tls.enabled }}
-  value: '0.0.0.0:8444 ssl'
-{{- else }}
-  value: '0.0.0.0:8001'
-{{- end }}
+  value: '0.0.0.0:{{ include "kong.adminApi.port" . }}{{ if .Values.adminApi.tls.enabled }} ssl{{ end }}'
 - name: KONG_ADMIN_ACCESS_LOG
   value: {{ .Values.adminApi.accessLog | quote }}
 - name: KONG_ADMIN_ERROR_LOG
@@ -623,20 +645,12 @@ admin-api
 
 {{- define "kong.adminApi.serviceUrl" -}}
 {{- $host := include "kong.adminApi.serviceHost" . -}}
-{{- if .Values.adminApi.tls.enabled }}
-{{- printf "https://%s:%s" $host "8444" }}
-{{- else }}
-{{- printf "http://%s:%s" $host "8001" }}
-{{- end -}}
+{{- printf "%s://%s:%s" (include "kong.adminApi.scheme" .) $host (include "kong.adminApi.port" .) -}}
 {{- end -}}
 
 {{- define "kong.adminApi.localhost" -}}
 {{- $host := "localhost" -}}
-{{- if .Values.adminApi.tls.enabled }}
-{{- printf "https://%s:%s" $host "8444" }}
-{{- else }}
-{{- printf "http://%s:%s" $host "8001" }}
-{{- end -}}
+{{- printf "%s://%s:%s" (include "kong.adminApi.scheme" .) $host (include "kong.adminApi.port" .) -}}
 {{- end -}}
 
 {{- define "kong.merged.adminApi.annotations" }}
@@ -652,4 +666,3 @@ admin-api
 {{- $mergedAnnotations := mergeOverwrite $globalAnnotations $localAnnotations }}
 {{- $mergedAnnotations | toYaml -}}
 {{ end -}}
-

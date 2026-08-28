@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Covers the dedicated Jumper management port.
+jumper:
+  managementPort: 9090

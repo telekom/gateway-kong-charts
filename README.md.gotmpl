@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: CC0-1.0
 -->
@@ -177,16 +177,19 @@ Each container has its own `readinessProbe`, `livenessProbe`, and `startupProbe`
 - `http://localhost:8100/status` as readiness probe for Kong
 - `http://localhost:8100/status` as liveness probe for Kong
 - `http://localhost:8100/status` as startup probe for Kong
-- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
+- `http://localhost:8080/readyz` as the default Jumper readiness and startup probe
+- `http://localhost:8080/livez` as the default Jumper liveness probe
 - `http://localhost:8081/health` as readiness probe for each Issuer-service container
 - `http://localhost:8081/health` as liveness probe for each Issuer-service container
 - `http://localhost:8081/health` as startup probe for each Issuer-service container
 
 **Configuration:**
 
-Each component has dedicated probe settings in `values.yaml`. Undefined values use Kubernetes defaults.
+Each component has dedicated probe settings in `values.yaml`. The chart supplies the defaults shown above.
+
+Set `jumper.managementPort` to expose Jumper management endpoints on a dedicated container port. Health probes remain on the application port.
+
+If you enable `networkPolicy.enabled` with `jumper.managementPort`, add a custom `networkPolicy.ingress` rule that allows the named destination port `jumper-mgmt`. The default NetworkPolicy does not automatically allow this dedicated port.
 
 | Component        | Helm Values                                                                               |
 | ---------------- | ----------------------------------------------------------------------------------------- |

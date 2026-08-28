@@ -85,11 +85,20 @@ spec:
         - containerPort: {{ .Values.jumper.port }}
           name: jumper
           protocol: TCP
+{{- if .Values.jumper.managementPort }}
+        - containerPort: {{ .Values.jumper.managementPort }}
+          name: jumper-mgmt
+          protocol: TCP
+{{- end }}
         volumeMounts:
           {{- include "kong.jumper.volumeMounts" $ | indent 8 }}
         env:
         - name: JUMPER_PORT
           value: {{ .Values.jumper.port | quote }}
+{{- if .Values.jumper.managementPort }}
+        - name: JUMPER_MANAGEMENT_PORT
+          value: {{ .Values.jumper.managementPort | quote }}
+{{- end }}
         {{- with .Values.jumper.environment }}
         {{- . | toYaml | nindent 8 }}
         {{- end }}

@@ -18,6 +18,8 @@ spec:
   backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
   template:
+    metadata:
+      labels: {{ include "gatewaySetup.labels" $ | nindent 8 }}
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}

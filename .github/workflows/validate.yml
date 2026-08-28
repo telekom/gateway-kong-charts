@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2025-2026 Deutsche Telekom AG
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -51,6 +51,8 @@ jobs:
             values: -f ci/profiles/base.yaml -f ci/profiles/keda.yaml
           - scenario: hpa-optional-resources
             values: -f ci/profiles/base.yaml -f ci/profiles/hpa-optional-resources.yaml
+          - scenario: jumper-management-port
+            values: -f ci/profiles/base.yaml -f ci/profiles/jumper-management-port.yaml
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2

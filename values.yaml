@@ -880,13 +880,15 @@ jumper:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: jumper
-    tag: "4.15.4"
+    tag: "4.16.0"
 
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent
 
   # -- Jumper container port
   port: 8080
+  # -- (int) Optional dedicated Jumper management port. Use an integer that differs from other enabled listener ports.
+  managementPort: null
 
   # -- Issuer service URL for gateway token issuance (your gateway's auth realm endpoint)
   issuerUrl: https://<your-gateway-host>/auth/realms/default
@@ -907,7 +909,7 @@ jumper:
   # -- Jumper liveness probe configuration
   livenessProbe:
     httpGet:
-      path: /actuator/health/liveness
+      path: /livez
       port: jumper
       scheme: HTTP
     timeoutSeconds: 5
@@ -915,14 +917,14 @@ jumper:
   # -- Jumper readiness probe configuration
   readinessProbe:
     httpGet:
-      path: /actuator/health/readiness
+      path: /readyz
       port: jumper
       scheme: HTTP
     initialDelaySeconds: 20
   # -- Jumper startup probe configuration
   startupProbe:
     httpGet:
-      path: /actuator/health/readiness
+      path: /readyz
       port: jumper
       scheme: HTTP
     initialDelaySeconds: 15

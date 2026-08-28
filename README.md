@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: CC0-1.0
 -->
@@ -177,16 +177,19 @@ Each container has its own `readinessProbe`, `livenessProbe`, and `startupProbe`
 - `http://localhost:8100/status` as readiness probe for Kong
 - `http://localhost:8100/status` as liveness probe for Kong
 - `http://localhost:8100/status` as startup probe for Kong
-- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
+- `http://localhost:8080/readyz` as the default Jumper readiness and startup probe
+- `http://localhost:8080/livez` as the default Jumper liveness probe
 - `http://localhost:8081/health` as readiness probe for each Issuer-service container
 - `http://localhost:8081/health` as liveness probe for each Issuer-service container
 - `http://localhost:8081/health` as startup probe for each Issuer-service container
 
 **Configuration:**
 
-Each component has dedicated probe settings in `values.yaml`. Undefined values use Kubernetes defaults.
+Each component has dedicated probe settings in `values.yaml`. The chart supplies the defaults shown above.
+
+Set `jumper.managementPort` to expose Jumper management endpoints on a dedicated container port. Health probes remain on the application port.
+
+If you enable `networkPolicy.enabled` with `jumper.managementPort`, add a custom `networkPolicy.ingress` rule that allows the named destination port `jumper-mgmt`. The default NetworkPolicy does not automatically allow this dedicated port.
 
 | Component        | Helm Values                                                                               |
 | ---------------- | ----------------------------------------------------------------------------------------- |
@@ -815,18 +818,19 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"jumper","tag":"4.15.4"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"jumper","tag":"4.16.0"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |
 | jumper.jvmOpts | string | `"-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"` | JVM options for Jumper |
-| jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/actuator/health/liveness","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | Jumper liveness probe configuration |
+| jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/livez","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | Jumper liveness probe configuration |
+| jumper.managementPort | int | `nil` | Optional dedicated Jumper management port. Use an integer that differs from other enabled listener ports. |
 | jumper.port | int | `8080` | Jumper container port |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` | Event publisher URL |
-| jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":20}` | Jumper readiness probe configuration |
+| jumper.readinessProbe | object | `{"httpGet":{"path":"/readyz","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":20}` | Jumper readiness probe configuration |
 | jumper.resources | object | `{"limits":{"cpu":"1500m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
 | jumper.stargateUrl | string | `"https://<your-gateway-host>"` | Gateway URL for Gateway-to-Gateway communication |
-| jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
+| jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/readyz","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
 | jumper.warmup | object | `{"enabled":false,"urls":[]}` | Warmup configuration for cold start optimization |
 | jumper.warmup.enabled | bool | `false` | Enable warmup on startup (set to false to completely disable) |
 | jumper.warmup.urls | list | `[]` | List of URLs to warm up (DNS, TLS handshake, connection pool, LMS token generation) Example: [https://iris.2.2.2.2.nip.io, https://iris.3.3.3.3.nip.io] |

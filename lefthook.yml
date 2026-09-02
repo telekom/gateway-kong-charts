@@ -46,7 +46,7 @@ pre-commit:
         }
 
         validate
-        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port; do
+        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port otlp; do
           validate -f "ci/profiles/${profile}.yaml"
         done
       fail_text: "Chart validation failed (or a required tool is missing; see CONTRIBUTING.md)."

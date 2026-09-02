@@ -65,7 +65,24 @@ spec:
                 "environment" : "{{ .Values.plugins.zipkin.environment | default .Values.global.environment | default "default" }}",
                 "zone" : "{{ .Values.plugins.zipkin.zone | default .Values.global.zone | default "unknown" }}",
                 "force_sample" : {{ .Values.plugins.zipkin.forceSample | default true }},
-                "header_type" : "{{ .Values.plugins.zipkin.headerType | default "b3" }}"
+                "propagation" : {
+                  "extract" : ["b3", "w3c", "ot"],
+                  "clear" : [
+                    "b3",
+                    "x-b3-traceid",
+                    "x-b3-spanid",
+                    "x-b3-parentspanid",
+                    "x-b3-sampled",
+                    "x-b3-flags",
+                    "traceparent",
+                    "tracestate",
+                    "ot-tracer-traceid",
+                    "ot-tracer-spanid",
+                    "ot-tracer-sampled"
+                  ],
+                  "inject" : ["b3"],
+                  "default_format" : "b3"
+                }
               }
             }'`
 

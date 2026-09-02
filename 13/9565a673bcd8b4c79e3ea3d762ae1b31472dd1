@@ -1,0 +1,97 @@
+templates/jobs/kong/configuration/job.yml
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+  s_4fe80d27313e0e::t_f7290ff4c1346a 22-23
+templates/_common.tpl
+  s_4fe80d27313e0e::t_f7290ff4c1346a 28-30,32-34
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+  s_4fe80d27313e0e::t_5e52b6880adee1 27
+  s_89eefadd9f889c::t_85d2ef733fee60 31
+templates/jobs/kong-plugins/migration-opentelemetry.yml
+  s_4fe80d27313e0e::t_f7290ff4c1346a 22-23
+templates/jobs/kong-plugins/migration-prometheus.yml
+  s_4fe80d27313e0e::t_f7290ff4c1346a 22-23
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+templates/service-metrics.yml
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 22
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+  s_5fbd6eba09a98c::t_a104a78ac979d6 23
+  s_4fe80d27313e0e::t_f7290ff4c1346a 24,26
+templates/jobs/kong-plugins/setup-prometheus.yml
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+  s_4fe80d27313e0e::t_f7290ff4c1346a 21-22
+templates/jobs/kong-plugins/setup-request-size-limiting.yml
+  s_4fe80d27313e0e::t_f7290ff4c1346a 21-22
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+.github/workflows/validate.yml
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 1
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 54-55
+ci/profiles/jumper-management-port.yaml
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 1-4,6-7
+  s_5fbd6eba09a98c::t_17cd4b687b04bd 5
+values.yaml
+  s_5fbd6eba09a98c::t_3040353b58cde3 883
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 890-891,912,920,927
+templates/jobs/kong-plugins/setup-opentelemetry.yml
+  s_4fe80d27313e0e::t_f7290ff4c1346a 21-22
+README.md
+  s_5fbd6eba09a98c::t_847e0ad3f1dc81 180-181,190,826-827,830,833
+  s_4fe80d27313e0e::t_c2178d1a4ffef9 189
+  s_5fbd6eba09a98c::t_dff6687d1fa11b 821
+  s_5fbd6eba09a98c::t_cf329840647ff5 192
+  s_4fe80d27313e0e::t_c62c7247965d46 2,188,191
+templates/jobs/kong-plugins/migration-zipkin.yml
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+  s_4fe80d27313e0e::t_f7290ff4c1346a 22-23
+lefthook.yml
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 49
+templates/deployment.yml
+  s_4fe80d27313e0e::t_f7290ff4c1346a 91-92,99,101
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 88-89,98,100
+  s_5fbd6eba09a98c::t_a104a78ac979d6 90
+README.md.gotmpl
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2,188
+  s_5fbd6eba09a98c::t_67ce434cc1be5b 180-181,190
+  s_4fe80d27313e0e::t_6d7965154bd9ac 191
+  s_5fbd6eba09a98c::t_a104a78ac979d6 192
+  s_4fe80d27313e0e::t_f7290ff4c1346a 189
+templates/jobs/kong-plugins/setup-zipkin.yml
+  s_4fe80d27313e0e::t_f7290ff4c1346a 21-22
+  s_4fe80d27313e0e::t_ce5cde53ffd2e5 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.1",
+  "base_commit_sha": "139565a673bcd8b4c79e3ea3d762ae1b31472dd1",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_4fe80d27313e0e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fb86b08e0ffeZWcajXDrNLfHCj",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    },
+    "s_5fbd6eba09a98c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9edcf21dffeWifOIDkPbNMlDs",
+        "model": "unknown"
+      },
+      "human_author": null
+    },
+    "s_89eefadd9f889c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fbd0ae9e6fferLrxQr8GodzGFh",
+        "model": "unknown"
+      },
+      "human_author": null
+    }
+  }
+}

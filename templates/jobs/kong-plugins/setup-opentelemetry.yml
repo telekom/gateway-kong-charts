@@ -65,7 +65,24 @@ spec:
                 "local_service_name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
                 "environment" : "{{ .Values.plugins.opentelemetry.environment | default .Values.global.environment | default "default" }}",
                 "zone" : "{{ .Values.plugins.opentelemetry.zone | default .Values.global.zone | default "unknown" }}",
-                "header_type" : "{{ .Values.plugins.opentelemetry.headerType | default "b3" }}"
+                "propagation" : {
+                  "extract" : ["b3", "w3c", "ot"],
+                  "clear" : [
+                    "b3",
+                    "x-b3-traceid",
+                    "x-b3-spanid",
+                    "x-b3-parentspanid",
+                    "x-b3-sampled",
+                    "x-b3-flags",
+                    "traceparent",
+                    "tracestate",
+                    "ot-tracer-traceid",
+                    "ot-tracer-spanid",
+                    "ot-tracer-sampled"
+                  ],
+                  "inject" : ["b3"],
+                  "default_format" : "b3"
+                }
               }
             }'`
 

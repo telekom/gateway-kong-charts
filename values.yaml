@@ -71,7 +71,8 @@ global:
   tracing:
     # -- Active trace exporter for the whole gateway: 'zipkin' or 'otlp'.
     # Selects which Kong tracing plugin is configured (zipkin vs opentelemetry)
-    # and which exporter Jumper uses. Exactly one is active at runtime.
+    # and which exporter Jumper uses. Exactly one is active at runtime. Kong
+    # accepts B3, W3C, and OT trace contexts and emits only B3 multi headers.
     exporter: "zipkin"
     # -- Trace collector URL, used VERBATIM by both Kong and Jumper (no path is
     # appended or stripped by the chart). Provide the FULL endpoint URL matching
@@ -832,8 +833,6 @@ plugins:
     #zone: null
     # -- Force sampling for all requests
     #forceSample: true
-    # -- Trace header type (b3 or w3c)
-    #headerType: "b3"
     # -- Include consumer credentials in trace metadata
     #includeCredential: "true"
     # -- Service name displayed in tracing UI
@@ -862,8 +861,6 @@ plugins:
     #sampleRatio: 1
     # -- Zone name for traces
     #zone: null
-    # -- Trace header type / propagation format (b3 keeps continuity with Jumper)
-    #headerType: "b3"
     # -- Service name displayed in tracing UI (set as the service.name resource attribute)
     #defaultServiceName: "stargate"
     # -- Kong built-in tracing instrumentations required for native span generation

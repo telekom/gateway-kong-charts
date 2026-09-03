@@ -13,14 +13,8 @@ metadata:
 spec:
   selector: {{ include "app.labels.selectorLabels" $ | nindent 4 }}
   ports:
-{{- if .Values.adminApi.tls.enabled }}
-  - name: admin-ssl
-    port: 8444
-    targetPort: 8444
-{{- else }}
-  - name: admin
-    port: 8001
-    targetPort: 8001
-{{- end }}
+  - name: {{ include "kong.adminApi.portName" . }}
+    port: {{ include "kong.adminApi.port" . }}
+    targetPort: {{ include "kong.adminApi.port" . }}
     protocol: TCP
 {{- end -}}

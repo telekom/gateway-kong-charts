@@ -30,24 +30,20 @@ spec:
         securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
         resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
         env:
-        - name: X_TARDIS_GATEWAY_ADMIN
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}
-              key: gatewayAdminApiKey
+        {{- include "kong.adminApi.clientEnv" . | nindent 8 }}
         command:        
           - /bin/bash
           - -c
           - |-
             echo "Removing old Kong ENI flavoured OpenTelemetry plugin via DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins"
 
-            ADMIN_API_HTTP_RETURN_CODE=`curl -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
+            ADMIN_API_HTTP_RETURN_CODE=`curl $CURL_OPTS -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }}`
             if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then
                 echo "Kong Admin-API unreachable return: $ADMIN_API_HTTP_RETURN_CODE"
                 exit 1
             fi
 
-            CONFIG_CALL_HTTP_RETURN_CODE=`curl \
+            CONFIG_CALL_HTTP_RETURN_CODE=`curl $CURL_OPTS \
             -o /dev/null \
             -w "%{http_code}" \
             -u "admin:$X_TARDIS_GATEWAY_ADMIN" \

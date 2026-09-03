@@ -33,11 +33,7 @@ spec:
         command: [ "/bin/sh" ]
         args: [ "-c", "/tmp/configuration.sh" ]
         env:
-        - name: X_TARDIS_GATEWAY_ADMIN
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}
-              key: gatewayAdminApiKey
+        {{- include "kong.adminApi.clientEnv" . | nindent 8 }}
         volumeMounts:
           {{- include "kong.configuration.volumeMounts" $ | indent 8 }}
       restartPolicy: OnFailure

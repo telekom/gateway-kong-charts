@@ -32,13 +32,8 @@ spec:
     {{- if .Values.adminApi.enabled }}
     # Allow admin API traffic
     - ports:
-      {{- if .Values.adminApi.tls.enabled }}
-        - port: 8444
+        - port: {{ include "kong.adminApi.port" . }}
           protocol: TCP
-      {{- else }}
-        - port: 8001
-          protocol: TCP
-      {{- end }}
     {{- end }}
     {{- if .Values.plugins.prometheus.enabled }}
     # Allow metrics scraping

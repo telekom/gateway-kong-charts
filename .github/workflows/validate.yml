@@ -36,25 +36,37 @@ env:
   KUBE_LINTER_VERSION: "0.8.3"
 
 jobs:
+  discover_profiles:
+    name: Discover chart profiles
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.profiles.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+
+      - name: Build profile matrix
+        id: profiles
+        run: |
+          matrix=$(
+            printf '%s\n' ci/profiles/*.yaml | jq -Rsc -c '
+              split("\n")
+              | map(select(length > 0 and . != "ci/profiles/base.yaml"))
+              | map({scenario: (split("/")[-1] | sub("\\.yaml$"; "")), profile: .})
+              | {include: ([{scenario: "default", profile: ""}] + .)}
+            '
+          )
+          printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
+
   lint-chart:
     name: Lint and render chart (${{ matrix.scenario }})
+    needs: discover_profiles
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - scenario: default
-            values: -f ci/profiles/base.yaml
-          - scenario: argo-rollouts
-            values: -f ci/profiles/base.yaml -f ci/profiles/argo-rollouts.yaml
-          - scenario: keda
-            values: -f ci/profiles/base.yaml -f ci/profiles/keda.yaml
-          - scenario: hpa-optional-resources
-            values: -f ci/profiles/base.yaml -f ci/profiles/hpa-optional-resources.yaml
-          - scenario: jumper-management-port
-            values: -f ci/profiles/base.yaml -f ci/profiles/jumper-management-port.yaml
-          - scenario: otlp
-            values: -f ci/profiles/base.yaml -f ci/profiles/otlp.yaml
+      matrix: ${{ fromJSON(needs.discover_profiles.outputs.matrix) }}
+    env:
+      PROFILE: ${{ matrix.profile }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -73,10 +85,22 @@ jobs:
           wget -q "https://github.com/stackrox/kube-linter/releases/download/v${KUBE_LINTER_VERSION}/kube-linter-linux.tar.gz" -O - | sudo tar -xzf - -C /usr/local/bin kube-linter
 
       - name: Lint chart
-        run: helm lint . ${{ matrix.values }}
+        run: |
+          set -euo pipefail
+          values=(-f ci/profiles/base.yaml)
+          if [[ -n "$PROFILE" ]]; then
+            values+=(-f "$PROFILE")
+          fi
+          helm lint . "${values[@]}"
 
       - name: Render chart
-        run: helm template . ${{ matrix.values }} > "$RUNNER_TEMP/rendered.yaml"
+        run: |
+          set -euo pipefail
+          values=(-f ci/profiles/base.yaml)
+          if [[ -n "$PROFILE" ]]; then
+            values+=(-f "$PROFILE")
+          fi
+          helm template . "${values[@]}" > "$RUNNER_TEMP/rendered.yaml"
 
       - name: Validate Kubernetes schemas
         run: |

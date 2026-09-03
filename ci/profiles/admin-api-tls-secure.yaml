@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Render-only coverage for certificate verification enabled. Proper certificate
+# support is still pending; see the Admin API TLS section in the README.
+migrations: jobs
+
+adminApi:
+  tls:
+    enabled: true
+    insecure: false
+
+proxy:
+  tls:
+    enabled: true

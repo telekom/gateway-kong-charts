@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Render every Admin API job with the opt-in insecure TLS client setting.
+migrations: jobs
+
+adminApi:
+  tls:
+    enabled: true
+    insecure: true
+
+global:
+  tracing:
+    exporter: zipkin

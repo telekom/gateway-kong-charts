@@ -151,8 +151,10 @@ adminApi:
   # -- Htpasswd for Admin API basic authentication
   htpasswd: admin:changeme
   tls:
-    # -- Enable HTTPS for Admin API
+    # -- Enable HTTPS for the Admin API
     enabled: false
+    # -- Skip certificate and hostname verification for chart-managed Admin API clients. The chart does not yet support custom Admin API certificates or CA trust. Kong therefore uses a self-signed certificate for localhost, which setup jobs cannot verify through the Admin API Service hostname.
+    insecure: false
   # -- Access log target
   accessLog: /dev/stdout
   # -- Error log target

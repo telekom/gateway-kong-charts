@@ -5,7 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if and .Values.adminApi.enabled .Values.adminApi.ingress.enabled }}
-{{- $svcPort := .Values.adminApi.tls.enabled | ternary "proxy-ssl" "proxy" -}}
+{{/* Route through Kong's proxy listener so the protected /admin-api route handles the request. */}}
+{{- $svcPort := include "kong.proxy.portName" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

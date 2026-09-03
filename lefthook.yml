@@ -46,8 +46,9 @@ pre-commit:
         }
 
         validate
-        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port otlp; do
-          validate -f "ci/profiles/${profile}.yaml"
+        for profile in ci/profiles/*.yaml; do
+          [ "$profile" = ci/profiles/base.yaml ] && continue
+          validate -f "$profile"
         done
       fail_text: "Chart validation failed (or a required tool is missing; see CONTRIBUTING.md)."
     # No CI equivalent — local secret scan over staged changes.
@@ -55,10 +56,10 @@ pre-commit:
       run: gitleaks git --staged --no-banner --redact
       fail_text: "Possible secret detected (or gitleaks missing — see CONTRIBUTING.md)."
 
-    # Mirrors CI (.github/workflows/validate.yml). Whole-project scan:
-    # any file missing an SPDX header breaks compliance.
+    # Mirrors CI (.github/workflows/validate.yml) for version-controlled files.
+    # CI runs `reuse lint` in a clean checkout; local untracked files are ignored.
     - name: reuse
-      run: reuse lint
+      run: git ls-files -z | xargs -0 reuse lint-file --quiet --
       fail_text: "REUSE/SPDX non-compliant (or reuse missing — see CONTRIBUTING.md)."
 
 commit-msg:

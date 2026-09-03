@@ -66,7 +66,7 @@ spec:
                 "zone" : "{{ .Values.plugins.zipkin.zone | default .Values.global.zone | default "unknown" }}",
                 "force_sample" : {{ .Values.plugins.zipkin.forceSample | default true }},
                 "propagation" : {
-                  "extract" : ["b3", "w3c", "ot"],
+                  "extract" : ["b3", "w3c"],
                   "clear" : [
                     "b3",
                     "x-b3-traceid",
@@ -75,10 +75,7 @@ spec:
                     "x-b3-sampled",
                     "x-b3-flags",
                     "traceparent",
-                    "tracestate",
-                    "ot-tracer-traceid",
-                    "ot-tracer-spanid",
-                    "ot-tracer-sampled"
+                    "tracestate"
                   ],
                   "inject" : ["b3"],
                   "default_format" : "b3"

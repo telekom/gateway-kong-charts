@@ -1,0 +1,23 @@
+README.md
+  s_869815851b2cef::t_ba879762aa6922 898
+  s_869815851b2cef::t_73c6b615faf20e 916
+values.yaml
+  s_869815851b2cef::t_439d24290bce4a 514
+  s_869815851b2cef::t_f8f6d2d35d13ba 1227-1228
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.3",
+  "base_commit_sha": "3f0e8cf2b5264b640bac65bbabff9b81eaee8990",
+  "prompts": {},
+  "sessions": {
+    "s_869815851b2cef": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f560d26caffef3kOgZwJfNyFEM",
+        "model": "unknown"
+      },
+      "human_author": "Miká Juznik <mika.juznik@telekom.de>"
+    }
+  }
+}

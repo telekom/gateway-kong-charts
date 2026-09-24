@@ -1,0 +1,26 @@
+values.yaml
+  h_052be7cb63ce69 880
+README.md
+  s_c7528081df130b::t_6f70fea9860d10 821
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "b59d7e6f5a8fe62c8a901918473a4be7b4a43efc",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_c7528081df130b": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f325c85daffeCqOPtO7PYGjMPR",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

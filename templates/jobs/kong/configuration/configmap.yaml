@@ -32,7 +32,7 @@ data:
 
     echo ""
     echo "2) Create request transformer plugin for setting api key header"
-    export X_TARDIS_GATEWAY_ADMIN_BASE64=$(echo -n "admin:$X_TARDIS_GATEWAY_ADMIN" | base64)
+    export X_TARDIS_GATEWAY_ADMIN_BASE64=$(echo -n "admin:$X_TARDIS_GATEWAY_ADMIN" | base64 -w0)
     curl --request PUT \
       --url {{ $apiUrl }}/services/{{ include "kong.adminApi.name" . }}/plugins/{{ .Values.plugins.requestTransformer.pluginId }} \
       --header 'Content-Type: application/json' \

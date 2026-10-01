@@ -18,6 +18,8 @@ spec:
   backoffLimit: {{ .Values.setupJobs.backoffLimit | default 15 }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds | default 3600 }}
   template:
+    metadata:
+      labels: {{ include "gatewaySetup.labels" $ | nindent 8 }}
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
@@ -61,8 +63,23 @@ spec:
                   "service.name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}"
                 },
                 "local_service_name" : "{{ .Values.plugins.opentelemetry.defaultServiceName | default .Values.global.tracing.defaultServiceName }}",
+                "environment" : "{{ .Values.plugins.opentelemetry.environment | default .Values.global.environment | default "default" }}",
                 "zone" : "{{ .Values.plugins.opentelemetry.zone | default .Values.global.zone | default "unknown" }}",
-                "header_type" : "{{ .Values.plugins.opentelemetry.headerType | default "b3" }}"
+                "propagation" : {
+                  "extract" : ["b3", "w3c"],
+                  "clear" : [
+                    "b3",
+                    "x-b3-traceid",
+                    "x-b3-spanid",
+                    "x-b3-parentspanid",
+                    "x-b3-sampled",
+                    "x-b3-flags",
+                    "traceparent",
+                    "tracestate"
+                  ],
+                  "inject" : ["b3"],
+                  "default_format" : "b3"
+                }
               }
             }'`
 

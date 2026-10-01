@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2025-2026 Deutsche Telekom AG
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -30,15 +30,31 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  # The chart deliberately fails rendering on unset required values, and the key rotation
-  # components are off by default, so linting needs both overridden.
-  HELM_OPTIONS: "--set global.failOnUnsetValues=false --set keyRotation.enabled=true"
   HELM_DOCS_VERSION: "1.14.2"
+  KUBERNETES_VERSION: "1.32.4" # Also bump this version in lefthook.yml
+  KUBECONFORM_VERSION: "0.8.0"
+  KUBE_LINTER_VERSION: "0.8.3"
 
 jobs:
   lint-chart:
-    name: Lint and render chart
+    name: Lint and render chart (${{ matrix.scenario }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: default
+            values: -f ci/profiles/base.yaml
+          - scenario: argo-rollouts
+            values: -f ci/profiles/base.yaml -f ci/profiles/argo-rollouts.yaml
+          - scenario: keda
+            values: -f ci/profiles/base.yaml -f ci/profiles/keda.yaml
+          - scenario: hpa-optional-resources
+            values: -f ci/profiles/base.yaml -f ci/profiles/hpa-optional-resources.yaml
+          - scenario: jumper-management-port
+            values: -f ci/profiles/base.yaml -f ci/profiles/jumper-management-port.yaml
+          - scenario: otlp
+            values: -f ci/profiles/base.yaml -f ci/profiles/otlp.yaml
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -46,11 +62,34 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 #v5.0.0
 
+      - name: Install kubeconform
+        run: |
+          set -euo pipefail
+          wget -q "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" -O - | sudo tar -xzf - -C /usr/local/bin kubeconform
+
+      - name: Install kube-linter
+        run: |
+          set -euo pipefail
+          wget -q "https://github.com/stackrox/kube-linter/releases/download/v${KUBE_LINTER_VERSION}/kube-linter-linux.tar.gz" -O - | sudo tar -xzf - -C /usr/local/bin kube-linter
+
       - name: Lint chart
-        run: helm lint . ${HELM_OPTIONS}
+        run: helm lint . ${{ matrix.values }}
 
       - name: Render chart
-        run: helm template . ${HELM_OPTIONS} > /dev/null
+        run: helm template . ${{ matrix.values }} > "$RUNNER_TEMP/rendered.yaml"
+
+      - name: Validate Kubernetes schemas
+        run: |
+          kubeconform \
+            -strict \
+            -summary \
+            -kubernetes-version "${KUBERNETES_VERSION}" \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            "$RUNNER_TEMP/rendered.yaml"
+
+      - name: Lint Kubernetes resources
+        run: kube-linter lint "$RUNNER_TEMP/rendered.yaml" --fail-if-no-objects-found --format plain
 
   check-docs:
     name: Check generated README
@@ -61,6 +100,7 @@ jobs:
 
       - name: Install helm-docs
         run: |
+          set -euo pipefail
           wget -q "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" -O - | tar -xzf - helm-docs
           chmod +x ./helm-docs
           sudo mv ./helm-docs /usr/local/bin/helm-docs

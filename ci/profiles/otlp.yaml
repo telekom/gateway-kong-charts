@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Covers the OpenTelemetry trace exporter with fixed B3 wire propagation.
+global:
+  tracing:
+    exporter: otlp
+    collectorUrl: "http://otel-collector:4318/v1/traces"

@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -19,6 +19,10 @@ spec:
     protocol: TCP
   - name: jumper-metrics
     port: 9544
+{{- if .Values.jumper.managementPort }}
+    targetPort: jumper-mgmt
+{{- else }}
     targetPort: jumper
+{{- end }}
     protocol: TCP
 {{- end -}}

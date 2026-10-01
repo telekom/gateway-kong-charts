@@ -24,22 +24,40 @@ pre-commit:
       glob: "{values.yaml,README.md.gotmpl,Chart.yaml,charts/**/values.yaml,README.md}"
       run: helm-docs && git add README.md
 
-    # Mirrors CI (.github/workflows/validate.yml). Same flags so local results
-    # match the gate. Runs when any chart source changes.
-    - name: helm-lint
-      glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*}"
-      run: helm lint . --set global.failOnUnsetValues=false --set keyRotation.enabled=true
-      fail_text: "helm lint failed (or helm missing — see CONTRIBUTING.md)."
+    # Mirrors CI (.github/workflows/validate.yml). Same scenarios so local results
+    # match the gate. Runs when chart sources or render profiles change.
+    - name: chart-validation
+      glob: "{Chart.yaml,values.yaml,templates/**/*,charts/**/*,ci/profiles/*.yaml}"
+      run: |
+        manifest="$(mktemp "${TMPDIR:-/tmp}/gateway-kong-manifest.XXXXXX.yaml")"
+        trap 'rm -f "$manifest"' EXIT
 
+        validate() {
+          helm lint . -f ci/profiles/base.yaml "$@" || exit 1
+          helm template . -f ci/profiles/base.yaml "$@" > "$manifest" || exit 1
+          kubeconform \
+            -strict \
+            -summary \
+            -kubernetes-version 1.32.4 \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            "$manifest" || exit 1
+          kube-linter lint "$manifest" --fail-if-no-objects-found --format plain || exit 1
+        }
+
+        validate
+        for profile in argo-rollouts keda hpa-optional-resources jumper-management-port otlp; do
+          validate -f "ci/profiles/${profile}.yaml"
+        done
+      fail_text: "Chart validation failed (or a required tool is missing; see CONTRIBUTING.md)."
     # No CI equivalent — local secret scan over staged changes.
     - name: gitleaks
       run: gitleaks git --staged --no-banner --redact
       fail_text: "Possible secret detected (or gitleaks missing — see CONTRIBUTING.md)."
 
-    # Mirrors CI (.github/workflows/validate.yml). Whole-project scan:
-    # any file missing an SPDX header breaks compliance.
+    # Check only staged files locally; CI checks the whole project.
     - name: reuse
-      run: reuse lint
+      run: reuse lint-file {staged_files}
       fail_text: "REUSE/SPDX non-compliant (or reuse missing — see CONTRIBUTING.md)."
 
 commit-msg:

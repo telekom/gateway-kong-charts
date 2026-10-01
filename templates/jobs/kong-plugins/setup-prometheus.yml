@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -18,6 +18,8 @@ spec:
   backoffLimit: {{ .Values.setupJobs.backoffLimit }}
   activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds }}
   template:
+    metadata:
+      labels: {{ include "gatewaySetup.labels" $ | nindent 8 }}
     spec:
       {{- include "image_pull_secrets" $ | indent 6 }}
       securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}

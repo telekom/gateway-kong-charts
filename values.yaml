@@ -71,7 +71,8 @@ global:
   tracing:
     # -- Active trace exporter for the whole gateway: 'zipkin' or 'otlp'.
     # Selects which Kong tracing plugin is configured (zipkin vs opentelemetry)
-    # and which exporter Jumper uses. Exactly one is active at runtime.
+    # and which exporter Jumper uses. Exactly one is active at runtime. Kong
+    # accepts B3 and W3C trace contexts and emits only B3 multi headers.
     exporter: "zipkin"
     # -- Trace collector URL, used VERBATIM by both Kong and Jumper (no path is
     # appended or stripped by the chart). Provide the FULL endpoint URL matching
@@ -128,7 +129,7 @@ image:
   # namespace: ""  # Override global.image.namespace
   repository: kong
   # -- Kong Gateway image tag
-  tag: "1.7.1"
+  tag: "1.7.2"
 
 # -- Image pull policy for Kong container
 imagePullPolicy: IfNotPresent
@@ -832,8 +833,6 @@ plugins:
     #zone: null
     # -- Force sampling for all requests
     #forceSample: true
-    # -- Trace header type (b3 or w3c)
-    #headerType: "b3"
     # -- Include consumer credentials in trace metadata
     #includeCredential: "true"
     # -- Service name displayed in tracing UI
@@ -862,8 +861,6 @@ plugins:
     #sampleRatio: 1
     # -- Zone name for traces
     #zone: null
-    # -- Trace header type / propagation format (b3 keeps continuity with Jumper)
-    #headerType: "b3"
     # -- Service name displayed in tracing UI (set as the service.name resource attribute)
     #defaultServiceName: "stargate"
     # -- Kong built-in tracing instrumentations required for native span generation
@@ -880,13 +877,15 @@ jumper:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: jumper
-    tag: "5.0.0-rc.1"
+    tag: "5.0.0-rc.2"
 
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent
 
   # -- Jumper container port
   port: 8080
+  # -- (int) Optional dedicated Jumper management port. Use an integer that differs from other enabled listener ports.
+  managementPort: null
 
   # -- Issuer service URL for gateway token issuance (your gateway's auth realm endpoint)
   issuerUrl: https://<your-gateway-host>/auth/realms/default
@@ -907,7 +906,7 @@ jumper:
   # -- Jumper liveness probe configuration
   livenessProbe:
     httpGet:
-      path: /actuator/health/liveness
+      path: /livez
       port: jumper
       scheme: HTTP
     timeoutSeconds: 5
@@ -915,14 +914,14 @@ jumper:
   # -- Jumper readiness probe configuration
   readinessProbe:
     httpGet:
-      path: /actuator/health/readiness
+      path: /readyz
       port: jumper
       scheme: HTTP
     initialDelaySeconds: 20
   # -- Jumper startup probe configuration
   startupProbe:
     httpGet:
-      path: /actuator/health/readiness
+      path: /readyz
       port: jumper
       scheme: HTTP
     initialDelaySeconds: 15
@@ -1225,6 +1224,8 @@ keyRotation:
 pdb:
   # -- Enable PodDisruptionBudget creation
   create: false
+  # -- Policy for evicting unhealthy pods. Leave unset for clusters that do not support this field
+  unhealthyPodEvictionPolicy:
   # -- Minimum available pods (number or percentage)
   minAvailable:
   # -- Maximum unavailable pods (number or percentage, defaults to 1 if both unset)

@@ -1,5 +1,5 @@
 {{/*
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: Apache-2.0
 */}}
@@ -22,6 +22,14 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
 {{- define "common.labels.classification" -}}
 ei.telekom.de/zone: {{ .Values.global.zone }}
 ei.telekom.de/environment: {{ .Values.global.environment }}
+{{- end -}}
+
+{{/*
+Stable labels for pods that configure Kong through its Admin API.
+*/}}
+{{- define "gatewaySetup.labels" -}}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: gateway-setup
 {{- end -}}
 
 {{/*

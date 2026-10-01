@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+kedaAutoscaling:
+  enabled: true
+  triggers:
+    prometheus:
+      # TODO: Remove when KEDA can render without a Prometheus endpoint by default.
+      serverAddress: http://prometheus.example

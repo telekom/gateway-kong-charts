@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2023-2025 Deutsche Telekom AG
+SPDX-FileCopyrightText: 2023-2026 Deutsche Telekom AG
 
 SPDX-License-Identifier: CC0-1.0
 -->
@@ -178,16 +178,19 @@ Each container has its own `readinessProbe`, `livenessProbe`, and `startupProbe`
 - `http://localhost:8100/status` as readiness probe for Kong
 - `http://localhost:8100/status` as liveness probe for Kong
 - `http://localhost:8100/status` as startup probe for Kong
-- `http://localhost:8080/actuator/health/readiness` as readiness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as liveness probe for each Jumper container ("jumper")
-- `http://localhost:8080/actuator/health/liveness` as startup probe for each Jumper container ("jumper")
+- `http://localhost:8080/readyz` as the default Jumper readiness and startup probe
+- `http://localhost:8080/livez` as the default Jumper liveness probe
 - `http://localhost:8081/health` as readiness probe for each Issuer-service container
 - `http://localhost:8081/health` as liveness probe for each Issuer-service container
 - `http://localhost:8081/health` as startup probe for each Issuer-service container
 
 **Configuration:**
 
-Each component has dedicated probe settings in `values.yaml`. Undefined values use Kubernetes defaults.
+Each component has dedicated probe settings in `values.yaml`. The chart supplies the defaults shown above.
+
+Set `jumper.managementPort` to expose Jumper management endpoints on a dedicated container port. Health probes remain on the application port.
+
+If you enable `networkPolicy.enabled` with `jumper.managementPort`, add a custom `networkPolicy.ingress` rule that allows the named destination port `jumper-mgmt`. The default NetworkPolicy does not automatically allow this dedicated port.
 
 | Component        | Helm Values                                                                               |
 | ---------------- | ----------------------------------------------------------------------------------------- |
@@ -777,15 +780,15 @@ The following table provides a comprehensive list of all configurable parameters
 | global.preStopSleepBase | int | `15` | Base sleep duration in seconds for pre-stop lifecycle hook |
 | global.tracing.collectorUrl | string | `"http://guardians-drax-collector.skoll:9411/api/v2/spans"` | Trace collector URL, used VERBATIM by both Kong and Jumper (no path is appended or stripped by the chart). Provide the FULL endpoint URL matching the selected `exporter`:   * exporter=zipkin -> full Zipkin v2 spans endpoint INCLUDING the path,       e.g. "http://collector:9411/api/v2/spans"   * exporter=otlp   -> full OTLP/HTTP traces endpoint INCLUDING the path,       e.g. "http://collector:4318/v1/traces" The same URL is applied to every target:   * Kong   + zipkin -> plugin `http_endpoint`   * Kong   + otlp   -> plugin `traces_endpoint`   * Jumper + zipkin -> TRACING_URL (Spring Boot zipkin endpoint)   * Jumper + otlp   -> TRACING_URL (Spring Boot otlp endpoint) Must include the http(s) scheme. IMPORTANT: when you switch `exporter`, update this URL to the target collector's protocol port AND path (Zipkin and OTLP usually listen on different ports/paths, e.g. 9411/api/v2/spans vs 4318/v1/traces). |
 | global.tracing.defaultServiceName | string | `"stargate"` | Service name displayed in tracing UI |
-| global.tracing.exporter | string | `"zipkin"` | Active trace exporter for the whole gateway: 'zipkin' or 'otlp'. Selects which Kong tracing plugin is configured (zipkin vs opentelemetry) and which exporter Jumper uses. Exactly one is active at runtime. |
+| global.tracing.exporter | string | `"zipkin"` | Active trace exporter for the whole gateway: 'zipkin' or 'otlp'. Selects which Kong tracing plugin is configured (zipkin vs opentelemetry) and which exporter Jumper uses. Exactly one is active at runtime. Kong accepts B3 and W3C trace contexts and emits only B3 multi headers. |
 | global.tracing.sampleRatio | int | `1` | Sample ratio for requests without trace IDs (0=off, 1=all requests) |
 | global.zone | string | `"default"` | Zone identifier for the gateway instance (must match control plane configuration) |
 | hpaAutoscaling | object | `{"cpuUtilizationPercentage":80,"enabled":false,"maxReplicas":10,"minReplicas":3}` | Horizontal Pod Autoscaler configuration |
 | hpaAutoscaling.cpuUtilizationPercentage | int | `80` | Target CPU utilization percentage |
 | hpaAutoscaling.maxReplicas | int | `10` | Maximum number of replicas |
 | hpaAutoscaling.minReplicas | int | `3` | Minimum number of replicas |
-| image | object | `{"repository":"kong","tag":"1.7.1"}` | Kong Gateway image configuration (inherits from global.image) |
-| image.tag | string | `"1.7.1"` | Kong Gateway image tag |
+| image | object | `{"repository":"kong","tag":"1.7.2"}` | Kong Gateway image configuration (inherits from global.image) |
+| image.tag | string | `"1.7.2"` | Kong Gateway image tag |
 | imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Kong container |
 | imageVerification.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000}` | Container security context for verification InitContainer |
 | imageVerification.enabled | bool | `false` | Enable cosign image signature verification (disable if using Kyverno policy) |
@@ -816,18 +819,19 @@ The following table provides a comprehensive list of all configurable parameters
 | jumper.enabled | bool | `true` | Enable Jumper container deployment |
 | jumper.environment | list | `[]` | Additional environment variables for Jumper container - {name: foo, value: bar} |
 | jumper.existingJwkSecretName | string | `nil` | Existing JWK secret name for OAuth token issuance (alternative to keyRotation.enabled=true) Must be compatible with gateway-rotator format: https://github.com/telekom/gateway-rotator#key-rotation-process |
-| jumper.image | object | `{"repository":"jumper","tag":"5.0.0-rc.1"}` | Jumper image configuration (inherits from global.image) |
+| jumper.image | object | `{"repository":"jumper","tag":"5.0.0-rc.2"}` | Jumper image configuration (inherits from global.image) |
 | jumper.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for Jumper container |
 | jumper.internetFacingZones | list | `[]` | List of zones that are considered internet-facing (empty list uses Jumper's default configuration) Example: [space, canis, aries] |
 | jumper.issuerUrl | string | `"https://<your-gateway-host>/auth/realms/default"` | Issuer service URL for gateway token issuance (your gateway's auth realm endpoint) |
 | jumper.jvmOpts | string | `"-XX:MaxRAMPercentage=75.0 -Dreactor.netty.pool.leasingStrategy=lifo"` | JVM options for Jumper |
-| jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/actuator/health/liveness","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | Jumper liveness probe configuration |
+| jumper.livenessProbe | object | `{"failureThreshold":6,"httpGet":{"path":"/livez","port":"jumper","scheme":"HTTP"},"timeoutSeconds":5}` | Jumper liveness probe configuration |
+| jumper.managementPort | int | `nil` | Optional dedicated Jumper management port. Use an integer that differs from other enabled listener ports. |
 | jumper.port | int | `8080` | Jumper container port |
 | jumper.publishEventUrl | string | `"http://producer.integration:8080/v1/events"` | Event publisher URL |
-| jumper.readinessProbe | object | `{"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":20}` | Jumper readiness probe configuration |
+| jumper.readinessProbe | object | `{"httpGet":{"path":"/readyz","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":20}` | Jumper readiness probe configuration |
 | jumper.resources | object | `{"limits":{"cpu":"1500m","memory":"1Gi"},"requests":{"cpu":"1500m","memory":"1Gi"}}` | Jumper container resource limits and requests |
 | jumper.stargateUrl | string | `"https://<your-gateway-host>"` | Gateway URL for Gateway-to-Gateway communication |
-| jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/actuator/health/readiness","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
+| jumper.startupProbe | object | `{"failureThreshold":285,"httpGet":{"path":"/readyz","port":"jumper","scheme":"HTTP"},"initialDelaySeconds":15,"periodSeconds":1}` | Jumper startup probe configuration |
 | jumper.warmup | object | `{"enabled":false,"urls":[]}` | Warmup configuration for cold start optimization |
 | jumper.warmup.enabled | bool | `false` | Enable warmup on startup (set to false to completely disable) |
 | jumper.warmup.urls | list | `[]` | List of URLs to warm up (DNS, TLS handshake, connection pool, LMS token generation) Example: [https://iris.2.2.2.2.nip.io, https://iris.3.3.3.3.nip.io] |
@@ -910,6 +914,7 @@ The following table provides a comprehensive list of all configurable parameters
 | pdb.create | bool | `false` | Enable PodDisruptionBudget creation |
 | pdb.maxUnavailable | string | `nil` | Maximum unavailable pods (number or percentage, defaults to 1 if both unset) |
 | pdb.minAvailable | string | `nil` | Minimum available pods (number or percentage) |
+| pdb.unhealthyPodEvictionPolicy | string | `nil` | Policy for evicting unhealthy pods. Leave unset for clusters that do not support this field |
 | plugins.acl.pluginId | string | `"bc823d55-83b5-4184-b03f-ce63cd3b75c7"` | Plugin ID for Kong configuration |
 | plugins.containerSecurityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":100}` | Container security context for plugin containers |
 | plugins.enabled | list | `["rate-limiting-merged"]` | Additional Kong plugins to enable (beyond bundled and jwt-keycloak) |

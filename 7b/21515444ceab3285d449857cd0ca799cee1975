@@ -1,0 +1,24 @@
+lefthook.yml
+  s_2488cff59a3a04::t_13cb317471b60d 49-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "7b21515444ceab3285d449857cd0ca799cee1975",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_2488cff59a3a04": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc76142f5ffebEvmo6boiqnGvq",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

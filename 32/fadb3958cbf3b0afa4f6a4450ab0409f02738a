@@ -1,0 +1,43 @@
+README.md
+  s_b57cbc5f319b05::t_306406579e358c 978-981
+CONTRIBUTING.md
+  s_b57cbc5f319b05::t_2b59952137f44c 36
+  s_b57cbc5f319b05::t_7753bf64fbe01d 33-35
+lefthook.yml
+  s_b57cbc5f319b05::t_940117dd9af34f 24
+  h_052be7cb63ce69 48
+  s_b57cbc5f319b05::t_6be23144101fc1 36
+  s_b57cbc5f319b05::t_d3dcabb6ab9a67 37-43
+  s_b57cbc5f319b05::t_bd1ba5847447a5 8-13,16-23,25-31,33-35,44-47,49-54
+  s_b57cbc5f319b05::t_75b0cc7ed4be83 1
+  s_b57cbc5f319b05::t_b7a205e0d769b6 2-7,14-15
+  s_b57cbc5f319b05::t_6feb6d13d1cc8a 32
+committed.toml
+  s_b57cbc5f319b05::t_630570c9bb2bb6 1-14,19-20
+  s_b57cbc5f319b05::t_a20847ba632504 15-18
+.github/workflows/helm-docs.yml
+  s_b57cbc5f319b05::t_75bab92580076c 23
+README.md.gotmpl
+  s_b57cbc5f319b05::t_e102d71f0ce1eb 689-692
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "32fadb3958cbf3b0afa4f6a4450ab0409f02738a",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_b57cbc5f319b05": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06cab5002ffejTLKolz164CESd",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

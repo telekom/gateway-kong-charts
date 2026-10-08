@@ -1,0 +1,21 @@
+CONTRIBUTING.md
+  s_fd456e0253f865::t_5c36cef978191a 40-43,45-46,55,61-66,68-70,72-73,75,77,88-93,95-99,107-108,112-121,124-126
+.github/workflows/publish-oci.yml
+  s_fd456e0253f865::t_252a5d936864ad 171-173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "cc7b242898e577079fd402937a228bbc3219e539",
+  "prompts": {},
+  "sessions": {
+    "s_fd456e0253f865": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0518e2479ffeK6RAN4TQ7VYWtv",
+        "model": "claude-opus-5"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

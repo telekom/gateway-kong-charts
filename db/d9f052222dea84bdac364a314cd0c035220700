@@ -1,0 +1,26 @@
+.github/workflows/validate.yml
+  s_2488cff59a3a04::t_bcf7d55c45fb44 52
+  s_2488cff59a3a04::t_8bf746a7e8cf0e 39-51,53-60,63,67-69,88-94,99-103
+  s_2488cff59a3a04::t_e2a433d2088761 97-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "dbd9f052222dea84bdac364a314cd0c035220700",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_2488cff59a3a04": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc76142f5ffebEvmo6boiqnGvq",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

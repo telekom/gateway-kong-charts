@@ -1,0 +1,40 @@
+README.md
+  s_ddc3654d632880::t_d6c92a0a8fd79e 721
+  s_ddc3654d632880::t_f6f569d32b787c 897
+  s_ddc3654d632880::t_b87c2a743240b1 422-424,704,732,737,740
+docs/ARGO_ROLLOUTS_FEATURE.md
+  s_ddc3654d632880::t_a0a67eb7fefe82 79,92-96,99-101
+values.yaml
+  s_ddc3654d632880::t_a0a67eb7fefe82 1384-1385,1403
+  s_ddc3654d632880::t_0059ba47047089 513
+  s_ddc3654d632880::t_671833e4efc70b 1462
+README.md.gotmpl
+  s_ddc3654d632880::t_a0a67eb7fefe82 422-424
+.github/workflows/validate.yml
+  s_ddc3654d632880::t_671833e4efc70b 33,39,41-43,53,56
+  s_ddc3654d632880::t_e31d2fc451c82c 44
+ci/profiles/full.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-21
+ci/profiles/default.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-6
+ci/profiles/argo-rollouts.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-6
+ci/profiles/keda.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "e0a56e39198c94837a4bc6bd65e57a27eb3f60d2",
+  "prompts": {},
+  "sessions": {
+    "s_ddc3654d632880": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00f0ed7c6ffeLj4UZK4JxKD5aw",
+        "model": "unknown"
+      },
+      "human_author": "Miká Juznik <mika.juznik@telekom.de>"
+    }
+  }
+}

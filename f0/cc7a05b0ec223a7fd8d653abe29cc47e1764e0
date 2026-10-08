@@ -1,0 +1,67 @@
+.github/workflows/release.yml
+  s_fd456e0253f865::t_5565cb387ab2a0 9
+  s_9155d6d01e8598::t_eff7764687f062 80,83-89,91-96,98
+  s_fd456e0253f865::t_32c306f9a95b39 1,7-8,17,19,21-22,24-27,31,40,43,46-49,51-67
+  s_9155d6d01e8598::t_cfef9ef282fe5c 76-79,81,97,99-113
+  s_9155d6d01e8598::t_72b6be91e44622 10-16
+  s_9155d6d01e8598::t_f88ab955e42ea5 82,90
+  s_9155d6d01e8598::t_e58d421c2c6a1b 37-38
+lefthook.yml
+  s_fd456e0253f865::t_a7fc00902f48cf 27,39
+README.md.gotmpl
+  s_fd456e0253f865::t_02f8084c8193a7 26,29
+release.config.js
+  s_fd456e0253f865::t_ac3efcdee4c4f7 1-63,66-75
+  s_fd456e0253f865::t_1c27c77edc0da2 64-65
+CONTRIBUTING.md
+  s_fd456e0253f865::t_5c36cef978191a 41-42,51,57-62,64-66,68-69,71,73,84-89,91-96,99-101
+  s_fd456e0253f865::t_3f1c824822a056 19
+  s_fd456e0253f865::t_78592b76606813 37-40,43-50,52-56,63,67,70,72,74-83,90,97-98,102
+.github/workflows/validate.yml
+  s_9155d6d01e8598::t_bacdf21a7d991b 98-100
+  s_fd456e0253f865::t_d320b10107c9c6 36
+  s_fd456e0253f865::t_e7e84f16fd795a 1,3,5,7-21,26-31,33-34,39-40,45,48-56,61-62,64-97,101-103
+.github/workflows/publish-oci.yml
+  s_fd456e0253f865::t_99fedf0a7b4a30 50,55
+  s_fd456e0253f865::t_cbd880ecc25ae7 82
+  s_fd456e0253f865::t_d320b10107c9c6 34
+  s_fd456e0253f865::t_3b5f89d96f4ebb 1,9,17,32-33,39,42,45,47,51-54,56-60,65,67-68,70,72-75,77,79-81,83-91,93-95,103,107,109,112-115,117-123
+  s_fd456e0253f865::t_b53f6153134bfd 7-8
+  s_fd456e0253f865::t_ebaceeb4c8c30d 92
+  s_fd456e0253f865::t_07450520304d90 96-98,106,108,110-111,116,124-127,134
+  s_fd456e0253f865::t_94fa27bc0689bc 128,131-133,135-145
+  s_fd456e0253f865::t_25eeaee03f963e 104
+  s_fd456e0253f865::t_7b2f11a64254be 35-36
+  s_fd456e0253f865::t_190043514fb660 99-102
+  s_fd456e0253f865::t_50c9a5a5411343 105
+  s_9155d6d01e8598::t_0a7e2a9904839b 10-14,21-26,37-38,48
+  s_fd456e0253f865::t_252a5d936864ad 129-130
+CHANGELOG.md
+  s_fd456e0253f865::t_407f9f5755de96 10
+README.md
+  s_fd456e0253f865::t_bf5617c1484bd7 26,29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f0cc7a05b0ec223a7fd8d653abe29cc47e1764e0",
+  "prompts": {},
+  "sessions": {
+    "s_9155d6d01e8598": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_04e54ea97ffetQh0mqHW2ZHMy8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    },
+    "s_fd456e0253f865": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0518e2479ffeK6RAN4TQ7VYWtv",
+        "model": "claude-opus-5"
+      },
+      "human_author": null
+    }
+  }
+}

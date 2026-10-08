@@ -1,0 +1,98 @@
+templates/jobs/kong/configuration/configmap.yaml
+  s_2488cff59a3a04::t_c1a85ee2d1d4ba 21,29-31,37,51,77,86,101,111
+templates/service-proxy.yml
+  s_2488cff59a3a04::t_f812e9877ac912 24
+README.md.gotmpl
+  s_2488cff59a3a04::t_4170198e16546c 238,240
+  s_2488cff59a3a04::t_d6910baba865f4 236-237,239,241
+lefthook.yml
+  s_2488cff59a3a04::t_4170198e16546c 52-60
+  s_2488cff59a3a04::t_e0efb005c5fdbf 67-68,70
+templates/ingress-admin.yml
+  s_2488cff59a3a04::t_f812e9877ac912 8-9
+templates/_kong.tpl
+  s_2488cff59a3a04::t_2a6832b2f1f7ae 83
+  s_2488cff59a3a04::t_c1a85ee2d1d4ba 60-71,76-82,84-85,479,648,653
+  s_2488cff59a3a04::t_f812e9877ac912 72-75
+templates/ingress-proxy.yml
+  s_2488cff59a3a04::t_f812e9877ac912 8
+.github/workflows/validate.yml
+  s_2488cff59a3a04::t_d6910baba865f4 56-57,60-61,64-65
+  s_2488cff59a3a04::t_4170198e16546c 58-59,62-63,66-67,91-93
+  s_f8bebf21be5b0c::t_a3538976ea4a51 94
+templates/service-admin.yml
+  s_2488cff59a3a04::t_c1a85ee2d1d4ba 16-18
+values.yaml
+  s_2488cff59a3a04::t_d6910baba865f4 153,155-156
+ci/profiles/admin-api-tls-insecure-zipkin.yaml
+  s_2488cff59a3a04::t_d6910baba865f4 1-15
+ci/profiles/admin-api-tls-secure.yaml
+  s_2488cff59a3a04::t_4170198e16546c 5-6,13-16
+  s_2488cff59a3a04::t_d6910baba865f4 1-4,7-12
+templates/networkpolicy.yaml
+  s_2488cff59a3a04::t_c1a85ee2d1d4ba 35
+README.md
+  s_e1f3b9ce6438b2::t_eabd451dd0881b 236-237,239,241,709-710
+  s_2488cff59a3a04::t_7de97be520fc5e 238,240
+templates/jobs/kong/configuration/job.yml
+  s_2488cff59a3a04::t_c1a85ee2d1d4ba 36
+templates/jobs/kong-plugins/setup-zipkin.yml
+  s_2488cff59a3a04::t_3f9c3db9f7313a 32,39,45,76
+ci/profiles/admin-api-tls-insecure-otlp.yaml
+  s_2488cff59a3a04::t_d6910baba865f4 1-15
+ci/assert-admin-api-tls.sh
+  s_2488cff59a3a04::t_61a9155f719346 14
+  s_2488cff59a3a04::t_69e3a8e9000341 15-16
+  s_2488cff59a3a04::t_4170198e16546c 1-13,17-65
+templates/jobs/kong-plugins/migration-zipkin.yml
+  s_2488cff59a3a04::t_dd323cb2d58f7f 33,40,46
+templates/jobs/kong-plugins/setup-request-size-limiting.yml
+  s_2488cff59a3a04::t_3f9c3db9f7313a 33,40,46
+templates/deployment.yml
+  s_2488cff59a3a04::t_c1a85ee2d1d4ba 202-203
+  s_2488cff59a3a04::t_204c22858fd0ac 201
+  s_2488cff59a3a04::t_571d2a3bfeef97 205
+templates/jobs/kong-plugins/setup-opentelemetry.yml
+  s_2488cff59a3a04::t_3f9c3db9f7313a 32,39,45,76
+templates/jobs/kong-plugins/migration-opentelemetry.yml
+  s_2488cff59a3a04::t_dd323cb2d58f7f 33,40,46
+templates/jobs/kong-plugins/setup-prometheus.yml
+  s_2488cff59a3a04::t_3f9c3db9f7313a 32,39,45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "4124564e8546b3d88d2cc2cc0ba1581810fc1542",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_2488cff59a3a04": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc76142f5ffebEvmo6boiqnGvq",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    },
+    "s_e1f3b9ce6438b2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc708ac04ffend0NKAkdJFViaZ",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    },
+    "s_f8bebf21be5b0c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fc71411c5ffed2KQR44wikB04K",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

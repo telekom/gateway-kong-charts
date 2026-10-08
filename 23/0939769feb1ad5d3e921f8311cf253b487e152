@@ -1,0 +1,44 @@
+ci/profiles/full.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-4,6,14-26
+  s_ddc3654d632880::t_e655e61b4fc3f3 7,11-12
+  s_ddc3654d632880::t_c4dc33b4ada88d 8-10
+  s_ddc3654d632880::t_1b99c3c42f1dde 5,13
+ci/profiles/keda.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-4,12-13
+  s_ddc3654d632880::t_1b99c3c42f1dde 5
+  s_ddc3654d632880::t_739dc44357f938 16
+  s_ddc3654d632880::t_e655e61b4fc3f3 6-11
+  s_ddc3654d632880::t_eaf5b3b35e3182 14-15
+  s_ddc3654d632880::t_40c6553223d911 17
+.github/workflows/validate.yml
+  s_ddc3654d632880::t_e655e61b4fc3f3 51,54
+  s_ddc3654d632880::t_671833e4efc70b 37,39-41
+  s_ddc3654d632880::t_e31d2fc451c82c 42
+ci/profiles/argo-rollouts.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-4,12-13
+  s_ddc3654d632880::t_1b99c3c42f1dde 5
+  s_ddc3654d632880::t_739dc44357f938 16
+  s_ddc3654d632880::t_e655e61b4fc3f3 6-11
+  s_ddc3654d632880::t_24fa05deeff096 14-15
+  s_ddc3654d632880::t_91eecfc9530c3a 17
+ci/profiles/default.yaml
+  s_ddc3654d632880::t_671833e4efc70b 1-4
+  s_ddc3654d632880::t_e655e61b4fc3f3 6-10
+  s_ddc3654d632880::t_1b99c3c42f1dde 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "230939769feb1ad5d3e921f8311cf253b487e152",
+  "prompts": {},
+  "sessions": {
+    "s_ddc3654d632880": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00f0ed7c6ffeLj4UZK4JxKD5aw",
+        "model": "unknown"
+      },
+      "human_author": null
+    }
+  }
+}

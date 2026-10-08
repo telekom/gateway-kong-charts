@@ -1,0 +1,29 @@
+lefthook.yml
+  s_400751232e2151::t_e6d232cd2139a0 32
+.github/workflows/validate.yml
+  s_400751232e2151::t_95abd3a57a3f66 63,68,99
+templates/pdb.yml
+  s_400751232e2151::t_c0856265ba15e8 14-16
+values.yaml
+  s_400751232e2151::t_c0856265ba15e8 1228-1229
+ci/profiles/hpa-optional-resources.yaml
+  s_400751232e2151::t_c0856265ba15e8 14
+README.md
+  s_400751232e2151::t_1d27bef5e30795 912
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "763ac22e60becde2e18b3b74da482aab60e89359",
+  "prompts": {},
+  "sessions": {
+    "s_400751232e2151": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fe1e896adffewrVDCGcFTliGxg",
+        "model": "unknown"
+      },
+      "human_author": "Miká Juznik <mika.juznik@telekom.de>"
+    }
+  }
+}

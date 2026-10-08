@@ -1,0 +1,14 @@
+values.yaml
+  h_aba7680b01ede6 883
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "d47b7adeb929a7c0d3b17793fdf058fa0378435c",
+  "prompts": {},
+  "humans": {
+    "h_aba7680b01ede6": {
+      "author": "Elmar Meuthen <elmar.meuthen@telekom.de>"
+    }
+  }
+}

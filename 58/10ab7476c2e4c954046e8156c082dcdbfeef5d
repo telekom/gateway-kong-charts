@@ -1,0 +1,24 @@
+values.yaml
+  s_587bfffb9e5bff::t_71c3cf33f328eb 547
+  s_587bfffb9e5bff::t_543e8fb11866ff 545-546,548-549
+README.md
+  s_587bfffb9e5bff::t_b865ad328ee8e3 899
+templates/keda/scaledobject.yaml
+  s_587bfffb9e5bff::t_543e8fb11866ff 113-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5810ab7476c2e4c954046e8156c082dcdbfeef5d",
+  "prompts": {},
+  "sessions": {
+    "s_587bfffb9e5bff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_094bfab7effeUYII4IbIctpX4q",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}

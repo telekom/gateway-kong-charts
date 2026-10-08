@@ -1,0 +1,31 @@
+README.md
+  s_72ea080dfac928::t_f535fca3aa1485 782
+lefthook.yml
+  s_72ea080dfac928::t_fae2f84e22bb93 49
+templates/jobs/kong-plugins/setup-opentelemetry.yml
+  s_72ea080dfac928::t_b1732e5c6fc6d7 68-85
+templates/jobs/kong-plugins/setup-zipkin.yml
+  s_72ea080dfac928::t_b1732e5c6fc6d7 68-85
+values.yaml
+  s_72ea080dfac928::t_fdd45f6787d42b 74-75
+ci/profiles/otlp.yaml
+  s_72ea080dfac928::t_fae2f84e22bb93 1-9
+.github/workflows/validate.yml
+  s_72ea080dfac928::t_fae2f84e22bb93 56-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "44fd5400942341693365bbb9ccc92590c24c330a",
+  "prompts": {},
+  "sessions": {
+    "s_72ea080dfac928": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9d756490ffe7lBz1LRjFgy6js",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "luis.pflamminger@telekom.de <luis.pflamminger@telekom.de>"
+    }
+  }
+}

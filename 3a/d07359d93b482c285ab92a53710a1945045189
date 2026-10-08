@@ -1,0 +1,14 @@
+README.md
+  h_052be7cb63ce69 818
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3ad07359d93b482c285ab92a53710a1945045189",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

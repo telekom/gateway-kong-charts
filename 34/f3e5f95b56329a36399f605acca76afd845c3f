@@ -1,0 +1,24 @@
+lefthook.yml
+  s_b57cbc5f319b05::t_940117dd9af34f 16
+  s_b57cbc5f319b05::t_bb19616a0398ff 12-15,17-20
+README.md.gotmpl
+  s_b57cbc5f319b05::t_ebfd6449c552b0 708-711
+README.md
+  s_b57cbc5f319b05::t_16eec9f9b6da5b 997-1000
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "34f3e5f95b56329a36399f605acca76afd845c3f",
+  "prompts": {},
+  "sessions": {
+    "s_b57cbc5f319b05": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06cab5002ffejTLKolz164CESd",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

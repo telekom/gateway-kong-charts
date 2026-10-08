@@ -1,0 +1,14 @@
+README.md.gotmpl
+  h_052be7cb63ce69 709,711-719
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2fca4d29a964d28092d1aa304e87478f0cc699bb",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

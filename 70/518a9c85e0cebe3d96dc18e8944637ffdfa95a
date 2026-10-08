@@ -1,0 +1,36 @@
+lefthook.yml
+  h_052be7cb63ce69 42
+  s_b57cbc5f319b05::t_bd1ba5847447a5 8-13,16-23,25-41,43-48
+README.md.gotmpl
+  s_b57cbc5f319b05::t_2bfc33b73e202d 709
+  s_b57cbc5f319b05::t_2e43373802a7ed 698,706
+  h_052be7cb63ce69 707
+committed.toml
+  s_b57cbc5f319b05::t_630570c9bb2bb6 1-14,19-20
+  s_b57cbc5f319b05::t_a20847ba632504 15-18
+README.md
+  s_b57cbc5f319b05::t_97b8d5cba0bbb0 987,995
+  s_b57cbc5f319b05::t_9b61aaed904cc3 998
+  s_b57cbc5f319b05::t_98fe77e1bef7e5 996
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "70518a9c85e0cebe3d96dc18e8944637ffdfa95a",
+  "prompts": {},
+  "humans": {
+    "h_052be7cb63ce69": {
+      "author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  },
+  "sessions": {
+    "s_b57cbc5f319b05": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06cab5002ffejTLKolz164CESd",
+        "model": "unknown"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}

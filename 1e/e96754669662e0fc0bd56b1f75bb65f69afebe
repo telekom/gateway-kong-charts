@@ -1,0 +1,16 @@
+README.md
+  h_65f5d22af11f8f 789-790
+values.yaml
+  h_65f5d22af11f8f 132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "1ee96754669662e0fc0bd56b1f75bb65f69afebe",
+  "prompts": {},
+  "humans": {
+    "h_65f5d22af11f8f": {
+      "author": "Miká Juznik <mika.juznik@telekom.de>"
+    }
+  }
+}

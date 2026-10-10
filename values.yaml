@@ -511,7 +511,7 @@ kedaAutoscaling:
 
     prometheus:
       # -- Enable Prometheus/Victoria Metrics based scaling
-      enabled: true
+      enabled: false
 
       # -- Victoria Metrics server address (REQUIRED if enabled)
       # Example: "http://prometheus.monitoring.svc.cluster.local:8427"
@@ -1224,8 +1224,8 @@ keyRotation:
 pdb:
   # -- Enable PodDisruptionBudget creation
   create: false
-  # -- Policy for evicting unhealthy pods. Leave unset for clusters that do not support this field
-  unhealthyPodEvictionPolicy:
+  # -- Policy for evicting unhealthy pods
+  unhealthyPodEvictionPolicy: AlwaysAllow
   # -- Minimum available pods (number or percentage)
   minAvailable:
   # -- Maximum unavailable pods (number or percentage, defaults to 1 if both unset)

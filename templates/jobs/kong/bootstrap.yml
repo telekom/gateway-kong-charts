@@ -23,6 +23,7 @@ spec:
         image: '{{ include "images.postgresql" $ }}'
         imagePullPolicy: {{ .Values.postgresql.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.postgresql.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
         command: ['/bin/bash']
         args: ['-c', 'until pg_isready -U {{ .Values.global.database.username }}; do echo waiting for database; sleep 2; done;']
         env:
@@ -32,6 +33,7 @@ spec:
         image: {{ include "images.kong" $ }}
         imagePullPolicy: {{ .Values.imagePullPolicy | default .Values.global.imagePullPolicy }}
         securityContext: {{ .Values.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
         env:
         {{- include "kong.migrations.env" $ | indent 8 }}
         command: [ "/bin/sh", "-c", "KONG_NGINX_DAEMON='off' kong migrations bootstrap" ]

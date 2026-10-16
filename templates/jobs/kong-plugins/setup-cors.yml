@@ -1,0 +1,97 @@
+{{/*
+SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if and (.Values.adminApi.enabled) (kindIs "bool" .Values.plugins.cors.enabled) }}
+{{- $config := dict }}
+{{- with .Values.plugins.cors.origins }}
+{{- $_ := set $config "origins" . }}
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-cors-setup
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  ttlSecondsAfterFinished: {{ .Values.setupJobs.ttlSecondsAfterFinished }}
+  backoffLimit: {{ .Values.setupJobs.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.setupJobs.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels: {{ include "gatewaySetup.labels" $ | nindent 8 }}
+    spec:
+      {{- include "image_pull_secrets" $ | indent 6 }}
+      securityContext: {{ .Values.podSecurityContext | toYaml | nindent 8 }}
+      containers:
+      - name: cors-setup
+        image: {{ include "images.job" $ }}
+        securityContext: {{ .Values.jobs.containerSecurityContext | toYaml | nindent 10 }}
+        resources: {{ .Values.setupJobs.resources | toYaml | nindent 10 }}
+        env:
+        - name: X_TARDIS_GATEWAY_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}
+              key: gatewayAdminApiKey
+        command:
+          - /bin/bash
+          - -c
+          - |-
+            {{- if .Values.plugins.cors.enabled }}
+            echo "Enabling global Kong CORS plugin via PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.cors.pluginId }}"
+            {{- else }}
+            echo "Removing global Kong CORS plugin via DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.cors.pluginId }}"
+            {{- end }}
+
+            ADMIN_API_HTTP_RETURN_CODE=$(curl -Is -o /dev/null -w "%{http_code}" -u "admin:$X_TARDIS_GATEWAY_ADMIN" -X GET {{ include "kong.adminApi.serviceUrl" . }})
+            if [ "$ADMIN_API_HTTP_RETURN_CODE" != "200" ]; then
+              echo "Kong Admin API unreachable, return: $ADMIN_API_HTTP_RETURN_CODE"
+              exit 1
+            fi
+            {{- if .Values.plugins.cors.enabled }}
+
+            CONFIG_CALL_HTTP_RETURN_CODE=$(curl \
+              -o /dev/null \
+              -w "%{http_code}" \
+              -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
+              -X PUT {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.cors.pluginId }} \
+              --header 'Content-Type: application/json' \
+              --data-binary @- <<'EOF'
+            {
+              "name": "cors",
+              "tags": ["tardis", "cors"],
+              "config": {{ $config | toJson }}
+            }
+            EOF
+            )
+
+            if [ "$CONFIG_CALL_HTTP_RETURN_CODE" = "409" ]; then
+              echo "A global CORS plugin with a different ID already exists. Set plugins.cors.pluginId to its ID or delete it, then re-run."
+              exit 1
+            fi
+
+            if [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "200" ] && [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "201" ]; then
+              echo "Configuring Kong CORS plugin failed, return: $CONFIG_CALL_HTTP_RETURN_CODE"
+              exit 1
+            fi
+            {{- else }}
+
+            CONFIG_CALL_HTTP_RETURN_CODE=$(curl \
+              -o /dev/null \
+              -w "%{http_code}" \
+              -u "admin:$X_TARDIS_GATEWAY_ADMIN" \
+              -X DELETE {{ include "kong.adminApi.serviceUrl" . }}/plugins/{{ .Values.plugins.cors.pluginId }})
+
+            # 404 means the plugin is already gone
+            if [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "204" ] && [ "$CONFIG_CALL_HTTP_RETURN_CODE" != "404" ]; then
+              echo "Removing Kong CORS plugin failed, return: $CONFIG_CALL_HTTP_RETURN_CODE"
+              exit 1
+            fi
+            {{- end }}
+      restartPolicy: OnFailure
+{{- end -}}

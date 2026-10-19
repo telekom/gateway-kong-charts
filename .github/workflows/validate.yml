@@ -141,3 +141,6 @@ jobs:
     uses: ./.github/workflows/release.yml
     with:
       source-sha: ${{ github.sha }}
+    secrets:
+      ARTIFACTORY_O28M_PUSH_USER: ${{ secrets.ARTIFACTORY_O28M_PUSH_USER }}
+      ARTIFACTORY_O28M_PUSH_TOKEN: ${{ secrets.ARTIFACTORY_O28M_PUSH_TOKEN }}

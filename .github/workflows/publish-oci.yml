@@ -4,16 +4,28 @@
 
 name: Publish to OCI Registry
 
-# Packages the chart for a published GitHub release and pushes it to GHCR. The source is
-# the release tag, not the default branch, so a re-run cannot pick up later commits.
+# Packages the chart for a published GitHub release and pushes it to GHCR and to
+# Artifactory. The source is the release tag, not the default branch, so a re-run cannot
+# pick up later commits. The chart is packaged once, so both registries get the same
+# artifact and the same digest.
 #
 # An automatic release calls this workflow directly from release.yml. The `release`
 # trigger below cannot serve it: semantic-release authenticates as GITHUB_TOKEN, and
 # GitHub does not start workflow runs from events raised by GITHUB_TOKEN. The trigger is
-# kept for a release published by hand, which does raise a run.
+# kept for a release published by hand, which does raise a run. `workflow_dispatch`
+# publishes an existing tag again, for example to fill a registry that missed a release.
 #
 # A published version is not overwritten. This workflow asserts this by checking if the
-# tag already exists in the OCI repository.
+# tag already exists in each OCI repository.
+#
+# Required repository variables:
+# - REGISTRY_HOST: Artifactory host name, for example `registry.example.com`
+# - REGISTRY_REPO: Artifactory repository path with a leading slash, without the chart
+#   name, for example `/my-oci-local/helm`
+#
+# Required secrets:
+# - ARTIFACTORY_O28M_PUSH_USER: Artifactory user with push permission
+# - ARTIFACTORY_O28M_PUSH_TOKEN: Artifactory token of that user
 
 on:
   release:
@@ -24,22 +36,33 @@ on:
         description: The release tag to package and publish.
         required: true
         type: string
+    secrets:
+      ARTIFACTORY_O28M_PUSH_USER:
+        required: true
+      ARTIFACTORY_O28M_PUSH_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The existing release tag to package and publish.
+        required: true
+        type: string
 
 permissions:
   contents: read
-  packages: write
 
 env:
   HELM_DOCS_VERSION: "1.14.2"
   CHART_NAME: stargate
-  REGISTRY: oci://ghcr.io/${{ github.repository_owner }}/o28m-charts
   # `inputs` is empty for a `release` event, so this resolves to whichever trigger fired.
   RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
 
 jobs:
-  publish-oci:
-    name: Package and publish chart
+  package:
+    name: Package chart
     runs-on: ubuntu-latest
+    outputs:
+      revision: ${{ steps.package.outputs.revision }}
     steps:
       - name: Check out the release tag
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -82,18 +105,92 @@ jobs:
             exit 1
           fi
 
-      - name: Log in to GHCR
+      - name: Package chart
+        id: package
+        run: |
+          set -euo pipefail
+          # This let's us recognize, which revision published a specific chart version
+          REVISION="$(git rev-parse HEAD)"
+          export REVISION
+          yq -i '.annotations."org.opencontainers.image.revision" = strenv(REVISION)' Chart.yaml
+
+          helm package .
+          echo "revision=${REVISION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload packaged chart
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 #v7.0.2
+        with:
+          name: chart
+          path: ${{ env.CHART_NAME }}-${{ env.RELEASE_TAG }}.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish chart (${{ matrix.registry }})
+    needs: [package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      # A failure in one registry must not stop the push to the other one. A re-run of the
+      # failed job then completes the release.
+      fail-fast: false
+      matrix:
+        include:
+          - registry: ghcr
+            host: ghcr.io
+            repository: ghcr.io/${{ github.repository_owner }}/o28m-charts
+          - registry: artifactory
+            host: ${{ vars.REGISTRY_HOST }}
+            repository: ${{ vars.REGISTRY_HOST }}${{ vars.REGISTRY_REPO }}
+    env:
+      REGISTRY_NAME: ${{ matrix.registry }}
+      REGISTRY_HOST: ${{ matrix.host }}
+      REGISTRY: oci://${{ matrix.repository }}
+    steps:
+      - name: Check the registry configuration
+        if: matrix.registry == 'artifactory'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTOR: ${{ github.actor }}
-        run: printf '%s' "${GITHUB_TOKEN}" | helm registry login ghcr.io -u "${ACTOR}" --password-stdin
+          VARS_REGISTRY_HOST: ${{ vars.REGISTRY_HOST }}
+          VARS_REGISTRY_REPO: ${{ vars.REGISTRY_REPO }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VARS_REGISTRY_HOST}" ] || [ -z "${VARS_REGISTRY_REPO}" ]; then
+            printf 'publish: set the REGISTRY_HOST and REGISTRY_REPO repository variables\n' >&2
+            exit 1
+          fi
+
+      - name: Set up Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 #v5.0.0
+
+      - name: Download packaged chart
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 #v8.0.2
+        with:
+          name: chart
+
+      - name: Log in to the registry
+        env:
+          REGISTRY_USER: >-
+            ${{ matrix.registry == 'ghcr' && github.actor || secrets.ARTIFACTORY_O28M_PUSH_USER }}
+          REGISTRY_PASSWORD: >-
+            ${{ matrix.registry == 'ghcr' && secrets.GITHUB_TOKEN || secrets.ARTIFACTORY_O28M_PUSH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${REGISTRY_USER}" ] || [ -z "${REGISTRY_PASSWORD}" ]; then
+            printf 'publish: credentials for registry %s are not set\n' "${REGISTRY_NAME}" >&2
+            exit 1
+          fi
+          printf '%s' "${REGISTRY_PASSWORD}" |
+            helm registry login "${REGISTRY_HOST}" -u "${REGISTRY_USER}" --password-stdin
 
       - name: Check if chart is already published
         id: published
+        env:
+          SOURCE_REVISION: ${{ needs.package.outputs.revision }}
         run: |
           set -uo pipefail
           chart_ref="${REGISTRY}/${CHART_NAME}"
-          source_revision="$(git rev-parse HEAD)"
           if ! metadata="$(helm show chart "${chart_ref}" --version "${RELEASE_TAG}" 2>&1)"; then
             printf 'publish: %s:%s is not published yet\n%s\n' \
               "${chart_ref}" "${RELEASE_TAG}" "${metadata}"
@@ -104,10 +201,10 @@ jobs:
           # Checks if the existing chart was published from this revision, or a different one
           published_revision="$(printf '%s\n' "${metadata}" |
             awk '$1 == "org.opencontainers.image.revision:" { gsub(/"/, "", $2); print $2; exit }')"
-          if [ "${published_revision}" != "${source_revision}" ]; then
+          if [ "${published_revision}" != "${SOURCE_REVISION}" ]; then
             printf 'publish: %s:%s already exists and was published from %s, not from %s\n' \
               "${chart_ref}" "${RELEASE_TAG}" "${published_revision:-an unknown commit}" \
-              "${source_revision}" >&2
+              "${SOURCE_REVISION}" >&2
             exit 1
           fi
 
@@ -115,18 +212,12 @@ jobs:
             "${chart_ref}" "${RELEASE_TAG}"
           echo "exists=true" >> "${GITHUB_OUTPUT}"
 
-      - name: Package and push chart
+      - name: Push chart
         if: steps.published.outputs.exists == 'false'
         run: |
           set -euo pipefail
-          # This let's us recognize, which revision published a specific chart version
-          REVISION="$(git rev-parse HEAD)" \
-            yq -i '.annotations."org.opencontainers.image.revision" = strenv(REVISION)' Chart.yaml
-
-          helm package .
-
-          # The push is retried because release tags are immutable and there is no real way
-          # to re-run this job if the push fails due to a transient error.
+          # The push is retried because release tags are immutable and a transient error
+          # would otherwise leave the registry without this version.
           attempts=3
           delay=5
           for attempt in $(seq 1 "${attempts}"); do

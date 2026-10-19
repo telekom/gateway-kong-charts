@@ -766,6 +766,14 @@ plugins:
     # -- Zone-wide issuer blocklist. Tokens from these issuers are rejected on ALL routes regardless of per-route allowedIss. Takes effect on Kong restart/redeploy only. Used for emergency revocation of compromised consumer zone gateway issuers without requiring full route reprocessing by Rover.
     blockedIssuers: []
 
+  cors:
+    # -- (bool) Manage a global CORS plugin instance. The plugin applies to all routes and replaces the CORS handling of the upstreams. `true` creates or updates the plugin, `false` deletes it (by `pluginId`), unset (default) leaves any existing plugin untouched.
+    enabled: null
+    # -- Plugin ID for Kong configuration
+    pluginId: 4bd9f93e-985a-432d-954a-b7459e75d5f3
+    # -- List of allowed domains for the `Access-Control-Allow-Origin` header. If you want to allow all origins, add `*` as a single value to this configuration field. The accepted values can either be flat strings or PCRE regexes. NOTE: If you don't specify any allowed domains, all origins are allowed.
+    origins: []
+
   prometheus:
     # -- Enable Prometheus metrics plugin
     enabled: true

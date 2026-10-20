@@ -22,6 +22,11 @@ on:
         description: The validated commit this release is built from.
         required: true
         type: string
+    secrets:
+      ARTIFACTORY_O28M_PUSH_USER:
+        required: true
+      ARTIFACTORY_O28M_PUSH_TOKEN:
+        required: true
 
 permissions:
   contents: read
@@ -111,3 +116,6 @@ jobs:
     uses: ./.github/workflows/publish-oci.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
+    secrets:
+      ARTIFACTORY_O28M_PUSH_USER: ${{ secrets.ARTIFACTORY_O28M_PUSH_USER }}
+      ARTIFACTORY_O28M_PUSH_TOKEN: ${{ secrets.ARTIFACTORY_O28M_PUSH_TOKEN }}

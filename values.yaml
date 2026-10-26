@@ -885,7 +885,7 @@ jumper:
     # registry: ""  # Override global.image.registry
     # namespace: ""  # Override global.image.namespace
     repository: jumper
-    tag: "4.17.3"
+    tag: "4.18.0"
 
   # -- Image pull policy for Jumper container
   imagePullPolicy: IfNotPresent

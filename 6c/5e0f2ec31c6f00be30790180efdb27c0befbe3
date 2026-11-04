@@ -1,0 +1,21 @@
+values.yaml
+  s_edbc78498fb1d6::t_ff7eb8fb3c55c7 888
+README.md
+  s_edbc78498fb1d6::t_ff7eb8fb3c55c7 822
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6c5e0f2ec31c6f00be30790180efdb27c0befbe3",
+  "prompts": {},
+  "sessions": {
+    "s_edbc78498fb1d6": {
+      "agent_id": {
+        "tool": "github-copilot-cli",
+        "id": "9fff5ee8-9b08-454d-be5b-c0e2b61b46cc",
+        "model": "unknown"
+      },
+      "human_author": "Elmar Meuthen <elmar.meuthen@telekom.de>"
+    }
+  }
+}

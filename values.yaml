@@ -1502,6 +1502,54 @@ argoRollouts:
         # -- Secret key for base64 encoded user:password Basic Auth header
         basicKey: "basic-auth"
 
+    # ============================================================================
+    # Success Rate Comparison Analysis Template
+    # ============================================================================
+    # Validates that the canary success rate does not drop below the stable success rate by more than a margin.
+    # Reference it as "success-rate-comparison-analysis" in argoRollouts.strategy.canary.analysis.templates.
+    # Requires the canary strategy, which sets the role=canary/stable pod labels.
+
+    successRateComparison:
+      # -- Enable success rate comparison analysis (canary against stable)
+      enabled: false
+      # -- Analysis interval
+      interval: 30s
+      # -- Number of measurements to take
+      count: 0
+      # -- Number of failed measurements that trigger rollback
+      failureLimit: 3
+      # -- Success criteria: canary success ratio may be below the stable success ratio by at most the margin,
+      # in absolute percentage points (0.05 = 5 points). NaN (no traffic on canary or stable) counts as success.
+      successCondition: "all(result, isNaN(#) || # <= 0.05)"
+      # -- PromQL query returning how far the canary success ratio (non-4xx/5xx) is below the stable
+      # success ratio over the last 2 minutes. Computed as canary failure ratio minus stable failure ratio.
+      query: |
+        (
+          (sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary",code=~"(4|5).."}[2m])) or vector(0))
+          /
+          sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="canary"}[2m]))
+        )
+        -
+        (
+          (sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="stable",code=~"(4|5).."}[2m])) or vector(0))
+          /
+          sum(rate(kong_http_requests_total{ei_telekom_de_zone="{{ args.zone }}",ei_telekom_de_environment="{{ args.environment }}",app_kubernetes_io_instance="{{ args.instance }}",route=~"{{ args.route-regex }}",role="stable"}[2m]))
+        )
+
+      # -- Prometheus server address
+      prometheusAddress: ""
+
+      # -- Prometheus Basic Auth authentication configuration
+      authentication:
+        # -- Enable authentication for Prometheus queries
+        enabled: true
+
+        # -- Secret name containing Prometheus credentials
+        secretName: "victoria-metrics-secret"
+
+        # -- Secret key for base64 encoded user:password Basic Auth header
+        basicKey: "basic-auth"
+
 # ============================================================================
 # Network Policy Configuration
 # ============================================================================

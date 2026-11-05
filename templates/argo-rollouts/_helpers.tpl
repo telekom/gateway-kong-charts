@@ -23,6 +23,9 @@ Validates Argo Rollouts configuration
     {{- if and .Values.argoRollouts.analysisTemplates.successRate.enabled (not .Values.argoRollouts.analysisTemplates.successRate.prometheusAddress) }}
       {{- fail "argoRollouts.analysisTemplates.successRate.prometheusAddress is required when success rate analysis is enabled" }}
     {{- end }}
+    {{- if and .Values.argoRollouts.analysisTemplates.successRateComparison.enabled (not .Values.argoRollouts.analysisTemplates.successRateComparison.prometheusAddress) }}
+      {{- fail "argoRollouts.analysisTemplates.successRateComparison.prometheusAddress is required when success rate comparison analysis is enabled" }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- end }}

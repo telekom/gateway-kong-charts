@@ -6,8 +6,7 @@ name: Publish to OCI Registry
 
 # Packages the chart for a published GitHub release and pushes it to GHCR and to
 # Artifactory. The source is the release tag, not the default branch, so a re-run cannot
-# pick up later commits. The chart is packaged once, so both registries get the same
-# artifact and the same digest.
+# pick up later commits.
 #
 # An automatic release calls this workflow directly from release.yml. The `release`
 # trigger below cannot serve it: semantic-release authenticates as GITHUB_TOKEN, and
@@ -129,12 +128,15 @@ jobs:
     name: Publish chart (${{ matrix.registry }})
     needs: [package]
     runs-on: ubuntu-latest
+    concurrency:
+      group: publish-oci-${{ inputs.tag || github.event.release.tag_name }}-${{ matrix.registry }}
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
     strategy:
       # A failure in one registry must not stop the push to the other one. A re-run of the
-      # failed job then completes the release.
+      # failed job then completes the release, while the packaged artifact is still retained.
       fail-fast: false
       matrix:
         include:

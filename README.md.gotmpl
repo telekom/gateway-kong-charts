@@ -46,6 +46,7 @@ helm install my-gateway . -f my-values.yaml
 - **Kubernetes Cluster**
 - **Helm**: Version 3.x
 - **Ingress Controller**: NGINX Ingress Controller (or compatible alternative) for external access
+- **Zone connectivity**: if you run a gateway mesh, each provider zone must be able to reach the Issuer Service of every zone that sends it mesh traffic. A mesh call is signed by the consumer gateway, and the provider gateway validates it by retrieving that gateway's JWK set. See [UPGRADE.md](UPGRADE.md) if you are coming from a 9.x.x chart.
 
 ### Container Images
 

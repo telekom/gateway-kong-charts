@@ -133,4 +133,49 @@ spec:
             value: "Basic {{`{{ args.prometheusBasic }}`}}"
         {{- end }}
 {{- end }}
+---
+# ============================================================================
+# Success Rate Comparison Analysis Template
+# ============================================================================
+# Compares the canary HTTP success rate (non-4xx/5xx) against the stable success rate
+# Triggers automatic rollback if the canary falls below the stable rate by more than the margin
+{{- with .Values.argoRollouts.analysisTemplates.successRateComparison }}
+{{- if .enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ $.Release.Name }}-success-rate-comparison-analysis
+  labels: {{ include "app.labels.standard" $ | nindent 4 }}
+spec:
+  args:
+  - name: environment
+  - name: zone
+  - name: instance
+  - name: route-regex
+    value: ".*"
+  {{- if and .authentication .authentication.enabled }}
+  - name: prometheusBasic
+    valueFrom:
+      secretKeyRef:
+        name: {{ .authentication.secretName }}
+        key: {{ .authentication.basicKey }}
+  {{- end }}
+  metrics:
+  - name: success-rate-comparison
+    interval: {{ .interval }}
+    count: {{ .count }}
+    failureLimit: {{ .failureLimit }}
+    successCondition: {{ .successCondition | quote }}
+    provider:
+      prometheus:
+        address: {{ .prometheusAddress | quote }}
+        query: |
+          {{- .query | nindent 10 }}
+        {{- if and .authentication .authentication.enabled }}
+        headers:
+          - key: Authorization
+            value: "Basic {{`{{ args.prometheusBasic }}`}}"
+        {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}

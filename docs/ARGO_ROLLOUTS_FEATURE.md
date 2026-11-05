@@ -56,6 +56,7 @@ When `argoRollouts.enabled=true`, the following resources are deployed:
 #### 3. AnalysisTemplates (`templates/analysistemplate-kong.yaml`) - Optional
 - **error-rate-analysis**: Monitors HTTP error rate via NGINX Ingress metrics
 - **success-rate-analysis**: Monitors overall success rate via NGINX Ingress metrics
+- **success-rate-comparison-analysis**: Compares the canary success rate against the stable success rate (disabled by default)
 - Triggers automatic rollback on failure
 - Enabled via `argoRollouts.analysisTemplates.enabled=true`
 
@@ -165,6 +166,35 @@ successRate:
 ```
 
 **Note:** Both templates use NGINX Ingress Controller metrics (`nginx_ingress_controller_request_duration_seconds_count`) and require `prometheusAddress` to be configured.
+
+### Success Rate Comparison Analysis
+
+Compares the canary against the stable version instead of checking a fixed threshold. Errors that the stable
+version also produces, such as consumer 4xx or a failing upstream, do not abort the rollout.
+
+The query returns the canary failure ratio (4xx/5xx) minus the stable failure ratio over the last 2 minutes, using
+the `role` pod label (`canary`/`stable`) that Argo Rollouts sets and the ServiceMonitor relabels onto the Kong
+metrics. The `successCondition` holds the allowed margin in absolute percentage points: with the default `0.05`
+and a stable success rate of 90%, the canary passes down to 85%.
+
+A `NaN` result means the canary or the stable version had no traffic in the window and counts as success. The
+template only works with the canary strategy, because blue-green does not set the `role` labels.
+
+Enable the template and reference it in the canary analysis:
+
+```yaml
+argoRollouts:
+  strategy:
+    canary:
+      analysis:
+        templates:
+          - templateName: success-rate-comparison-analysis
+  analysisTemplates:
+    successRateComparison:
+      enabled: true
+      prometheusAddress: ""  # Required: set your Prometheus/Victoria Metrics URL
+      successCondition: "all(result, isNaN(#) || # <= 0.05)"  # optional: change the margin
+```
 
 ## Authentication Setup
 

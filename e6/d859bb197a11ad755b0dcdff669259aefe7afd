@@ -1,0 +1,22 @@
+README.md
+  h_65f5d22af11f8f 728-738
+docs/ARGO_ROLLOUTS_FEATURE.md
+  h_65f5d22af11f8f 59,170-198
+templates/argo-rollouts/_helpers.tpl
+  h_65f5d22af11f8f 26-28
+templates/argo-rollouts/analysistemplate.yaml
+  h_65f5d22af11f8f 136-180
+values.yaml
+  h_65f5d22af11f8f 1503-1550
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "e6d859bb197a11ad755b0dcdff669259aefe7afd",
+  "prompts": {},
+  "humans": {
+    "h_65f5d22af11f8f": {
+      "author": "Miká Juznik <mika.juznik@telekom.de>"
+    }
+  }
+}
